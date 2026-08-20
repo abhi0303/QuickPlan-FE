@@ -1,13 +1,14 @@
 import { lazy, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AlarmClock, ListTodo, Sparkles, Users, Wallet } from 'lucide-react'
+import { AlarmClock, Sparkles, Users, Wallet } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import './styles/global.scss'
 
 const AppShell = lazy(() => import('./components/layout/AppShell').then((module) => ({ default: module.AppShell })))
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })))
 const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage').then((module) => ({ default: module.PlaceholderPage })))
+const TasksPage = lazy(() => import('./pages/TasksPage').then((module) => ({ default: module.TasksPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
 
@@ -46,7 +47,7 @@ function App() {
           <Route path="/auth" element={session ? <Navigate to="/" replace /> : <AuthPage />} />
           <Route element={session ? <AppShell /> : <Navigate to="/auth" replace />}>
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/tasks" element={<PlaceholderPage icon={ListTodo} title="Tasks" eyebrow="Your work" description="Plan, prioritize, and complete everything that matters." />} />
+            <Route path="/tasks" element={<TasksPage />} />
             <Route path="/reminders" element={<PlaceholderPage icon={AlarmClock} title="Reminders" eyebrow="Stay on time" description="Keep important moments visible with smart reminders." />} />
             <Route path="/expenses" element={<PlaceholderPage icon={Wallet} title="Money" eyebrow="Simple finances" description="Track IOUs, expenses, and shared costs without the spreadsheet." />} />
             <Route path="/people" element={<PlaceholderPage icon={Users} title="People" eyebrow="Your circle" description="See balances and transaction history with the people you know." />} />

@@ -14,9 +14,14 @@ type AppStore = {
   theme: Theme
   sidebarOpen: boolean
   session: Session | null
+  quickAddOpen: boolean
+  /** Bumped after any task mutation so views know to refetch. */
+  tasksVersion: number
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
   setSidebarOpen: (open: boolean) => void
+  setQuickAddOpen: (open: boolean) => void
+  bumpTasksVersion: () => void
   signIn: (session: Session) => void
   updateSession: (patch: Partial<Omit<Session, 'token'>>) => void
   signOut: () => void
@@ -28,12 +33,16 @@ export const useAppStore = create<AppStore>()(
       theme: 'light',
       sidebarOpen: false,
       session: null,
+      quickAddOpen: false,
+      tasksVersion: 0,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
+      setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
+      bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
       signIn: (session) => set({ session, sidebarOpen: false }),
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
-      signOut: () => set({ session: null, sidebarOpen: false }),
+      signOut: () => set({ session: null, sidebarOpen: false, quickAddOpen: false }),
     }),
     {
       name: 'quickplan-preferences',

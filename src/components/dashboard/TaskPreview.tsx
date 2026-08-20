@@ -1,29 +1,60 @@
+import { format, parseISO } from 'date-fns'
 import { Check, Clock3, EllipsisVertical } from 'lucide-react'
+import type { Task } from '../../services/tasks'
 
-type TaskPreviewProps = {
-  title: string
-  time?: string
-  tag: string
-  color: string
-  completed?: boolean
+const CATEGORY_COLORS: Record<string, string> = {
+  work: '#6c7bff',
+  personal: '#f2871f',
+  finance: '#0fb58a',
+  health: '#e0526d',
 }
 
-export function TaskPreview({ title, time, tag, color, completed }: TaskPreviewProps) {
+const DEFAULT_COLOR = '#6e8a80'
+
+function formatDue(dueDate?: string) {
+  if (!dueDate) return undefined
+  try {
+    return format(parseISO(dueDate), 'h:mm a')
+  } catch {
+    return undefined
+  }
+}
+
+type Props = {
+  task: Task
+  onToggle: (task: Task) => void
+  busy?: boolean
+}
+
+export function TaskPreview({ task, onToggle, busy }: Props) {
+  const time = formatDue(task.dueDate)
+  const color = task.category ? CATEGORY_COLORS[task.category.toLowerCase()] ?? DEFAULT_COLOR : DEFAULT_COLOR
+
   return (
-    <div className={`task-preview ${completed ? 'completed' : ''}`}>
-      <button className="check-circle" aria-label={`Mark "${title}" complete`}>
+    <div className={`task-preview ${task.isCompleted ? 'completed' : ''}`}>
+      <button
+        className="check-circle"
+        onClick={() => onToggle(task)}
+        disabled={busy}
+        aria-pressed={task.isCompleted}
+        aria-label={`Mark "${task.title}" ${task.isCompleted ? 'incomplete' : 'complete'}`}
+      >
         <Check size={14} strokeWidth={3.2} />
       </button>
 
       <div className="task-copy">
-        <strong>{title}</strong>
-        <div className="task-meta">
-          {time && <span className="task-time"><Clock3 size={13} /> {time}</span>}
-          <span className="task-tag" style={{ color, backgroundColor: `${color}1f` }}>{tag}</span>
-        </div>
+        <strong>{task.title}</strong>
+        {(time || task.category) && (
+          <div className="task-meta">
+            {time && <span className="task-time"><Clock3 size={13} /> {time}</span>}
+            {task.category && (
+              <span className="task-tag" style={{ color, backgroundColor: `${color}1f` }}>{task.category}</span>
+            )}
+          </div>
+        )}
       </div>
 
-      <button className="task-menu" aria-label={`More options for "${title}"`}>
+      <button className="task-menu" aria-label={`More options for "${task.title}"`}>
         <EllipsisVertical size={17} />
       </button>
     </div>
