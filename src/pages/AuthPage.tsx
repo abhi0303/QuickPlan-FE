@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
+import { ArrowRight, CircleAlert, Eye, EyeOff, LoaderCircle, Mic, ShieldCheck, Sparkles, Wallet } from 'lucide-react'
 import { getApiErrorMessage } from '../services/api'
 import { login, register } from '../services/auth'
 import { useAppStore } from '../store/useAppStore'
@@ -65,13 +66,34 @@ export function AuthPage() {
 
   return (
     <main className="auth-page">
-      <div className="auth-brand"><span className="brand-mark">✦</span><span>quickplan</span></div>
+      <div className="brand">
+        <span className="brand-mark"><Sparkles size={19} strokeWidth={2.4} /></span>
+        <span>Quickplan</span>
+      </div>
+
       <div className="auth-layout">
         <section className="auth-intro">
           <p className="eyebrow">A calmer way to get things done</p>
           <h1>Your day,<br /><em>thoughtfully planned.</em></h1>
-          <p className="auth-copy">Capture tasks, reminders, and money notes in one simple space. Type it, say it, and Quickplan will help organize the rest.</p>
-          <div className="auth-proof"><span className="proof-avatars"><i>A</i><i>R</i><i>N</i></span><span>Built for everyday momentum</span></div>
+          <p className="auth-copy">
+            Capture tasks, reminders, and money notes in one simple space. Type it, say it, and Quickplan will help
+            organize the rest.
+          </p>
+
+          <div className="auth-features">
+            <div className="auth-feature">
+              <i><Mic size={18} /></i>
+              Just say it — Hindi, English, or Hinglish
+            </div>
+            <div className="auth-feature">
+              <i className="tangerine"><Wallet size={18} /></i>
+              Track who owes what, without a spreadsheet
+            </div>
+            <div className="auth-feature">
+              <i className="periwinkle"><ShieldCheck size={18} /></i>
+              Your plans stay private to you
+            </div>
+          </div>
         </section>
 
         <section className="auth-card">
@@ -105,7 +127,7 @@ export function AuthPage() {
                   disabled={loading}
                 />
                 <button type="button" className="input-action" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
-                  <span className="material-symbols-outlined">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </span>
             </label>
@@ -124,11 +146,19 @@ export function AuthPage() {
               </label>
             )}
 
-            {error && <p className="form-error" role="alert">{error}</p>}
+            {error && (
+              <p className="form-error" role="alert">
+                <CircleAlert size={16} />
+                {error}
+              </p>
+            )}
 
             <button className="auth-submit" disabled={loading}>
-              {loading ? 'Please wait...' : isSignup ? 'Create account' : 'Continue to Quickplan'}
-              <span className="material-symbols-outlined">arrow_forward</span>
+              {loading ? (
+                <><LoaderCircle size={18} className="spin" /> Please wait...</>
+              ) : (
+                <>{isSignup ? 'Create account' : 'Continue to Quickplan'} <ArrowRight size={18} /></>
+              )}
             </button>
           </form>
 
@@ -137,7 +167,10 @@ export function AuthPage() {
               : <>New to Quickplan? <button type="button" onClick={() => switchMode('signup')}>Create an account</button></>}
           </div>
 
-          <p className="auth-terms">By continuing, you agree to keep your planning space personal and private.</p>
+          <p className="auth-terms">
+            <ShieldCheck size={14} />
+            Your planning space stays personal and private.
+          </p>
         </section>
       </div>
     </main>

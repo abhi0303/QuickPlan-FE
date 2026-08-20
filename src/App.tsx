@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AlarmClock, ListTodo, Sparkles, Users, Wallet } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import './styles/global.scss'
 
@@ -11,7 +12,12 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => 
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
 
 function LoadingScreen() {
-  return <div className="loading-screen"><span className="brand-mark">✦</span><span>Loading Quickplan...</span></div>
+  return (
+    <div className="loading-screen">
+      <span className="brand-mark"><Sparkles size={19} strokeWidth={2.4} /></span>
+      <span>Loading Quickplan...</span>
+    </div>
+  )
 }
 
 function App() {
@@ -19,16 +25,31 @@ function App() {
 
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Toaster position="top-right" toastOptions={{ style: { background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '13px' } }} />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '999px',
+            boxShadow: 'var(--shadow)',
+            color: 'var(--text)',
+            fontSize: '14px',
+            fontWeight: 600,
+            padding: '10px 16px',
+          },
+          success: { iconTheme: { primary: 'var(--primary)', secondary: '#fff' } },
+        }}
+      />
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/auth" element={session ? <Navigate to="/" replace /> : <AuthPage />} />
           <Route element={session ? <AppShell /> : <Navigate to="/auth" replace />}>
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/tasks" element={<PlaceholderPage title="Tasks" eyebrow="Your work" description="Plan, prioritize, and complete everything that matters." />} />
-            <Route path="/reminders" element={<PlaceholderPage title="Reminders" eyebrow="Stay on time" description="Keep important moments visible with smart reminders." />} />
-            <Route path="/expenses" element={<PlaceholderPage title="Money" eyebrow="Simple finances" description="Track IOUs, expenses, and shared costs without the spreadsheet." />} />
-            <Route path="/people" element={<PlaceholderPage title="People" eyebrow="Your circle" description="See balances and transaction history with the people you know." />} />
+            <Route path="/tasks" element={<PlaceholderPage icon={ListTodo} title="Tasks" eyebrow="Your work" description="Plan, prioritize, and complete everything that matters." />} />
+            <Route path="/reminders" element={<PlaceholderPage icon={AlarmClock} title="Reminders" eyebrow="Stay on time" description="Keep important moments visible with smart reminders." />} />
+            <Route path="/expenses" element={<PlaceholderPage icon={Wallet} title="Money" eyebrow="Simple finances" description="Track IOUs, expenses, and shared costs without the spreadsheet." />} />
+            <Route path="/people" element={<PlaceholderPage icon={Users} title="People" eyebrow="Your circle" description="See balances and transaction history with the people you know." />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to={session ? '/' : '/auth'} replace />} />

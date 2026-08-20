@@ -1,3 +1,17 @@
-export function QuickAdd() {
-  return <button className="quick-add"><span className="quick-add-icon">+</span><span><strong>Quick add</strong><small>Type or speak naturally</small></span><kbd>⌘ K</kbd></button>
+import { Mic, Plus } from 'lucide-react'
+
+type Props = {
+  label?: string
+  variant?: 'light' | 'solid' | 'ghost'
+  icon?: 'plus' | 'mic'
+}
+
+export function QuickAdd({ label = 'Quick add', variant = 'light', icon = 'plus' }: Props) {
+  const Icon = icon === 'mic' ? Mic : Plus
+  return (
+    <button className={`quick-add ${variant === 'light' ? '' : variant}`}>
+      <Icon size={18} strokeWidth={2.4} />
+      {label}
+    </button>
+  )
 }
