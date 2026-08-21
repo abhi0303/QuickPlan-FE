@@ -54,14 +54,6 @@
     --sidebar-w: 262px;
     --shell-gap: 18px;
 
-    /* Device safe areas (notch, punch-hole, home indicator, rounded corners).
-       Resolve to 0 on hardware without them, so they are safe to add anywhere.
-       Requires viewport-fit=cover in index.html. */
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-right: env(safe-area-inset-right, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-left: env(safe-area-inset-left, 0px);
-
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     color: var(--text);
     font-synthesis: none;
@@ -203,16 +195,16 @@ h2 {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--r-xl);
-    bottom: calc(var(--shell-gap) + var(--safe-bottom));
+    bottom: calc(var(--shell-gap) + env(safe-area-inset-bottom, 0px));
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
     gap: 26px;
-    left: calc(var(--shell-gap) + var(--safe-left));
+    left: calc(var(--shell-gap) + env(safe-area-inset-left, 0px));
     overflow-y: auto;
     padding: 24px 18px 18px;
     position: fixed;
-    top: calc(var(--shell-gap) + var(--safe-top));
+    top: calc(var(--shell-gap) + env(safe-area-inset-top, 0px));
     width: var(--sidebar-w);
     z-index: 5;
 }
@@ -397,7 +389,7 @@ h2 {
     display: flex;
     gap: 14px;
     justify-content: space-between;
-    padding: calc(18px + var(--safe-top)) 4.5% 18px;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 4.5% 18px;
     position: sticky;
     top: 0;
     z-index: 4;
@@ -483,7 +475,7 @@ h2 {
 .page-container {
     margin: 0 auto;
     max-width: 1160px;
-    padding: 10px calc(4.5% + var(--safe-right)) 60px calc(4.5% + var(--safe-left));
+    padding: 10px calc(4.5% + env(safe-area-inset-right, 0px)) 60px calc(4.5% + env(safe-area-inset-left, 0px));
 }
 
 /* ==========================================================================
@@ -498,7 +490,7 @@ h2 {
     display: none;
     justify-content: space-around;
     left: 0;
-    padding: 8px calc(6px + var(--safe-right)) calc(8px + var(--safe-bottom)) calc(6px + var(--safe-left));
+    padding: 8px calc(6px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(6px + env(safe-area-inset-left, 0px));
     position: fixed;
     right: 0;
     z-index: 6;
@@ -534,7 +526,7 @@ h2 {
     align-items: center;
     background: var(--gradient);
     border-radius: var(--r-pill);
-    bottom: calc(160px + var(--safe-bottom));
+    bottom: calc(160px + env(safe-area-inset-bottom, 0px));
     box-shadow: var(--shadow-primary);
     color: #fff;
     display: none;
@@ -1288,14 +1280,14 @@ select:focus-visible { border-color: var(--primary); }
     align-items: center;
     background: var(--gradient);
     border-radius: var(--r-pill);
-    bottom: calc(28px + var(--safe-bottom));
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
     box-shadow: var(--shadow-primary), var(--shadow-lg);
     color: #fff;
     display: flex;
     height: 64px;
     justify-content: center;
     position: fixed;
-    right: calc(28px + var(--safe-right));
+    right: calc(28px + env(safe-area-inset-right, 0px));
     transition: transform .2s ease;
     width: 64px;
     z-index: 25;
@@ -1327,8 +1319,8 @@ select:focus-visible { border-color: var(--primary); }
     display: flex;
     inset: 0;
     justify-content: center;
-    padding: calc(24px + var(--safe-top)) calc(24px + var(--safe-right))
-             calc(24px + var(--safe-bottom)) calc(24px + var(--safe-left));
+    padding: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-right, 0px))
+             calc(24px + env(safe-area-inset-bottom, 0px)) calc(24px + env(safe-area-inset-left, 0px));
     position: fixed;
     z-index: 60;
 }
@@ -1488,7 +1480,7 @@ select:focus-visible { border-color: var(--primary); }
     background: var(--surface);
     border: 1px solid var(--rose);
     border-radius: var(--r-lg);
-    bottom: calc(28px + var(--safe-bottom));
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
     box-shadow: var(--shadow-lg);
     color: var(--rose);
     font-size: 14px;
@@ -1502,7 +1494,7 @@ select:focus-visible { border-color: var(--primary); }
 }
 
 @media (max-width: 860px) {
-    .speak-fab { bottom: calc(88px + var(--safe-bottom)); right: calc(18px + var(--safe-right)); }
+    .speak-fab { bottom: calc(88px + env(safe-area-inset-bottom, 0px)); right: calc(18px + env(safe-area-inset-right, 0px)); }
     .voice-panel { padding: 28px 20px 20px; }
     .voice-text { font-size: 16px; }
 }
@@ -1520,8 +1512,8 @@ select:focus-visible { border-color: var(--primary); }
     inset: 0;
     justify-content: center;
     overflow-y: auto;
-    padding: calc(clamp(16px, 6vh, 72px) + var(--safe-top)) calc(16px + var(--safe-right))
-             calc(40px + var(--safe-bottom)) calc(16px + var(--safe-left));
+    padding: calc(clamp(16px, 6vh, 72px) + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px))
+             calc(40px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
     position: fixed;
     z-index: 40;
 }
@@ -1888,8 +1880,8 @@ textarea.control { resize: vertical; }
 .auth-page {
     background: var(--bg);
     min-height: 100vh;
-    padding: calc(28px + var(--safe-top)) calc(6% + var(--safe-right))
-             calc(60px + var(--safe-bottom)) calc(6% + var(--safe-left));
+    padding: calc(28px + env(safe-area-inset-top, 0px)) calc(6% + env(safe-area-inset-right, 0px))
+             calc(60px + env(safe-area-inset-bottom, 0px)) calc(6% + env(safe-area-inset-left, 0px));
     position: relative;
 }
 
@@ -2421,7 +2413,7 @@ textarea.control { resize: vertical; }
 
     .topbar {
         gap: 10px;
-        padding: calc(14px + var(--safe-top)) calc(20px + var(--safe-right)) 14px calc(20px + var(--safe-left));
+        padding: calc(14px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-right, 0px)) 14px calc(20px + env(safe-area-inset-left, 0px));
     }
 
     .topbar-brand { display: flex; }
@@ -2433,7 +2425,7 @@ textarea.control { resize: vertical; }
     .fab { display: flex; }
 
     .page-container {
-        padding: 6px calc(20px + var(--safe-right)) calc(110px + var(--safe-bottom)) calc(20px + var(--safe-left));
+        padding: 6px calc(20px + env(safe-area-inset-right, 0px)) calc(110px + env(safe-area-inset-bottom, 0px)) calc(20px + env(safe-area-inset-left, 0px));
     }
 
     .hero-card { border-radius: var(--r-lg); padding: 26px 22px; }
@@ -2459,8 +2451,8 @@ textarea.control { resize: vertical; }
     select { width: 100%; }
 
     .auth-page {
-        padding: calc(22px + var(--safe-top)) calc(20px + var(--safe-right))
-                 calc(50px + var(--safe-bottom)) calc(20px + var(--safe-left));
+        padding: calc(22px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-right, 0px))
+                 calc(50px + env(safe-area-inset-bottom, 0px)) calc(20px + env(safe-area-inset-left, 0px));
     }
 
     .auth-layout { display: block; margin-top: 36px; }
@@ -2481,5 +2473,35 @@ textarea.control { resize: vertical; }
         animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: .01ms !important;
+    }
+}
+
+
+/* ==========================================================================
+   installed app (PWA) — system bar clearance
+   ========================================================================== */
+
+/* An installed app is drawn edge-to-edge underneath the system status bar.
+   env() handles devices that report their insets correctly; the max() floor
+   covers the ones that draw edge-to-edge but report 0 — which is what left
+   the header sitting on top of the clock and battery.
+
+   Phones only: an installed desktop window has no system bar over the page,
+   so a floor there would just add dead space. */
+@media (display-mode: standalone) and (max-width: 860px),
+       (display-mode: fullscreen) and (max-width: 860px),
+       (display-mode: minimal-ui) and (max-width: 860px) {
+
+    .topbar {
+        padding-top: max(calc(14px + env(safe-area-inset-top, 0px)), 50px);
+    }
+
+    .auth-page {
+        padding-top: max(calc(22px + env(safe-area-inset-top, 0px)), 58px);
+    }
+
+    /* iOS home indicator sits over the tab bar on gesture-nav devices */
+    .bottom-nav {
+        padding-bottom: max(calc(8px + env(safe-area-inset-bottom, 0px)), 12px);
     }
 }
