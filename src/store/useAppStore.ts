@@ -19,12 +19,15 @@ type AppStore = {
   quickAddSeed: string
   /** Bumped after any task mutation so views know to refetch. */
   tasksVersion: number
+  /** Bumped only when finishing the last open task, to fire the celebration. */
+  celebrationId: number
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
   setSidebarOpen: (open: boolean) => void
   setQuickAddOpen: (open: boolean) => void
   openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
+  celebrate: () => void
   signIn: (session: Session) => void
   updateSession: (patch: Partial<Omit<Session, 'token'>>) => void
   signOut: () => void
@@ -39,6 +42,7 @@ export const useAppStore = create<AppStore>()(
       quickAddOpen: false,
       quickAddSeed: '',
       tasksVersion: 0,
+      celebrationId: 0,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
@@ -47,6 +51,7 @@ export const useAppStore = create<AppStore>()(
       setQuickAddOpen: (quickAddOpen) => set(quickAddOpen ? { quickAddOpen } : { quickAddOpen, quickAddSeed: '' }),
       openQuickAddWithText: (quickAddSeed) => set({ quickAddSeed, quickAddOpen: true }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
+      celebrate: () => set((state) => ({ celebrationId: state.celebrationId + 1 })),
       signIn: (session) => set({ session, sidebarOpen: false }),
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
       signOut: () => set({ session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '' }),

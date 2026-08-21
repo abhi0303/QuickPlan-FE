@@ -16,6 +16,7 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
+import { Celebration } from '../common/Celebration'
 import { QuickAddModal } from '../common/QuickAddModal'
 import { SpeakButton } from '../common/SpeakButton'
 import { useTheme } from '../../hooks/useTheme'
@@ -141,6 +142,7 @@ export function AppShell() {
       {showVoiceButton && <SpeakButton floating />}
 
       <QuickAddModal />
+      <Celebration />
 
       <nav className="bottom-nav">
         {navigation.map(({ to, label, icon: Icon, end }) => (
