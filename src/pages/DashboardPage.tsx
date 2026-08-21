@@ -3,7 +3,9 @@ import {
   AlarmClock,
   ArrowUpRight,
   CalendarDays,
+  CircleAlert,
   CircleCheckBig,
+  ListChecks,
   IndianRupee,
   Plus,
   Sparkles,
@@ -12,13 +14,8 @@ import {
 } from 'lucide-react'
 import { QuickAdd } from '../components/common/QuickAdd'
 import { TaskPreview } from '../components/dashboard/TaskPreview'
+import { useTasks } from '../hooks/useTasks'
 import { useAppStore } from '../store/useAppStore'
-
-const CATEGORY = {
-  work: '#6c7bff',
-  personal: '#f2871f',
-  finance: '#0fb58a',
-}
 
 const upcoming = [
   { day: 'Fri', date: '21', title: 'Send client proposal', when: 'Tomorrow · 10:00 AM' },
@@ -34,8 +31,13 @@ function greeting(hour: number) {
 
 export function DashboardPage() {
   const session = useAppStore((state) => state.session)
+  const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+  const { tasks, loading, error: loadError, busyId, retry, toggle } = useTasks('today')
+
   const now = new Date()
   const firstName = session?.name.split(' ')[0] ?? 'there'
+
+  const openCount = tasks.filter((task) => !task.isCompleted).length
 
   return (
     <div className="dashboard">
@@ -46,11 +48,16 @@ export function DashboardPage() {
             {format(now, 'EEEE, d MMMM')}
           </span>
           <h1>{greeting(now.getHours())}, {firstName} 👋</h1>
-          <p>You have 4 things planned today. Make it count, one small step at a time.</p>
+          <p>
+            {loading
+              ? 'Loading your day...'
+              : openCount > 0
+                ? `You have ${openCount} thing${openCount === 1 ? '' : 's'} planned today. One small step at a time.`
+                : 'Nothing on your plate today. Add something to get started.'}
+          </p>
         </div>
         <div className="hero-actions">
           <QuickAdd label="Quick add" />
-          <QuickAdd label="Speak it" variant="ghost" icon="mic" />
         </div>
       </section>
 
@@ -86,19 +93,43 @@ export function DashboardPage() {
       <div className="dashboard-grid">
         <section className="panel">
           <div className="panel-heading">
-            <h2>Today <span className="count-pill">4</span></h2>
+            <h2>Today {!loading && <span className="count-pill">{openCount}</span>}</h2>
             <button className="text-button">View all <ArrowUpRight size={15} /></button>
           </div>
           <p className="muted">{format(now, 'EEEE, d MMMM')}</p>
 
-          <div className="task-list">
-            <TaskPreview title="Call Rahul about the project" time="5:00 PM" tag="Work" color={CATEGORY.work} />
-            <TaskPreview title="Finish the quarterly report" tag="Work" color={CATEGORY.work} />
-            <TaskPreview title="Pick up groceries" time="7:30 PM" tag="Personal" color={CATEGORY.personal} />
-            <TaskPreview title="Pay electricity bill" tag="Finance" color={CATEGORY.finance} completed />
-          </div>
+          {loading && (
+            <div className="task-list">
+              {[0, 1, 2].map((row) => <div className="task-skeleton" key={row} />)}
+            </div>
+          )}
 
-          <button className="add-task-line"><Plus size={17} /> Add a task</button>
+          {!loading && loadError && (
+            <div className="panel-state">
+              <CircleAlert size={20} />
+              <p>{loadError}</p>
+              <button className="text-button" onClick={retry}>Try again</button>
+            </div>
+          )}
+
+          {!loading && !loadError && tasks.length === 0 && (
+            <div className="panel-state">
+              <ListChecks size={22} />
+              <p>Nothing scheduled for today yet.</p>
+            </div>
+          )}
+
+          {!loading && !loadError && tasks.length > 0 && (
+            <div className="task-list">
+              {tasks.map((task) => (
+                <TaskPreview key={task.id} task={task} onToggle={toggle} busy={busyId === task.id} />
+              ))}
+            </div>
+          )}
+
+          <button className="add-task-line" onClick={() => setQuickAddOpen(true)}>
+            <Plus size={17} /> Add a task
+          </button>
         </section>
 
         <section className="panel">

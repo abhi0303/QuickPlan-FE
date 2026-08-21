@@ -1,16 +1,17 @@
-import { Mic, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { useAppStore } from '../../store/useAppStore'
 
 type Props = {
   label?: string
   variant?: 'light' | 'solid' | 'ghost'
-  icon?: 'plus' | 'mic'
 }
 
-export function QuickAdd({ label = 'Quick add', variant = 'light', icon = 'plus' }: Props) {
-  const Icon = icon === 'mic' ? Mic : Plus
+export function QuickAdd({ label = 'Quick add', variant = 'light' }: Props) {
+  const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+
   return (
-    <button className={`quick-add ${variant === 'light' ? '' : variant}`}>
-      <Icon size={18} strokeWidth={2.4} />
+    <button className={`quick-add ${variant === 'light' ? '' : variant}`} onClick={() => setQuickAddOpen(true)}>
+      <Plus size={18} strokeWidth={2.4} />
       {label}
     </button>
   )

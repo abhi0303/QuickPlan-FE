@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   AlarmClock,
   Bell,
@@ -15,8 +16,13 @@ import {
   Users,
   Wallet,
 } from 'lucide-react'
+import { QuickAddModal } from '../common/QuickAddModal'
+import { SpeakButton } from '../common/SpeakButton'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
+
+/** Voice capture is a single entry point for tasks, reminders and money. */
+const VOICE_ROUTES = ['/', '/tasks', '/reminders', '/expenses']
 
 const navigation = [
   { to: '/', label: 'Home', icon: House, end: true },
@@ -31,6 +37,20 @@ export function AppShell() {
   const session = useAppStore((state) => state.session)
   const signOut = useAppStore((state) => state.signOut)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
+  const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+  const { pathname } = useLocation()
+  const showVoiceButton = VOICE_ROUTES.includes(pathname)
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setQuickAddOpen(true)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [setQuickAddOpen])
 
   const initial = session?.name.charAt(0).toUpperCase() ?? 'Q'
   const firstName = session?.name.split(' ')[0] ?? 'there'
@@ -114,9 +134,13 @@ export function AppShell() {
         </div>
       </main>
 
-      <button className="fab" aria-label="Quick add">
+      <button className="fab" aria-label="Quick add" onClick={() => setQuickAddOpen(true)}>
         <Plus size={26} strokeWidth={2.5} />
       </button>
+
+      {showVoiceButton && <SpeakButton floating />}
+
+      <QuickAddModal />
 
       <nav className="bottom-nav">
         {navigation.map(({ to, label, icon: Icon, end }) => (
