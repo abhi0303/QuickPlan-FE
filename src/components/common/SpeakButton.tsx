@@ -25,6 +25,8 @@ type Phase = 'idle' | 'listening' | 'asking' | 'answering'
 const THINKING_MS = 450
 /** A beat after she finishes, so the mic doesn't catch her own tail. */
 const HANDOVER_MS = 400
+/** Hard ceiling on the ask step, so a blocked utterance can never strand it. */
+const ASK_STALL_MS = 9000
 
 const FOLLOW_UPS = [
   (subject: string) => `Sure! What time works for ${subject}?`,
@@ -54,10 +56,13 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
   const gotResultRef = useRef(false)
   const turnRef = useRef(0)
   const timerRef = useRef<number | null>(null)
+  const stallGuardRef = useRef<number | null>(null)
 
   function clearPendingBeat() {
     if (timerRef.current !== null) window.clearTimeout(timerRef.current)
+    if (stallGuardRef.current !== null) window.clearTimeout(stallGuardRef.current)
     timerRef.current = null
+    stallGuardRef.current = null
   }
 
   function setPhase(next: Phase) {
@@ -68,6 +73,7 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
   const synthesis = useSpeechSynthesis()
 
   function finish(text: string) {
+    clearPendingBeat()
     setPhase('idle')
     setQuestion('')
     openQuickAddWithText(text)
@@ -115,6 +121,13 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
             speech.start()
           }, HANDOVER_MS)
         })
+
+        // Belt and braces: if the platform never reports the utterance
+        // finishing, open the form with what we already have rather than
+        // leaving the user staring at the question.
+        stallGuardRef.current = window.setTimeout(() => {
+          if (phaseRef.current === 'asking') finish(firstTranscriptRef.current)
+        }, ASK_STALL_MS)
       }, THINKING_MS)
     },
 
@@ -155,6 +168,11 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
       cancel()
       return
     }
+    // Must happen inside the click handler: iOS grants speech synthesis
+    // permission only from a user gesture, and the talk-back later fires
+    // from a timer.
+    synthesis.unlock()
+
     firstTranscriptRef.current = ''
     gotResultRef.current = false
     setPhase('listening')
