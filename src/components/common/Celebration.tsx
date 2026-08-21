@@ -4,7 +4,7 @@ import { PartyPopper } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 
 const COLORS = ['#0fb58a', '#2ecfa1', '#6c7bff', '#f2871f', '#e0526d', '#ffd166']
-const PIECES = 64
+const PIECES = 46
 
 type Piece = {
   left: number
@@ -20,10 +20,8 @@ type Piece = {
 function buildPieces(): Piece[] {
   return Array.from({ length: PIECES }, () => ({
     left: Math.random() * 100,
-    // A wide stagger plus a slow fall keeps pieces on screen together for
-    // several seconds; a short fall just flicks past before it registers.
-    delay: Math.random() * 1.4,
-    duration: 6.5 + Math.random() * 3.5,
+    delay: Math.random() * 0.35,
+    duration: 2 + Math.random() * 1.2,
     drift: (Math.random() - 0.5) * 240,
     spin: 360 + Math.random() * 720,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],

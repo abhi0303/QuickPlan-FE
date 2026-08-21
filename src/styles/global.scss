@@ -1747,7 +1747,7 @@ select:focus-visible {
 .celebration {
     /* The wrapper's own fade is the longest animation here; its animationend
        is what marks the burst as spent, so no timer is needed. */
-    animation: celebrationLife 12s linear forwards;
+    animation: celebrationLife 3.6s linear forwards;
     inset: 0;
     overflow: hidden;
     pointer-events: none;
@@ -1756,12 +1756,12 @@ select:focus-visible {
 }
 
 @keyframes celebrationLife {
-    0%, 96% { opacity: 1; }
+    0%, 92% { opacity: 1; }
     100% { opacity: 0; }
 }
 
 .celebration i {
-    animation: confettiFall cubic-bezier(.25, .6, .4, 1) forwards;
+    animation: confettiFall linear forwards;
     border-radius: 2px;
     display: block;
     position: absolute;
@@ -1771,15 +1771,13 @@ select:focus-visible {
 .celebration i.is-round { border-radius: 50%; }
 
 @keyframes confettiFall {
-    0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0); }
-    5% { opacity: 1; }
-    88% { opacity: 1; }
-    100% { opacity: 0; transform: translate3d(var(--drift), 108vh, 0) rotate(var(--spin)); }
+    0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); }
+    100% { opacity: .9; transform: translate3d(var(--drift), 108vh, 0) rotate(var(--spin)); }
 }
 
 .celebration-badge {
     align-items: center;
-    animation: badgePop .5s cubic-bezier(.2, .9, .3, 1.4) both, badgeOut .6s ease 6.5s forwards;
+    animation: badgePop .5s cubic-bezier(.2, .9, .3, 1.4) both, badgeOut .4s ease 2.6s forwards;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--r-pill);
@@ -1813,7 +1811,7 @@ select:focus-visible {
     .celebration i { display: none; }
 
     .celebration {
-        animation: celebrationLife 3600ms linear forwards !important;
+        animation: celebrationLife 2200ms linear forwards !important;
     }
 
     .celebration-badge {
