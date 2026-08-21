@@ -144,21 +144,26 @@ export function useSpeechRecognition(options: Options = {}) {
 
     recognition.onresult = (event) => {
       // Rebuild the session transcript from index 0 every time rather than
-      // appending from event.resultIndex. Android re-emits earlier results,
-      // and appending them duplicated the phrase.
+      // appending from event.resultIndex, since Android re-emits earlier
+      // results.
+      //
+      // Merge rather than concatenate: Android delivers finals that restate
+      // and extend one another ("set", "set an", "set an alarm"), so joining
+      // them produced "set set an set an alarm". Chrome on desktop emits
+      // disjoint segments, which merge appends unchanged.
       let finals = ''
       let pending = ''
       for (let i = 0; i < event.results.length; i += 1) {
         const result = event.results[i]
         const text = result[0].transcript
-        if (result.isFinal) finals = `${finals} ${text}`.trim()
+        if (result.isFinal) finals = mergeTranscripts(finals, text)
         else pending += text
       }
 
       sessionRef.current = finals
       if (finals || pending.trim()) heardSpeechRef.current = true
 
-      const full = mergeTranscripts(carryRef.current, `${finals} ${pending}`.trim())
+      const full = mergeTranscripts(carryRef.current, mergeTranscripts(finals, pending.trim()))
       setInterim(full)
       armSilence()
     }
