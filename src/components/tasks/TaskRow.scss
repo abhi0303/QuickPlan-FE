@@ -1,0 +1,118 @@
+/* TaskRow — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+.task-row {
+    align-items: flex-start;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 13px;
+    padding: 14px 12px;
+    transition: background .18s ease, opacity .18s ease;
+}
+
+.task-row:hover {
+    background: var(--surface-soft);
+}
+
+.task-row.is-busy {
+    opacity: .5;
+    pointer-events: none;
+}
+
+.task-row.completed .task-row-copy strong {
+    color: var(--muted);
+    text-decoration: line-through;
+}
+
+.task-row-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (min-width: 1000px) {
+/* the panel is wide; keep the title left and pull the meta to the right
+       rather than stacking everything in the first third */
+.task-row-copy {
+        align-items: center;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+    }
+
+.task-row-copy>div:first-child {
+        min-width: 0;
+    }
+}
+
+.task-row-copy strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.task-notes {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.priority-tag {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    text-transform: capitalize;
+}
+
+.priority-tag.medium {
+    background: var(--periwinkle-soft);
+    color: var(--periwinkle);
+}
+
+.priority-tag.high {
+    background: var(--tangerine-soft);
+    color: var(--tangerine);
+}
+
+.priority-tag.urgent {
+    background: var(--rose-soft);
+    color: var(--rose);
+}
+
+.task-delete {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 32px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .18s ease, background .18s ease, color .18s ease;
+    width: 32px;
+}
+
+.task-row:hover .task-delete {
+    opacity: 1;
+}
+
+.task-delete:hover {
+    background: var(--rose-soft);
+    color: var(--rose);
+}
+
+@media (max-width: 860px) {
+.task-delete {
+        opacity: 1;
+    }
+
+.task-notes {
+        white-space: normal;
+    }
+}

@@ -1,0 +1,334 @@
+/* DashboardPage — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+/* ==========================================================================
+   hero greeting
+   ========================================================================== */
+
+.hero-card {
+    background: var(--gradient);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    color: #fff;
+    margin-bottom: 22px;
+    overflow: hidden;
+    padding: 32px;
+    position: relative;
+}
+
+.hero-card::before,
+.hero-card::after {
+    background: rgba(255, 255, 255, .12);
+    border-radius: var(--r-pill);
+    content: '';
+    position: absolute;
+}
+
+.hero-card::before {
+    height: 260px;
+    right: -70px;
+    top: -110px;
+    width: 260px;
+}
+
+.hero-card::after {
+    bottom: -120px;
+    height: 190px;
+    right: 110px;
+    width: 190px;
+}
+
+.hero-copy {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-date {
+    align-items: center;
+    background: rgba(255, 255, 255, .18);
+    border-radius: var(--r-pill);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 7px;
+    margin-bottom: 14px;
+    padding: 6px 13px;
+}
+
+.hero-card h1 {
+    color: #fff;
+}
+
+.hero-card p {
+    color: rgba(255, 255, 255, .85);
+    font-size: 15px;
+    margin-top: 8px;
+    max-width: 420px;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   stat cards
+   ========================================================================== */
+
+.stats-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    margin-bottom: 22px;
+}
+
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-3px);
+}
+
+.stat-top {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.stat-card .stat-icon {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-md);
+    color: var(--primary);
+    display: flex;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+}
+
+.stat-card .stat-icon.periwinkle {
+    background: var(--periwinkle-soft);
+    color: var(--periwinkle);
+}
+
+.stat-card .stat-icon.tangerine {
+    background: var(--tangerine-soft);
+    color: var(--tangerine);
+}
+
+.stat-trend {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 4px;
+    padding: 5px 10px;
+}
+
+.stat-trend.neutral {
+    background: var(--surface-alt);
+    color: var(--muted);
+}
+
+.stat-card strong {
+    display: block;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -.8px;
+}
+
+/* scoped to the label only — a bare `.stat-card span` also matches
+   .stat-icon / .stat-trend and wins on specificity, killing their flex */
+
+.stat-label {
+    color: var(--muted);
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* ==========================================================================
+   panels
+   ========================================================================== */
+
+.dashboard-grid {
+    align-items: start;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1.25fr 1fr;
+}
+
+.panel-heading {
+    align-items: center;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.panel-heading h2 {
+    align-items: center;
+    display: flex;
+    gap: 9px;
+}
+
+.add-task-line {
+    align-items: center;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--r-md);
+    color: var(--muted);
+    display: flex;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+    padding: 13px;
+    transition: border-color .18s ease, color .18s ease, background .18s ease;
+    width: 100%;
+}
+
+.add-task-line:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary-strong);
+}
+
+/* upcoming */
+
+.upcoming-list {
+    display: grid;
+    gap: 8px;
+}
+
+.upcoming-item {
+    align-items: center;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 14px;
+    padding: 10px;
+    transition: background .18s ease;
+}
+
+.upcoming-item:hover {
+    background: var(--surface-soft);
+}
+
+.upcoming-item time {
+    align-items: center;
+    background: var(--surface-alt);
+    border-radius: var(--r-md);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    font-size: 11px;
+    font-weight: 700;
+    height: 50px;
+    justify-content: center;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    width: 50px;
+}
+
+.upcoming-item time strong {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+}
+
+.upcoming-item p strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.upcoming-item p small {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+/* insight */
+
+.insight-card {
+    align-items: center;
+    background: var(--gradient-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    display: flex;
+    gap: 16px;
+    margin-top: 20px;
+    padding: 20px 22px;
+}
+
+.insight-icon {
+    align-items: center;
+    color: var(--primary);
+    display: flex;
+    flex: none;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+}
+
+.insight-card strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.insight-card p {
+    color: var(--text-soft);
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+@media (max-width: 1000px) {
+.dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+.hero-card {
+        border-radius: var(--r-lg);
+        padding: 26px 22px;
+    }
+
+.stats-grid {
+        gap: 12px;
+    }
+
+.stat-card {
+        padding: 16px;
+    }
+
+.stat-card strong {
+        font-size: 22px;
+    }
+
+.insight-card {
+        align-items: flex-start;
+        border-radius: var(--r-lg);
+        padding: 18px;
+    }
+}

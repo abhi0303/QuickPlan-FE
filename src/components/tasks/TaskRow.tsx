@@ -1,6 +1,7 @@
 import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns'
 import { Check, Clock3, Trash2 } from 'lucide-react'
 import type { Task, TaskPriority } from '../../services/tasks'
+import './TaskRow.scss'
 
 const CATEGORY_COLORS: Record<string, string> = {
   work: '#6c7bff',

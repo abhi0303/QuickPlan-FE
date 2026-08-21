@@ -16,6 +16,7 @@ import { createReminder } from '../../services/reminders'
 import { createTask, TASK_PRIORITIES } from '../../services/tasks'
 import type { TaskPriority } from '../../services/tasks'
 import { useAppStore } from '../../store/useAppStore'
+import './QuickAddModal.scss'
 
 const CATEGORIES = ['Work', 'Personal', 'Finance', 'Health']
 const PRIORITY_LABELS: Record<TaskPriority, string> = { LOW: 'Low', MEDIUM: 'Medium', HIGH: 'High', URGENT: 'Urgent' }

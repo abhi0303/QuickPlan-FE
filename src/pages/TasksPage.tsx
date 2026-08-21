@@ -8,6 +8,7 @@ import { useTasks } from '../hooks/useTasks'
 import { TASK_PRIORITIES } from '../services/tasks'
 import type { TaskView } from '../services/tasks'
 import { useAppStore } from '../store/useAppStore'
+import './TasksPage.scss'
 
 const FILTERS: { label: string; value?: TaskView }[] = [
   { label: 'All', value: undefined },

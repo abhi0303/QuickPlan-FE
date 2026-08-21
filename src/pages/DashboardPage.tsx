@@ -16,6 +16,7 @@ import { QuickAdd } from '../components/common/QuickAdd'
 import { TaskPreview } from '../components/dashboard/TaskPreview'
 import { useTasks } from '../hooks/useTasks'
 import { useAppStore } from '../store/useAppStore'
+import './DashboardPage.scss'
 
 const upcoming = [
   { day: 'Fri', date: '21', title: 'Send client proposal', when: 'Tomorrow · 10:00 AM' },

@@ -1,0 +1,246 @@
+/* SpeakButton — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+/* ==========================================================================
+   voice capture — floating button + focus overlay
+   ========================================================================== */
+
+.speak-fab {
+    align-items: center;
+    background: var(--gradient);
+    border-radius: var(--r-pill);
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    box-shadow: var(--shadow-primary), var(--shadow-lg);
+    color: #fff;
+    display: flex;
+    height: 64px;
+    justify-content: center;
+    position: fixed;
+    right: calc(28px + env(safe-area-inset-right, 0px));
+    transition: transform .2s ease;
+    width: 64px;
+    z-index: 25;
+}
+
+.speak-fab::after {
+    animation: fabHalo 2.6s ease-out infinite;
+    border: 2px solid var(--primary);
+    border-radius: var(--r-pill);
+    content: '';
+    inset: 0;
+    position: absolute;
+}
+
+.speak-fab:hover {
+    transform: translateY(-3px) scale(1.04);
+}
+
+.speak-fab:active {
+    transform: scale(.95);
+}
+
+.speak-fab.is-active {
+    background: var(--rose);
+}
+
+.speak-fab.is-active::after {
+    border-color: var(--rose);
+}
+
+@keyframes fabHalo {
+    0% {
+        opacity: .5;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.55);
+    }
+}
+
+/* Portalled to <body>: an ancestor stacking context (.hero-actions) would
+   otherwise trap this under the sidebar regardless of z-index. */
+
+.voice-overlay {
+    align-items: center;
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(24px + env(safe-area-inset-left, 0px));
+    position: fixed;
+    z-index: 60;
+}
+
+.voice-scrim {
+    animation: fadeIn .2s ease;
+    backdrop-filter: blur(10px);
+    background: rgba(8, 28, 23, .55);
+    border: 0;
+    cursor: default;
+    inset: 0;
+    padding: 0;
+    position: absolute;
+}
+
+:root[data-theme='dark'] .voice-scrim {
+    background: rgba(0, 0, 0, .68);
+}
+
+.voice-panel {
+    animation: voiceIn .28s cubic-bezier(.2, .9, .3, 1);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    max-width: 460px;
+    padding: 34px 30px 26px;
+    position: relative;
+    text-align: center;
+    width: 100%;
+}
+
+@keyframes voiceIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.voice-orb {
+    align-items: center;
+    background: var(--rose);
+    border-radius: var(--r-pill);
+    color: #fff;
+    display: inline-flex;
+    height: 88px;
+    justify-content: center;
+    margin-bottom: 20px;
+    position: relative;
+    width: 88px;
+}
+
+.voice-orb.is-speaking {
+    background: var(--gradient);
+}
+
+.voice-orb i {
+    animation: ring 2.4s ease-out infinite;
+    border: 2px solid var(--rose);
+    border-radius: var(--r-pill);
+    inset: 0;
+    opacity: 0;
+    position: absolute;
+}
+
+.voice-orb.is-speaking i {
+    border-color: var(--primary);
+}
+
+.voice-orb i:nth-child(2) {
+    animation-delay: .8s;
+}
+
+.voice-orb i:nth-child(3) {
+    animation-delay: 1.6s;
+}
+
+@keyframes ring {
+    0% {
+        opacity: .6;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(1.9);
+    }
+}
+
+.voice-status {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.voice-text {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.45;
+    margin-top: 10px;
+    min-height: 52px;
+}
+
+.voice-hint {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 13px;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.voice-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.voice-done {
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    color: var(--on-primary);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 28px;
+    transition: background .18s ease;
+}
+
+.voice-done:hover {
+    background: var(--primary-strong);
+}
+
+.listening-bar.error {
+    animation: modalIn .22s ease;
+    background: var(--surface);
+    border: 1px solid var(--rose);
+    border-radius: var(--r-lg);
+    bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    box-shadow: var(--shadow-lg);
+    color: var(--rose);
+    font-size: 14px;
+    font-weight: 600;
+    left: 50%;
+    max-width: min(460px, calc(100vw - 32px));
+    padding: 14px 18px;
+    position: fixed;
+    transform: translateX(-50%);
+    z-index: 60;
+}
+
+@media (max-width: 860px) {
+.speak-fab {
+        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+        right: calc(18px + env(safe-area-inset-right, 0px));
+    }
+
+.voice-panel {
+        padding: 28px 20px 20px;
+    }
+
+.voice-text {
+        font-size: 16px;
+    }
+}

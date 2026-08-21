@@ -6,6 +6,7 @@ import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis'
 import { isQuickAddCancel, isSelfOnlyAnswer, parseQuickAdd } from '../../services/smartInput'
 import { useAppStore } from '../../store/useAppStore'
+import './SpeakButton.scss'
 
 type Props = {
   label?: string

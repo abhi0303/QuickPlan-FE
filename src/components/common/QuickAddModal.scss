@@ -1,0 +1,312 @@
+/* QuickAddModal — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+/* ==========================================================================
+   quick add modal
+   ========================================================================== */
+
+.modal-backdrop {
+    align-items: flex-start;
+    animation: fadeIn .18s ease;
+    backdrop-filter: blur(6px);
+    background: rgba(8, 28, 23, .45);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    overflow-y: auto;
+    padding: calc(clamp(16px, 6vh, 72px) + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(40px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+    position: fixed;
+    z-index: 40;
+}
+
+.modal {
+    animation: modalIn .22s ease;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    max-width: 540px;
+    padding: 28px;
+    width: 100%;
+}
+
+.modal-head {
+    align-items: flex-start;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.modal-head h2 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+}
+
+.modal-close {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 34px;
+    justify-content: center;
+    transition: background .18s ease, color .18s ease;
+    width: 34px;
+}
+
+.modal-close:hover {
+    background: var(--surface-alt);
+    color: var(--text);
+}
+
+/* --- smart / voice input row --- */
+
+.smart-row {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.smart-field {
+    align-items: center;
+    background: var(--gradient-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    display: flex;
+    flex: 1;
+    gap: 11px;
+    min-width: 0;
+    padding: 0 16px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.smart-field:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.smart-field>svg {
+    color: var(--primary);
+    flex: none;
+}
+
+.smart-field input {
+    background: none;
+    border: 0;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 0;
+    outline: 0;
+    padding: 15px 0;
+    width: 100%;
+}
+
+.smart-field input::placeholder {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.mic-button {
+    align-items: center;
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    display: flex;
+    flex: none;
+    height: 50px;
+    justify-content: center;
+    transition: background .18s ease, color .18s ease;
+    width: 50px;
+}
+
+.mic-button:hover {
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+}
+
+.mic-button.is-listening {
+    animation: pulse 1.4s ease-in-out infinite;
+    background: var(--rose);
+    color: #fff;
+}
+
+.smart-note {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.smart-note.warn {
+    color: var(--tangerine);
+}
+
+.smart-preview {
+    align-items: flex-start;
+    background: var(--primary-soft);
+    border-radius: var(--r-md);
+    color: var(--primary-strong);
+    display: flex;
+    gap: 11px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+}
+
+.smart-preview>svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.smart-preview strong {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.smart-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.smart-chips span {
+    align-items: center;
+    background: var(--surface);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 5px;
+    padding: 5px 10px;
+    text-transform: capitalize;
+}
+
+/* --- intent tabs --- */
+
+.intent-tabs {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    display: flex;
+    gap: 3px;
+    margin-bottom: 20px;
+    padding: 4px;
+}
+
+.intent-tabs button {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: 1;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 6px;
+    justify-content: center;
+    padding: 10px 8px;
+    transition: background .18s ease, color .18s ease;
+}
+
+.intent-tabs button:hover:not(.active):not(:disabled) {
+    color: var(--text);
+}
+
+.intent-tabs button.active {
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+    color: var(--primary-strong);
+}
+
+.intent-tabs button:disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+/* --- form fields --- */
+
+.modal form {
+    display: grid;
+    gap: 20px;
+}
+
+.field-pair {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1.25fr 1fr;
+}
+
+/* --- chips --- */
+
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* --- actions --- */
+
+.modal-actions {
+    align-items: center;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
+    padding-top: 20px;
+}
+
+.modal-submit {
+    align-items: center;
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-primary);
+    color: var(--on-primary);
+    display: inline-flex;
+    font-size: 15px;
+    font-weight: 700;
+    gap: 8px;
+    justify-content: center;
+    padding: 14px 26px;
+    transition: background .18s ease, transform .18s ease;
+}
+
+.modal-submit:hover:not(:disabled) {
+    background: var(--primary-strong);
+    transform: translateY(-1px);
+}
+
+.modal-submit:disabled {
+    cursor: wait;
+    opacity: .75;
+}
+
+@media (max-width: 560px) {
+.modal {
+        border-radius: var(--r-lg);
+        padding: 22px 18px;
+    }
+
+.modal form {
+        gap: 18px;
+    }
+
+.field-pair {
+        grid-template-columns: 1fr;
+    }
+
+.modal-actions {
+        flex-direction: column-reverse;
+    }
+
+.modal-actions button {
+        width: 100%;
+    }
+}

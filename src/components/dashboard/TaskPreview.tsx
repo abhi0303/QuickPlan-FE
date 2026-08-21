@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns'
 import { Check, Clock3, EllipsisVertical } from 'lucide-react'
 import type { Task } from '../../services/tasks'
+import './TaskPreview.scss'
 
 const CATEGORY_COLORS: Record<string, string> = {
   work: '#6c7bff',

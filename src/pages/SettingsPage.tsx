@@ -1,5 +1,6 @@
 import { BellRing, Globe, LogOut, Moon, Palette, Repeat, Sun } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
+import './SettingsPage.scss'
 
 export function SettingsPage() {
   const theme = useAppStore((state) => state.theme)

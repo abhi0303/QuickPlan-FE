@@ -1,0 +1,79 @@
+/* Celebration — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+/* ==========================================================================
+   celebration — last open task finished
+   ========================================================================== */
+
+.celebration {
+    /* The wrapper's own fade is the longest animation here; its animationend
+       is what marks the burst as spent, so no timer is needed. */
+    animation: celebrationLife 3.6s linear forwards;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    position: fixed;
+    z-index: 70;
+}
+
+@keyframes celebrationLife {
+    0%, 92% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.celebration i {
+    animation: confettiFall linear forwards;
+    border-radius: 2px;
+    display: block;
+    position: absolute;
+    top: -6%;
+}
+
+.celebration i.is-round { border-radius: 50%; }
+
+@keyframes confettiFall {
+    0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); }
+    100% { opacity: .9; transform: translate3d(var(--drift), 108vh, 0) rotate(var(--spin)); }
+}
+
+.celebration-badge {
+    align-items: center;
+    animation: badgePop .5s cubic-bezier(.2, .9, .3, 1.4) both, badgeOut .4s ease 2.6s forwards;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-lg);
+    color: var(--primary-strong);
+    display: flex;
+    font-size: 15px;
+    font-weight: 700;
+    gap: 9px;
+    left: 50%;
+    padding: 14px 24px;
+    position: absolute;
+    top: 22%;
+    transform: translateX(-50%);
+}
+
+@keyframes badgePop {
+    from { opacity: 0; transform: translate(-50%, 14px) scale(.9); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes badgeOut {
+    to { opacity: 0; transform: translate(-50%, -10px) scale(.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+.celebration i { display: none; }
+
+.celebration {
+        animation: celebrationLife 2200ms linear forwards !important;
+    }
+
+.celebration-badge {
+        animation: none !important;
+        opacity: 1 !important;
+    }
+}

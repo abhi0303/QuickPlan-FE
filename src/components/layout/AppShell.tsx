@@ -21,6 +21,7 @@ import { QuickAddModal } from '../common/QuickAddModal'
 import { SpeakButton } from '../common/SpeakButton'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
+import './AppShell.scss'
 
 /** Voice capture is a single entry point for tasks, reminders and money. */
 const VOICE_ROUTES = ['/', '/tasks', '/reminders', '/expenses']
