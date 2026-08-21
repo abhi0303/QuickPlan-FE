@@ -1,5 +1,5 @@
 {
-  "name": "QuickPlan — Smart Todo & Expense Tracker",
+  "name": "QuickPlan \u2014 Smart Todo & Expense Tracker",
   "short_name": "QuickPlan",
   "description": "Voice-first smart todo, reminder & expense tracker. Speak naturally in Hindi, English, or Hinglish.",
   "start_url": "./",
@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f4faf7",
-  "theme_color": "#0fb58a",
+  "theme_color": "#f4faf7",
   "icons": [
     {
       "src": "favicon.svg",
