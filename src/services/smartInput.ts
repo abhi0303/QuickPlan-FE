@@ -1,5 +1,5 @@
 import englishDataset from '../data/smartInput.en.json'
-import { isCancelCommand, parseSmartInput } from './smartParser'
+import { isCancelCommand, isSkipAnswer, parseNameList, parseSmartInput } from './smartParser'
 import type { ParsedInput, SmartDataset } from './smartParser'
 
 /**
@@ -18,6 +18,16 @@ export function parseQuickAdd(text: string, now?: Date): ParsedInput | null {
 /** True when a spoken phrase means "close this, do nothing". */
 export function isQuickAddCancel(text: string): boolean {
   return isCancelCommand(text, activeDataset)
+}
+
+/** Splits a spoken list of names; empty when the reply means "just me". */
+export function parseNames(text: string): string[] {
+  return parseNameList(text, activeDataset)
+}
+
+/** True when a reply to "who shall I add?" means nobody. */
+export function isSelfOnlyAnswer(text: string): boolean {
+  return isSkipAnswer(text, activeDataset)
 }
 
 export type { ParsedInput }

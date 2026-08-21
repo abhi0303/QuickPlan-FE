@@ -59,8 +59,10 @@ export function TaskRow({ task, busy, onToggle, onDelete }: Props) {
       </button>
 
       <div className="task-row-copy">
-        <strong>{task.title}</strong>
-        {task.notes && <p className="task-notes">{task.notes}</p>}
+        <div>
+          <strong>{task.title}</strong>
+          {task.notes && <p className="task-notes">{task.notes}</p>}
+        </div>
 
         <div className="task-meta">
           {due && (

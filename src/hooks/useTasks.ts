@@ -12,11 +12,19 @@ import { useAppStore } from '../store/useAppStore'
  * event handler; setting it inside the fetch effect would mean updating state
  * before the first await.
  */
+export type TaskFilters = {
+  view?: TaskView
+  category?: string
+  priority?: string
+}
+
 export function useTasks(initialView?: TaskView) {
   const tasksVersion = useAppStore((state) => state.tasksVersion)
   const bumpTasksVersion = useAppStore((state) => state.bumpTasksVersion)
 
-  const [view, setViewState] = useState<TaskView | undefined>(initialView)
+  // All three are real query params on GET /api/tasks, so filtering happens
+  // server-side rather than on the page.
+  const [filters, setFiltersState] = useState<TaskFilters>({ view: initialView })
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -25,7 +33,7 @@ export function useTasks(initialView?: TaskView) {
 
   useEffect(() => {
     let cancelled = false
-    listTasks(view ? { view } : {})
+    listTasks(filters)
       .then((data) => {
         if (cancelled) return
         setTasks(data)
@@ -38,13 +46,18 @@ export function useTasks(initialView?: TaskView) {
         if (!cancelled) setLoading(false)
       })
     return () => { cancelled = true }
-  }, [view, tasksVersion, retryToken])
+  }, [filters, tasksVersion, retryToken])
 
-  function setView(next?: TaskView) {
-    if (next === view) return
+  /** Loading is flipped here, in the event handler, not inside the fetch effect. */
+  function setFilter<K extends keyof TaskFilters>(key: K, value: TaskFilters[K]) {
+    if (filters[key] === value) return
     setLoading(true)
     setError('')
-    setViewState(next)
+    setFiltersState((current) => ({ ...current, [key]: value }))
+  }
+
+  function setView(next?: TaskView) {
+    setFilter('view', next)
   }
 
   function retry() {
@@ -78,5 +91,5 @@ export function useTasks(initialView?: TaskView) {
     }
   }
 
-  return { view, setView, tasks, loading, error, busyId, retry, toggle, remove }
+  return { filters, view: filters.view, setView, setFilter, tasks, loading, error, busyId, retry, toggle, remove }
 }

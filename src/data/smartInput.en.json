@@ -2,7 +2,6 @@
   "version": 1,
   "locale": "en",
   "note": "Pure vocabulary data for the rule-based smart-input parser. No code, no regex — safe to move to the backend and serve from an endpoint later. Matching is case-insensitive and on whole words only.",
-
   "intentPrefixes": [
     "please remind me to",
     "remind me to",
@@ -35,49 +34,161 @@
     "todo",
     "task"
   ],
-
-  "fillerWords": ["please", "kindly", "just", "also", "maybe", "around", "about", "approximately", "sharp", "ok", "okay", "hey", "um", "uh", "well"],
-
+  "fillerWords": [
+    "please",
+    "kindly",
+    "just",
+    "also",
+    "maybe",
+    "around",
+    "about",
+    "approximately",
+    "sharp",
+    "ok",
+    "okay",
+    "hey",
+    "um",
+    "uh",
+    "well"
+  ],
   "cancelCommandsNote": "Matched against the WHOLE utterance after normalising, never as a substring — so 'cancel the client meeting' still creates a task.",
   "cancelCommands": [
-    "cancel", "cancel it", "cancel that", "cancel this",
-    "close", "close it", "close this", "close the popup",
-    "exit", "quit", "stop", "stop it",
-    "abort", "dismiss", "discard",
-    "never mind", "nevermind", "forget it", "forget that",
-    "leave it", "no thanks", "not now",
-    "don't add", "do not add", "dont add",
-    "go back", "back"
+    "cancel",
+    "cancel it",
+    "cancel that",
+    "cancel this",
+    "close",
+    "close it",
+    "close this",
+    "close the popup",
+    "exit",
+    "quit",
+    "stop",
+    "stop it",
+    "abort",
+    "dismiss",
+    "discard",
+    "never mind",
+    "nevermind",
+    "forget it",
+    "forget that",
+    "leave it",
+    "no thanks",
+    "not now",
+    "don't add",
+    "do not add",
+    "dont add",
+    "go back",
+    "back"
   ],
-
   "priorities": {
-    "URGENT": ["urgent", "urgently", "asap", "immediately", "right away", "critical", "emergency"],
-    "HIGH": ["important", "high priority", "top priority", "priority", "must do"],
-    "MEDIUM": ["normal priority", "medium priority"],
-    "LOW": ["low priority", "whenever", "sometime", "no rush", "not urgent"]
-  },
-
-  "categories": {
-    "Work": [
-      "client", "meeting", "office", "project", "report", "standup", "stand up",
-      "presentation", "deadline", "interview", "demo", "email", "boss", "manager",
-      "team", "review", "sprint", "deploy", "release", "invoice", "proposal"
+    "URGENT": [
+      "urgent",
+      "urgently",
+      "asap",
+      "immediately",
+      "right away",
+      "critical",
+      "emergency"
     ],
-    "Personal": [
-      "groceries", "grocery", "shopping", "birthday", "anniversary", "movie",
-      "dinner", "lunch", "breakfast", "family", "friend", "haircut", "laundry",
-      "clean", "cook", "party", "trip", "travel", "book tickets"
+    "HIGH": [
+      "important",
+      "high priority",
+      "top priority",
+      "priority",
+      "must do"
     ],
-    "Finance": [
-      "bill", "bills", "rent", "emi", "payment", "pay", "recharge", "insurance",
-      "tax", "taxes", "salary", "loan", "credit card", "electricity", "subscription"
+    "MEDIUM": [
+      "normal priority",
+      "medium priority"
     ],
-    "Health": [
-      "doctor", "dentist", "medicine", "medicines", "appointment", "checkup",
-      "check up", "gym", "workout", "yoga", "run", "walk", "therapy", "vaccine"
+    "LOW": [
+      "low priority",
+      "whenever",
+      "sometime",
+      "no rush",
+      "not urgent"
     ]
   },
-
+  "categories": {
+    "Work": [
+      "client",
+      "meeting",
+      "office",
+      "project",
+      "report",
+      "standup",
+      "stand up",
+      "presentation",
+      "deadline",
+      "interview",
+      "demo",
+      "email",
+      "boss",
+      "manager",
+      "team",
+      "review",
+      "sprint",
+      "deploy",
+      "release",
+      "invoice",
+      "proposal"
+    ],
+    "Personal": [
+      "groceries",
+      "grocery",
+      "shopping",
+      "birthday",
+      "anniversary",
+      "movie",
+      "dinner",
+      "lunch",
+      "breakfast",
+      "family",
+      "friend",
+      "haircut",
+      "laundry",
+      "clean",
+      "cook",
+      "party",
+      "trip",
+      "travel",
+      "book tickets"
+    ],
+    "Finance": [
+      "bill",
+      "bills",
+      "rent",
+      "emi",
+      "payment",
+      "pay",
+      "recharge",
+      "insurance",
+      "tax",
+      "taxes",
+      "salary",
+      "loan",
+      "credit card",
+      "electricity",
+      "subscription"
+    ],
+    "Health": [
+      "doctor",
+      "dentist",
+      "medicine",
+      "medicines",
+      "appointment",
+      "checkup",
+      "check up",
+      "gym",
+      "workout",
+      "yoga",
+      "run",
+      "walk",
+      "therapy",
+      "vaccine"
+    ]
+  },
   "relativeDays": {
     "today": 0,
     "tonight": 0,
@@ -86,17 +197,24 @@
     "day after tomorrow": 2,
     "next week": 7
   },
-
   "weekdays": {
-    "sunday": 0, "sun": 0,
-    "monday": 1, "mon": 1,
-    "tuesday": 2, "tue": 2, "tues": 2,
-    "wednesday": 3, "wed": 3,
-    "thursday": 4, "thu": 4, "thurs": 4,
-    "friday": 5, "fri": 5,
-    "saturday": 6, "sat": 6
+    "sunday": 0,
+    "sun": 0,
+    "monday": 1,
+    "mon": 1,
+    "tuesday": 2,
+    "tue": 2,
+    "tues": 2,
+    "wednesday": 3,
+    "wed": 3,
+    "thursday": 4,
+    "thu": 4,
+    "thurs": 4,
+    "friday": 5,
+    "fri": 5,
+    "saturday": 6,
+    "sat": 6
   },
-
   "timeOfDay": {
     "morning": "09:00",
     "noon": "12:00",
@@ -106,29 +224,213 @@
     "night": "20:00",
     "midnight": "00:00"
   },
-
   "months": {
-    "january": 0, "jan": 0,
-    "february": 1, "feb": 1,
-    "march": 2, "mar": 2,
-    "april": 3, "apr": 3,
+    "january": 0,
+    "jan": 0,
+    "february": 1,
+    "feb": 1,
+    "march": 2,
+    "mar": 2,
+    "april": 3,
+    "apr": 3,
     "may": 4,
-    "june": 5, "jun": 5,
-    "july": 6, "jul": 6,
-    "august": 7, "aug": 7,
-    "september": 8, "sep": 8, "sept": 8,
-    "october": 9, "oct": 9,
-    "november": 10, "nov": 10,
-    "december": 11, "dec": 11
+    "june": 5,
+    "jun": 5,
+    "july": 6,
+    "jul": 6,
+    "august": 7,
+    "aug": 7,
+    "september": 8,
+    "sep": 8,
+    "sept": 8,
+    "october": 9,
+    "oct": 9,
+    "november": 10,
+    "nov": 10,
+    "december": 11,
+    "dec": 11
   },
-
-  "connectorWords": ["at", "on", "by", "for", "in", "the", "a", "an", "to", "this", "next"],
-
+  "connectorWords": [
+    "at",
+    "on",
+    "by",
+    "for",
+    "in",
+    "the",
+    "a",
+    "an",
+    "to",
+    "this",
+    "next",
+    "with"
+  ],
   "defaults": {
     "priority": "MEDIUM",
     "hourWithoutMeridiem": {
       "assumePmBelow": 8,
       "comment": "A bare hour like 'at 3' is read as 15:00; 'at 9' stays 09:00."
     }
+  },
+  "intentNote": "Intent is decided in this order: expense (money verb + amount) -> reminder (alarm/remind keywords) -> task (default).",
+  "reminderTriggers": [
+    "set an alarm",
+    "set alarm",
+    "set a alarm",
+    "set an alert",
+    "set a reminder",
+    "set reminder",
+    "create a reminder",
+    "add a reminder",
+    "remind me to",
+    "remind me",
+    "reminder for",
+    "reminder to",
+    "reminder",
+    "alarm for",
+    "alarm at",
+    "alarm",
+    "wake me up",
+    "wake me",
+    "ping me",
+    "alert me",
+    "notify me",
+    "don't let me forget",
+    "dont let me forget",
+    "set an appointment",
+    "set appointment",
+    "set a appointment",
+    "book an appointment",
+    "book appointment",
+    "make an appointment",
+    "schedule an appointment",
+    "fix an appointment",
+    "appointment with",
+    "appointment at",
+    "appointment on",
+    "appointment",
+    "set a meeting",
+    "set an event",
+    "schedule a call"
+  ],
+  "expense": {
+    "paidByMe": [
+      "i paid",
+      "i have paid",
+      "i've paid",
+      "i had paid",
+      "paid",
+      "i gave",
+      "i have given",
+      "i've given",
+      "gave",
+      "i spent",
+      "i have spent",
+      "i've spent",
+      "spent",
+      "i lent",
+      "i have lent",
+      "lent",
+      "i sent",
+      "sent"
+    ],
+    "paidToMe": [
+      "paid me",
+      "has paid me",
+      "have paid me",
+      "had paid me",
+      "gave me",
+      "has given me",
+      "have given me",
+      "given me",
+      "sent me",
+      "has sent me",
+      "lent me",
+      "returned me",
+      "owes me",
+      "owe me"
+    ],
+    "currencyWords": [
+      "rupees",
+      "rupee",
+      "rs",
+      "inr",
+      "bucks",
+      "dollars",
+      "dollar",
+      "euros",
+      "taka"
+    ],
+    "reasonPrefixes": [
+      "for",
+      "towards",
+      "on account of"
+    ],
+    "personPrefixes": [
+      "to",
+      "from"
+    ],
+    "anonymousPersons": [
+      "someone",
+      "somebody",
+      "some one",
+      "a friend",
+      "my friend",
+      "him",
+      "her",
+      "them"
+    ]
+  },
+  "splitSkipAnswers": [
+    "no one",
+    "noone",
+    "no-one",
+    "nobody",
+    "none",
+    "no",
+    "only me",
+    "just me",
+    "myself",
+    "only for me",
+    "just for me",
+    "for me",
+    "ignore",
+    "skip",
+    "nothing",
+    "alone",
+    "self",
+    "leave it",
+    "never mind",
+    "nevermind"
+  ],
+  "nameJoiners": [
+    "and",
+    "&",
+    "plus",
+    "along with",
+    "with"
+  ],
+  "recurrence": {
+    "DAILY": [
+      "every day",
+      "everyday",
+      "daily",
+      "each day"
+    ],
+    "WEEKDAYS": [
+      "every weekday",
+      "weekdays",
+      "on weekdays",
+      "every working day"
+    ],
+    "WEEKLY": [
+      "every week",
+      "weekly",
+      "each week"
+    ],
+    "MONTHLY": [
+      "every month",
+      "monthly",
+      "each month"
+    ]
   }
 }
