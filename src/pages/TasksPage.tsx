@@ -74,21 +74,23 @@ export function TasksPage() {
       )}
 
       <div className="tasks-toolbar">
-        <ScrollRow className="filter-bar" role="tablist" label="Filter tasks">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter.label}
-              role="tab"
-              aria-selected={view === filter.value}
-              className={view === filter.value ? 'active' : ''}
-              onClick={() => setView(filter.value)}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </ScrollRow>
+        {/* row 1: the view tabs, with search kept to a fixed width so it can
+            never squeeze the tabs off screen */}
+        <div className="toolbar-row">
+          <ScrollRow className="filter-bar" role="tablist" label="Filter tasks">
+            {FILTERS.map((filter) => (
+              <button
+                key={filter.label}
+                role="tab"
+                aria-selected={view === filter.value}
+                className={view === filter.value ? 'active' : ''}
+                onClick={() => setView(filter.value)}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </ScrollRow>
 
-        <div className="toolbar-controls">
           <label className="search-inline">
             <Search size={16} />
             <input
@@ -101,44 +103,53 @@ export function TasksPage() {
               <button onClick={() => setQuery('')} aria-label="Clear filter"><X size={14} /></button>
             )}
           </label>
+        </div>
 
+        {/* row 2: refinements */}
+        <div className="toolbar-row">
           <ScrollRow className="select-row">
-          <label className="sort-select">
-            <Tag size={15} />
-            <select
-              value={filters.category ?? ''}
-              onChange={(event) => setFilter('category', event.target.value || undefined)}
-              aria-label="Filter by category"
-            >
-              <option value="">All categories</option>
-              {CATEGORY_OPTIONS.map((category) => <option key={category} value={category}>{category}</option>)}
-            </select>
-          </label>
+            <label className="sort-select">
+              <Tag size={15} />
+              <select
+                value={filters.category ?? ''}
+                onChange={(event) => setFilter('category', event.target.value || undefined)}
+                aria-label="Filter by category"
+              >
+                <option value="">All categories</option>
+                {CATEGORY_OPTIONS.map((category) => <option key={category} value={category}>{category}</option>)}
+              </select>
+            </label>
 
-          <label className="sort-select">
-            <Flag size={15} />
-            <select
-              value={filters.priority ?? ''}
-              onChange={(event) => setFilter('priority', event.target.value || undefined)}
-              aria-label="Filter by priority"
-            >
-              <option value="">Any priority</option>
-              {TASK_PRIORITIES.map((priority) => (
-                <option key={priority} value={priority}>
-                  {priority.charAt(0) + priority.slice(1).toLowerCase()}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label className="sort-select">
+              <Flag size={15} />
+              <select
+                value={filters.priority ?? ''}
+                onChange={(event) => setFilter('priority', event.target.value || undefined)}
+                aria-label="Filter by priority"
+              >
+                <option value="">Any priority</option>
+                {TASK_PRIORITIES.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority.charAt(0) + priority.slice(1).toLowerCase()}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label className="sort-select">
-            <SlidersHorizontal size={15} />
-            <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} aria-label="Sort tasks">
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-          </label>
+            <label className="sort-select">
+              <SlidersHorizontal size={15} />
+              <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} aria-label="Sort tasks">
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+
+            {hasExtraFilters && (
+              <button type="button" className="chip clear" onClick={clearFilters}>
+                <X size={13} /> Clear
+              </button>
+            )}
           </ScrollRow>
         </div>
       </div>

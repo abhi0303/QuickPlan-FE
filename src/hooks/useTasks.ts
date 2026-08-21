@@ -21,6 +21,7 @@ export type TaskFilters = {
 export function useTasks(initialView?: TaskView) {
   const tasksVersion = useAppStore((state) => state.tasksVersion)
   const bumpTasksVersion = useAppStore((state) => state.bumpTasksVersion)
+  const celebrate = useAppStore((state) => state.celebrate)
 
   // All three are real query params on GET /api/tasks, so filtering happens
   // server-side rather than on the page.
@@ -67,10 +68,18 @@ export function useTasks(initialView?: TaskView) {
   }
 
   async function toggle(task: Task) {
+    const completing = !task.isCompleted
+    // Decided here, from the click, rather than by watching the progress value.
+    // Watching it would also fire on first load and when switching to the
+    // Completed filter, neither of which the user just achieved.
+    const clearsTheList =
+      completing && tasks.length > 0 && tasks.every((item) => item.id === task.id || item.isCompleted)
+
     setBusyId(task.id)
     try {
-      await setTaskCompleted(task.id, !task.isCompleted)
+      await setTaskCompleted(task.id, completing)
       bumpTasksVersion()
+      if (clearsTheList) celebrate()
     } catch (toggleError) {
       toast.error(getApiErrorMessage(toggleError, 'Could not update that task.'))
     } finally {

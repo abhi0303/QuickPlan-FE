@@ -1197,22 +1197,27 @@ h2 {
 /* --- toolbar --- */
 
 .tasks-toolbar {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: space-between;
+    display: grid;
+    gap: 10px;
     margin-bottom: 16px;
     min-width: 0;
 }
 
-.toolbar-controls {
+.toolbar-row {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
 }
+
+/* Fixed width, so growing search can never squeeze the view tabs off screen —
+   which is what pushed "Overdue" and "Completed" into a scroll on a wide
+   display that had room for them. */
+.toolbar-row .search-inline {
+    flex: 0 0 clamp(200px, 24%, 300px);
+}
+
+
 
 .search-inline {
     align-items: center;
@@ -1557,21 +1562,15 @@ h2 {
         white-space: normal;
     }
 
-    .tasks-toolbar {
-        align-items: stretch;
-        flex-direction: column;
-    }
-
-    /* search on its own row; the selects stay on a single scrolling line
-       rather than stacking into three more rows */
-    .toolbar-controls {
+    /* stack the row: tabs on one line, search beneath, selects on their own
+       scrolling line */
+    .toolbar-row {
         align-items: stretch;
         flex-direction: column;
         gap: 8px;
     }
 
-    .search-inline { flex: none; }
-    .toolbar-controls .scroll-row { width: 100%; }
+    .toolbar-row .search-inline { flex: none; }
 }
 
 /* ==========================================================================
@@ -1739,6 +1738,88 @@ select:focus-visible {
 .danger-row:hover {
     background: var(--rose-soft);
     border-color: var(--rose);
+}
+
+/* ==========================================================================
+   celebration — last open task finished
+   ========================================================================== */
+
+.celebration {
+    /* The wrapper's own fade is the longest animation here; its animationend
+       is what marks the burst as spent, so no timer is needed. */
+    animation: celebrationLife 12s linear forwards;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    position: fixed;
+    z-index: 70;
+}
+
+@keyframes celebrationLife {
+    0%, 96% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.celebration i {
+    animation: confettiFall cubic-bezier(.25, .6, .4, 1) forwards;
+    border-radius: 2px;
+    display: block;
+    position: absolute;
+    top: -6%;
+}
+
+.celebration i.is-round { border-radius: 50%; }
+
+@keyframes confettiFall {
+    0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0); }
+    5% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { opacity: 0; transform: translate3d(var(--drift), 108vh, 0) rotate(var(--spin)); }
+}
+
+.celebration-badge {
+    align-items: center;
+    animation: badgePop .5s cubic-bezier(.2, .9, .3, 1.4) both, badgeOut .6s ease 6.5s forwards;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-lg);
+    color: var(--primary-strong);
+    display: flex;
+    font-size: 15px;
+    font-weight: 700;
+    gap: 9px;
+    left: 50%;
+    padding: 14px 24px;
+    position: absolute;
+    top: 22%;
+    transform: translateX(-50%);
+}
+
+@keyframes badgePop {
+    from { opacity: 0; transform: translate(-50%, 14px) scale(.9); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes badgeOut {
+    to { opacity: 0; transform: translate(-50%, -10px) scale(.96); }
+}
+
+/* Reduced motion: drop the falling paper, keep the acknowledgement readable.
+   The global reduce rule collapses every animation to .01ms, which would make
+   this vanish before it could be read; these selectors outrank `*`, so the
+   badge still holds for a couple of seconds. */
+@media (prefers-reduced-motion: reduce) {
+    .celebration i { display: none; }
+
+    .celebration {
+        animation: celebrationLife 3600ms linear forwards !important;
+    }
+
+    .celebration-badge {
+        animation: none !important;
+        opacity: 1 !important;
+    }
 }
 
 /* ==========================================================================
