@@ -1,5 +1,5 @@
 import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns'
-import { Check, Clock3, Trash2 } from 'lucide-react'
+import { Check, Clock3, Pencil, Trash2 } from 'lucide-react'
 import type { Task, TaskPriority } from '../../services/tasks'
 import './TaskRow.scss'
 
@@ -41,9 +41,10 @@ type Props = {
   busy?: boolean
   onToggle: (task: Task) => void
   onDelete: (task: Task) => void
+  onEdit: (task: Task) => void
 }
 
-export function TaskRow({ task, busy, onToggle, onDelete }: Props) {
+export function TaskRow({ task, busy, onToggle, onDelete, onEdit }: Props) {
   const due = describeDue(task.dueDate)
   const color = task.category ? CATEGORY_COLORS[task.category.toLowerCase()] ?? DEFAULT_COLOR : DEFAULT_COLOR
 
@@ -78,14 +79,25 @@ export function TaskRow({ task, busy, onToggle, onDelete }: Props) {
         </div>
       </div>
 
-      <button
-        className="task-delete"
-        onClick={() => onDelete(task)}
-        disabled={busy}
-        aria-label={`Delete "${task.title}"`}
-      >
-        <Trash2 size={17} />
-      </button>
+      <div className="task-row-actions">
+        <button
+          className="task-edit"
+          onClick={() => onEdit(task)}
+          disabled={busy}
+          aria-label={`Edit "${task.title}"`}
+        >
+          <Pencil size={16} />
+        </button>
+
+        <button
+          className="task-delete"
+          onClick={() => onDelete(task)}
+          disabled={busy}
+          aria-label={`Delete "${task.title}"`}
+        >
+          <Trash2 size={17} />
+        </button>
+      </div>
     </div>
   )
 }

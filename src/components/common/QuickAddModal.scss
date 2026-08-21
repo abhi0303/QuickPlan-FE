@@ -2,68 +2,10 @@
    Shared tokens, base type and cross-component primitives live in
    src/styles/global.scss. */
 
-/* ==========================================================================
-   quick add modal
-   ========================================================================== */
-
-.modal-backdrop {
-    align-items: flex-start;
-    animation: fadeIn .18s ease;
-    backdrop-filter: blur(6px);
-    background: rgba(8, 28, 23, .45);
-    display: flex;
-    inset: 0;
-    justify-content: center;
-    overflow-y: auto;
-    padding: calc(clamp(16px, 6vh, 72px) + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(40px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
-    position: fixed;
-    z-index: 40;
-}
-
-.modal {
-    animation: modalIn .22s ease;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-xl);
-    box-shadow: var(--shadow-lg);
-    max-width: 540px;
-    padding: 28px;
-    width: 100%;
-}
-
-.modal-head {
-    align-items: flex-start;
-    display: flex;
-    gap: 16px;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.modal-head h2 {
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -.5px;
-}
-
-.modal-close {
-    align-items: center;
-    border-radius: var(--r-pill);
-    color: var(--muted);
-    display: flex;
-    flex: none;
-    height: 34px;
-    justify-content: center;
-    transition: background .18s ease, color .18s ease;
-    width: 34px;
-}
-
-.modal-close:hover {
-    background: var(--surface-alt);
-    color: var(--text);
-}
-
+/* QuickAddModal — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
 /* --- smart / voice input row --- */
-
 .smart-row {
     align-items: center;
     display: flex;
@@ -191,7 +133,6 @@
 }
 
 /* --- intent tabs --- */
-
 .intent-tabs {
     background: var(--surface-alt);
     border-radius: var(--r-pill);
@@ -231,7 +172,6 @@
 }
 
 /* --- form fields --- */
-
 .modal form {
     display: grid;
     gap: 20px;
@@ -243,67 +183,13 @@
     grid-template-columns: 1.25fr 1fr;
 }
 
-/* --- chips --- */
-
-.chip-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-/* --- actions --- */
-
-.modal-actions {
-    align-items: center;
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 4px;
-    padding-top: 20px;
-}
-
-.modal-submit {
-    align-items: center;
-    background: var(--primary);
-    border-radius: var(--r-pill);
-    box-shadow: var(--shadow-primary);
-    color: var(--on-primary);
-    display: inline-flex;
-    font-size: 15px;
-    font-weight: 700;
-    gap: 8px;
-    justify-content: center;
-    padding: 14px 26px;
-    transition: background .18s ease, transform .18s ease;
-}
-
-.modal-submit:hover:not(:disabled) {
-    background: var(--primary-strong);
-    transform: translateY(-1px);
-}
-
-.modal-submit:disabled {
-    cursor: wait;
-    opacity: .75;
-}
-
 @media (max-width: 560px) {
-.modal {
-        border-radius: var(--r-lg);
-        padding: 22px 18px;
-    }
-
 .modal form {
         gap: 18px;
     }
 
 .field-pair {
         grid-template-columns: 1fr;
-    }
-
-.modal-actions {
-        flex-direction: column-reverse;
     }
 
 .modal-actions button {

@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns'
-import { Check, Clock3, EllipsisVertical } from 'lucide-react'
+import { Check, Clock3, Pencil } from 'lucide-react'
 import type { Task } from '../../services/tasks'
 import './TaskPreview.scss'
 
@@ -24,10 +24,11 @@ function formatDue(dueDate?: string) {
 type Props = {
   task: Task
   onToggle: (task: Task) => void
+  onEdit: (task: Task) => void
   busy?: boolean
 }
 
-export function TaskPreview({ task, onToggle, busy }: Props) {
+export function TaskPreview({ task, onToggle, onEdit, busy }: Props) {
   const time = formatDue(task.dueDate)
   const color = task.category ? CATEGORY_COLORS[task.category.toLowerCase()] ?? DEFAULT_COLOR : DEFAULT_COLOR
 
@@ -55,8 +56,9 @@ export function TaskPreview({ task, onToggle, busy }: Props) {
         )}
       </div>
 
-      <button className="task-menu" aria-label={`More options for "${task.title}"`}>
-        <EllipsisVertical size={17} />
+      <button className="task-menu" onClick={() => onEdit(task)} disabled={busy}
+        aria-label={`Edit "${task.title}"`}>
+        <Pencil size={16} />
       </button>
     </div>
   )

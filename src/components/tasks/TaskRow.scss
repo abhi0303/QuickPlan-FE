@@ -85,6 +85,29 @@
     color: var(--rose);
 }
 
+.task-row-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 2px;
+}
+
+.task-edit {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    height: 32px;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .18s ease, background .18s ease, color .18s ease;
+    width: 32px;
+}
+
+.task-row:hover .task-edit { opacity: 1; }
+.task-edit:hover { background: var(--primary-soft); color: var(--primary-strong); }
+.task-edit:disabled { cursor: not-allowed; opacity: .4; }
+
 .task-delete {
     align-items: center;
     border-radius: var(--r-pill);

@@ -9,7 +9,6 @@ import {
   LogOut,
   Moon,
   Plus,
-  Search,
   Settings,
   Sparkles,
   Sun,
@@ -18,6 +17,9 @@ import {
 } from 'lucide-react'
 import { Celebration } from '../common/Celebration'
 import { QuickAddModal } from '../common/QuickAddModal'
+import { EditReminderModal } from '../reminders/EditReminderModal'
+import { ReminderAlerts } from '../reminders/ReminderAlerts'
+import { EditTaskModal } from '../tasks/EditTaskModal'
 import { SpeakButton } from '../common/SpeakButton'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
@@ -105,11 +107,10 @@ export function AppShell() {
             <span>Quickplan</span>
           </div>
 
-          <label className="search-pill">
-            <Search size={18} />
-            <input placeholder="Search tasks, people, money..." aria-label="Search" />
-            <kbd>⌘K</kbd>
-          </label>
+          {/* Global search is hidden until there is an API to back it: no
+              search endpoint exists yet (see docs/push-notifications.md's
+              sibling note in the API review). Restore this block once
+              GET /api/search lands. */}
 
           <div className="topbar-actions">
             <button
@@ -143,6 +144,9 @@ export function AppShell() {
       {showVoiceButton && <SpeakButton floating />}
 
       <QuickAddModal />
+      <EditTaskModal />
+      <EditReminderModal />
+      <ReminderAlerts />
       <Celebration />
 
       <nav className="bottom-nav">

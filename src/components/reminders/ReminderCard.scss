@@ -1,0 +1,177 @@
+/* ReminderCard — styles owned by this component.
+   Shared tokens and primitives live in src/styles/global.scss. */
+
+/* ReminderCard — styles owned by this component.
+   Shared tokens and primitives live in src/styles/global.scss. */
+.reminder-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform .22s ease, box-shadow .22s ease, opacity .22s ease;
+}
+
+.reminder-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+
+.reminder-card.is-busy { opacity: .5; pointer-events: none; }
+
+.reminder-card.is-past { opacity: .62; }
+
+.reminder-card.is-past .reminder-sky { filter: grayscale(.55); }
+
+/* --- the sky band: each card's illustration, coloured by time of day --- */
+.reminder-sky {
+    align-items: center;
+    color: #fff;
+    display: flex;
+    gap: 10px;
+    overflow: hidden;
+    padding: 16px 18px;
+    position: relative;
+}
+
+.slot-dawn .reminder-sky { background: linear-gradient(120deg, #f7a072 0%, #ffcf8b 55%, #ffe3a3 100%); }
+
+.slot-day .reminder-sky { background: linear-gradient(120deg, #2ecfa1 0%, #4bc5e8 60%, #7ab8ff 100%); }
+
+.slot-dusk .reminder-sky { background: linear-gradient(120deg, #f2871f 0%, #e0526d 60%, #8b5cf6 100%); }
+
+.slot-night .reminder-sky { background: linear-gradient(120deg, #1e2b5c 0%, #3b3f8f 55%, #6c7bff 100%); }
+
+.reminder-sky > svg { flex: none; position: relative; z-index: 1; }
+
+.reminder-slot {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    text-transform: uppercase;
+    z-index: 1;
+}
+
+/* soft light shapes so the band reads as artwork rather than a colour block */
+.reminder-sky i {
+    background: rgba(255, 255, 255, .18);
+    border-radius: var(--r-pill);
+    position: absolute;
+}
+
+.reminder-sky .orb-a { height: 120px; right: -30px; top: -60px; width: 120px; }
+
+.reminder-sky .orb-b { bottom: -54px; height: 78px; right: 58px; width: 78px; }
+
+.reminder-actions {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    opacity: 0;
+    position: relative;
+    transition: opacity .18s ease;
+    z-index: 2;
+}
+
+.reminder-card:hover .reminder-actions,
+.reminder-card:focus-within .reminder-actions { opacity: 1; }
+
+.reminder-actions button {
+    align-items: center;
+    background: rgba(255, 255, 255, .22);
+    border-radius: var(--r-pill);
+    color: #fff;
+    display: flex;
+    height: 30px;
+    justify-content: center;
+    transition: background .18s ease;
+    width: 30px;
+}
+
+.reminder-actions button:hover { background: rgba(255, 255, 255, .4); }
+
+.reminder-actions button.danger:hover { background: var(--rose); }
+
+/* --- body --- */
+.reminder-body { padding: 18px; }
+
+.reminder-clock {
+    align-items: baseline;
+    color: var(--text);
+    display: flex;
+    font-size: 34px;
+    font-weight: 800;
+    gap: 5px;
+    letter-spacing: -1.4px;
+    line-height: 1;
+}
+
+.reminder-clock span {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.reminder-countdown {
+    align-items: baseline;
+    color: var(--primary-strong);
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.reminder-countdown em {
+    color: var(--muted);
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 700;
+}
+
+.reminder-countdown.is-past,
+.is-past .reminder-countdown { color: var(--muted); }
+
+/* the last five minutes get a heartbeat */
+.reminder-countdown.is-imminent {
+    animation: tickPulse 1.6s ease-in-out infinite;
+    color: var(--rose);
+}
+
+@keyframes tickPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .55; }
+}
+
+.reminder-body h3 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-top: 10px;
+}
+
+.reminder-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 14px;
+}
+
+.reminder-tag {
+    align-items: center;
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 5px;
+    padding: 5px 10px;
+}
+
+.reminder-tag.repeat { background: var(--primary-soft); color: var(--primary-strong); }
+
+@media (max-width: 560px) {
+.reminder-actions { opacity: 1; }
+
+.reminder-clock { font-size: 30px; }
+}

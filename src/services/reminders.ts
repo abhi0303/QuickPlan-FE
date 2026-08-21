@@ -58,3 +58,16 @@ export async function createReminder(payload: CreateReminderPayload): Promise<Re
 export async function deleteReminder(id: string): Promise<void> {
   await api.delete(`/api/reminders/${id}`)
 }
+
+/** Mirrors UpdateReminderDto — a partial of the create payload. */
+export type UpdateReminderPayload = Partial<CreateReminderPayload>
+
+/**
+ * Real in-place update. Replaces the earlier create-then-delete workaround,
+ * which existed only because no PATCH endpoint was available; that changed the
+ * reminder's id on every edit.
+ */
+export async function updateReminder(id: string, patch: UpdateReminderPayload): Promise<Reminder | null> {
+  const { data } = await api.patch(`/api/reminders/${id}`, patch)
+  return normalizeReminder(data) ?? normalizeReminder((data as { data?: unknown })?.data)
+}

@@ -2,18 +2,6 @@
    Shared tokens, base type and cross-component primitives live in
    src/styles/global.scss. */
 
-/* ==========================================================================
-   tasks page
-   ========================================================================== */
-
-.page-head {
-    align-items: flex-end;
-    display: flex;
-    gap: 18px;
-    justify-content: space-between;
-    margin-bottom: 22px;
-}
-
 .filter-bar button {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -37,7 +25,6 @@
 }
 
 /* --- progress --- */
-
 .task-progress {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -80,7 +67,6 @@
 }
 
 /* --- toolbar --- */
-
 .tasks-toolbar {
     display: grid;
     gap: 10px;
@@ -98,7 +84,6 @@
 /* Fixed width, so growing search can never squeeze the view tabs off screen —
    which is what pushed "Overdue" and "Completed" into a scroll on a wide
    display that had room for them. */
-
 .toolbar-row .search-inline {
     flex: 0 0 clamp(200px, 24%, 300px);
 }
@@ -179,7 +164,6 @@
 }
 
 /* strips never wrap now — they scroll */
-
 .filter-bar,
 .select-row {
     display: flex;
@@ -193,7 +177,6 @@
 .select-row .sort-select { flex: none; }
 
 /* --- groups --- */
-
 .task-group+.task-group {
     margin-top: 22px;
 }
@@ -221,7 +204,6 @@
 }
 
 /* overdue is the one group that should pull the eye */
-
 .task-group-head.overdue {
     color: var(--rose);
 }
@@ -254,13 +236,6 @@
 }
 
 @media (max-width: 860px) {
-.page-head {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-
-/* stack the row: tabs on one line, search beneath, selects on their own
-       scrolling line */
 .toolbar-row {
         align-items: stretch;
         flex-direction: column;

@@ -1,0 +1,19 @@
+/* EditReminderModal — styles owned by this component.
+   The modal shell and field primitives live in src/styles/global.scss. */
+
+.reminder-modal { max-width: 500px; }
+
+.reminder-modal form {
+    display: grid;
+    gap: 20px;
+}
+
+.reminder-modal .field-pair {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1.25fr 1fr;
+}
+
+@media (max-width: 560px) {
+    .reminder-modal .field-pair { grid-template-columns: 1fr; }
+}

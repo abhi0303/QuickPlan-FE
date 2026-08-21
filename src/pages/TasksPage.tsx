@@ -32,6 +32,7 @@ const EMPTY_COPY: Record<string, string> = {
 export function TasksPage() {
   const { filters, view, setView, setFilter, tasks, loading, error, busyId, retry, toggle, remove } = useTasks()
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+  const setEditingTask = useAppStore((state) => state.setEditingTask)
 
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>('due')
@@ -202,6 +203,7 @@ export function TasksPage() {
                   busy={busyId === task.id}
                   onToggle={toggle}
                   onDelete={remove}
+                  onEdit={setEditingTask}
                 />
               ))}
             </div>

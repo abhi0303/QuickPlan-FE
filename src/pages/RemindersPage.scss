@@ -1,0 +1,176 @@
+/* RemindersPage — styles owned by this page.
+   Shared tokens and primitives live in src/styles/global.scss. */
+
+.reminders-page { padding-top: 10px; }
+
+/* --- next-up banner --- */
+
+.next-banner {
+    align-items: center;
+    background: var(--gradient);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    color: #fff;
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    padding: 20px 24px;
+    position: relative;
+}
+
+.next-pulse {
+    align-items: center;
+    animation: nextPulse 2.4s ease-in-out infinite;
+    background: rgba(255, 255, 255, .22);
+    border-radius: var(--r-pill);
+    display: flex;
+    flex: none;
+    height: 46px;
+    justify-content: center;
+    width: 46px;
+}
+
+@keyframes nextPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, .35); }
+    50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0); }
+}
+
+.next-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    opacity: .85;
+    text-transform: uppercase;
+}
+
+.next-banner strong {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 3px;
+}
+
+.next-when {
+    margin-left: auto;
+    text-align: right;
+}
+
+.next-when em {
+    display: block;
+    font-size: 26px;
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: -.5px;
+}
+
+.next-when small { font-size: 12px; opacity: .85; }
+
+/* --- filters: pills with counts, distinct from the task tabs --- */
+
+.reminder-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    min-width: 0;
+    padding: 2px;
+}
+
+.reminder-filters button {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    display: flex;
+    flex: none;
+    font-size: 14px;
+    font-weight: 700;
+    gap: 8px;
+    padding: 10px 16px;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.reminder-filters button i {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    font-size: 11px;
+    font-style: normal;
+    min-width: 20px;
+    padding: 2px 6px;
+    text-align: center;
+}
+
+.reminder-filters button:hover { border-color: var(--border-strong); }
+
+.reminder-filters button.active {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary-strong);
+}
+
+.reminder-filters button.active i { background: var(--primary); color: var(--on-primary); }
+
+/* --- the grid: cards, not rows --- */
+
+.reminder-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+}
+
+.reminder-skeleton {
+    animation: shimmer 1.3s ease-in-out infinite;
+    background: var(--surface-alt);
+    border-radius: var(--r-xl);
+    height: 230px;
+}
+
+.reminder-skeleton:nth-child(2) { animation-delay: .15s; }
+.reminder-skeleton:nth-child(3) { animation-delay: .3s; }
+
+.reminder-empty {
+    align-items: center;
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r-xl);
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 60px 24px;
+    text-align: center;
+}
+
+.reminder-empty p { font-size: 15px; font-weight: 600; }
+
+.empty-bell {
+    align-items: center;
+    background: var(--gradient-soft);
+    border-radius: var(--r-lg);
+    color: var(--primary);
+    display: flex;
+    height: 72px;
+    justify-content: center;
+    width: 72px;
+}
+
+@media (max-width: 860px) {
+    .next-banner { align-items: flex-start; flex-direction: column; gap: 12px; padding: 18px; }
+    .next-when { margin-left: 0; text-align: left; }
+    .reminder-grid { gap: 14px; grid-template-columns: 1fr; }
+}
+
+.page-head-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 10px;
+}
+
+@media (max-width: 860px) {
+    .page-head-actions { width: 100%; }
+    .page-head-actions .quick-add { flex: 1; justify-content: center; }
+}
