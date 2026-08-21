@@ -1,6 +1,11 @@
-import { CircleAlert, ListChecks, Plus } from 'lucide-react'
+import { useState } from 'react'
+import { CircleAlert, Flag, ListChecks, Plus, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
+import { ScrollRow } from '../components/common/ScrollRow'
 import { TaskRow } from '../components/tasks/TaskRow'
+import { groupTasks, searchTasks, SORT_OPTIONS } from '../components/tasks/taskGrouping'
+import type { SortKey } from '../components/tasks/taskGrouping'
 import { useTasks } from '../hooks/useTasks'
+import { TASK_PRIORITIES } from '../services/tasks'
 import type { TaskView } from '../services/tasks'
 import { useAppStore } from '../store/useAppStore'
 
@@ -12,6 +17,9 @@ const FILTERS: { label: string; value?: TaskView }[] = [
   { label: 'Completed', value: 'completed' },
 ]
 
+/** Sent as ?category= — server-side, same as the view tabs. */
+const CATEGORY_OPTIONS = ['Work', 'Personal', 'Finance', 'Health']
+
 const EMPTY_COPY: Record<string, string> = {
   all: 'No tasks yet. Add your first one to get started.',
   today: 'Nothing scheduled for today.',
@@ -21,10 +29,25 @@ const EMPTY_COPY: Record<string, string> = {
 }
 
 export function TasksPage() {
-  const { view, setView, tasks, loading, error, busyId, retry, toggle, remove } = useTasks()
+  const { filters, view, setView, setFilter, tasks, loading, error, busyId, retry, toggle, remove } = useTasks()
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
 
-  const openCount = tasks.filter((task) => !task.isCompleted).length
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState<SortKey>('due')
+
+  const now = new Date()
+  const visible = searchTasks(tasks, query)
+  const groups = groupTasks(visible, now, sort)
+
+  const hasExtraFilters = Boolean(filters.category || filters.priority)
+
+  function clearFilters() {
+    setFilter('category', undefined)
+    setFilter('priority', undefined)
+  }
+
+  const doneCount = tasks.filter((task) => task.isCompleted).length
+  const progress = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0
 
   return (
     <section className="tasks-page">
@@ -39,18 +62,85 @@ export function TasksPage() {
         </button>
       </div>
 
-      <div className="filter-bar" role="tablist" aria-label="Filter tasks">
-        {FILTERS.map((filter) => (
-          <button
-            key={filter.label}
-            role="tab"
-            aria-selected={view === filter.value}
-            className={view === filter.value ? 'active' : ''}
-            onClick={() => setView(filter.value)}
-          >
-            {filter.label}
-          </button>
-        ))}
+      {/* progress reads at a glance without opening anything */}
+      {!loading && !error && tasks.length > 0 && (
+        <div className="task-progress">
+          <div className="task-progress-top">
+            <strong>{doneCount} of {tasks.length} done</strong>
+            <span>{progress}%</span>
+          </div>
+          <div className="task-progress-bar"><i style={{ width: `${progress}%` }} /></div>
+        </div>
+      )}
+
+      <div className="tasks-toolbar">
+        <ScrollRow className="filter-bar" role="tablist" label="Filter tasks">
+          {FILTERS.map((filter) => (
+            <button
+              key={filter.label}
+              role="tab"
+              aria-selected={view === filter.value}
+              className={view === filter.value ? 'active' : ''}
+              onClick={() => setView(filter.value)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </ScrollRow>
+
+        <div className="toolbar-controls">
+          <label className="search-inline">
+            <Search size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Filter tasks..."
+              aria-label="Filter tasks by name"
+            />
+            {query && (
+              <button onClick={() => setQuery('')} aria-label="Clear filter"><X size={14} /></button>
+            )}
+          </label>
+
+          <ScrollRow className="select-row">
+          <label className="sort-select">
+            <Tag size={15} />
+            <select
+              value={filters.category ?? ''}
+              onChange={(event) => setFilter('category', event.target.value || undefined)}
+              aria-label="Filter by category"
+            >
+              <option value="">All categories</option>
+              {CATEGORY_OPTIONS.map((category) => <option key={category} value={category}>{category}</option>)}
+            </select>
+          </label>
+
+          <label className="sort-select">
+            <Flag size={15} />
+            <select
+              value={filters.priority ?? ''}
+              onChange={(event) => setFilter('priority', event.target.value || undefined)}
+              aria-label="Filter by priority"
+            >
+              <option value="">Any priority</option>
+              {TASK_PRIORITIES.map((priority) => (
+                <option key={priority} value={priority}>
+                  {priority.charAt(0) + priority.slice(1).toLowerCase()}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="sort-select">
+            <SlidersHorizontal size={15} />
+            <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)} aria-label="Sort tasks">
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          </ScrollRow>
+        </div>
       </div>
 
       <div className="panel">
@@ -71,19 +161,29 @@ export function TasksPage() {
         {!loading && !error && tasks.length === 0 && (
           <div className="panel-state">
             <ListChecks size={26} />
-            <p>{EMPTY_COPY[view ?? 'all']}</p>
-            <button className="text-button" onClick={() => setQuickAddOpen(true)}>Add a task</button>
+            <p>{hasExtraFilters ? 'No tasks match these filters.' : EMPTY_COPY[view ?? 'all']}</p>
+            {hasExtraFilters
+              ? <button className="text-button" onClick={clearFilters}>Clear filters</button>
+              : <button className="text-button" onClick={() => setQuickAddOpen(true)}>Add a task</button>}
           </div>
         )}
 
-        {!loading && !error && tasks.length > 0 && (
-          <>
-            <p className="list-summary">
-              {tasks.length} task{tasks.length === 1 ? '' : 's'}
-              {openCount !== tasks.length && ` · ${openCount} open`}
-            </p>
+        {!loading && !error && tasks.length > 0 && visible.length === 0 && (
+          <div className="panel-state">
+            <Search size={22} />
+            <p>Nothing matches “{query}”.</p>
+            <button className="text-button" onClick={() => setQuery('')}>Clear filter</button>
+          </div>
+        )}
+
+        {!loading && !error && groups.map((group) => (
+          <div className="task-group" key={group.bucket}>
+            <div className={`task-group-head ${group.bucket}`}>
+              <span>{group.label}</span>
+              <i>{group.tasks.length}</i>
+            </div>
             <div className="task-list">
-              {tasks.map((task) => (
+              {group.tasks.map((task) => (
                 <TaskRow
                   key={task.id}
                   task={task}
@@ -93,8 +193,8 @@ export function TasksPage() {
                 />
               ))}
             </div>
-          </>
-        )}
+          </div>
+        ))}
       </div>
     </section>
   )

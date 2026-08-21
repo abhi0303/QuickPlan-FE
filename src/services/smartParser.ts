@@ -23,23 +23,51 @@ export type SmartDataset = {
   timeOfDay: Record<string, string>
   months: Record<string, number>
   connectorWords: string[]
+  reminderTriggers: string[]
+  expense: {
+    paidByMe: string[]
+    paidToMe: string[]
+    currencyWords: string[]
+    reasonPrefixes: string[]
+    personPrefixes: string[]
+    anonymousPersons: string[]
+  }
+  splitSkipAnswers: string[]
+  nameJoiners: string[]
+  recurrence: Record<string, string[]>
   defaults: {
     priority: string
     hourWithoutMeridiem: { assumePmBelow: number }
   }
 }
 
+export type ParsedIntent = 'task' | 'reminder' | 'expense'
+export type ExpenseDirection = 'PAYABLE' | 'RECEIVABLE'
+
 export type ParsedInput = {
+  /** Which module this belongs to, and therefore which form and API to use. */
+  intent: ParsedIntent
   title: string
   dueDate?: string
   priority: TaskPriority
   category?: string
+  /** reminder only — DAILY / WEEKLY / WEEKDAYS / MONTHLY */
+  recurrenceRule?: string
+  /** expense only */
+  amount?: number
+  /** RECEIVABLE: they owe me. PAYABLE: I owe them. */
+  direction?: ExpenseDirection
+  personName?: string
+  reason?: string
   /** Which parts were recognised — drives the confirmation chips in the UI. */
   matched: {
     time?: string
     date?: string
     priority?: string
     category?: string
+    intent?: string
+    amount?: string
+    person?: string
   }
 }
 
@@ -276,6 +304,106 @@ function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+// ------------------------------------------------------------- intent -----
+
+/** Longest phrase first, so "paid me" beats "paid". */
+function findPhrase(text: string, phrases: string[]) {
+  const sorted = [...phrases].sort(byLengthDesc)
+  for (const phrase of sorted) {
+    const match = text.match(phraseRegExp(phrase))
+    if (match) return { phrase, text: match[0], index: match.index ?? 0 }
+  }
+  return null
+}
+
+/**
+ * Money amount. Runs only after the time has been stripped, so "3:30" can no
+ * longer be mistaken for a quantity.
+ */
+function extractAmount(text: string, data: SmartDataset) {
+  const currency = data.expense.currencyWords.map(escapeRegExp).join('|')
+
+  // "₹500", "rs 500", "500 rupees", or a bare number next to a money verb
+  const patterns = [
+    new RegExp(String.raw`(?:₹|\brs\.?\s*|\binr\s*)(\d+(?:[.,]\d+)?)`, 'i'),
+    new RegExp(String.raw`\b(\d+(?:[.,]\d+)?)\s*(?:${currency})\b`, 'i'),
+    new RegExp(String.raw`\b(\d+(?:[.,]\d+)?)\b`),
+  ]
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (!match) continue
+    const value = Number(match[1].replace(/,/g, ''))
+    if (Number.isFinite(value) && value > 0) return { amount: value, text: match[0] }
+  }
+  return null
+}
+
+/** Name(s) following "to"/"from", stopping at a connector or money word. */
+function extractPerson(text: string, data: SmartDataset) {
+  const prefixes = data.expense.personPrefixes.map(escapeRegExp).join('|')
+  const match = text.match(new RegExp(String.raw`\b(?:${prefixes})\s+([a-z][\w']*(?:\s+[a-z][\w']*)?)`, 'i'))
+  if (!match) return null
+
+  const stop = new Set([...data.connectorWords, ...data.expense.currencyWords, ...data.fillerWords])
+  const words = match[1].split(/\s+/).filter((word) => !stop.has(word.toLowerCase()))
+  if (!words.length) return null
+
+  const name = words.join(' ')
+  if (data.expense.anonymousPersons.some((generic) => generic === name.toLowerCase())) {
+    return { name: null, text: match[0] }
+  }
+  return { name: capitalize(name), text: match[0] }
+}
+
+function extractReason(text: string, data: SmartDataset) {
+  const prefixes = data.expense.reasonPrefixes.map(escapeRegExp).join('|')
+  const match = text.match(new RegExp(String.raw`\b(?:${prefixes})\s+(.+)$`, 'i'))
+  if (!match) return null
+  const reason = trimConnectors(tidy(match[1]), data)
+  return reason ? { reason, text: match[0] } : null
+}
+
+function extractRecurrence(text: string, data: SmartDataset) {
+  const entries = Object.entries(data.recurrence)
+  const all = entries.flatMap(([rule, phrases]) => phrases.map((phrase) => ({ rule, phrase })))
+  all.sort((a, b) => byLengthDesc(a.phrase, b.phrase))
+
+  for (const { rule, phrase } of all) {
+    const match = text.match(phraseRegExp(phrase))
+    if (match) return { rule, text: match[0] }
+  }
+  return null
+}
+
+/**
+ * Splits a spoken list of names: "Rahul and Ravina and Suraj" or
+ * "Rahul, Ravina & Suraj". Returns [] when the reply means "nobody".
+ */
+export function parseNameList(input: string, data: SmartDataset): string[] {
+  const cleaned = tidy(input.toLowerCase().replace(/[.!?]+/g, ' '))
+  if (!cleaned) return []
+  if (data.splitSkipAnswers.some((answer) => answer === cleaned)) return []
+
+  const joiners = data.nameJoiners.map(escapeRegExp).join('|')
+  const parts = cleaned
+    .split(new RegExp(String.raw`\s*,\s*|\s+(?:${joiners})\s+`, 'i'))
+    .map((part) => trimConnectors(tidy(part), data))
+    .filter(Boolean)
+
+  const stop = new Set([...data.fillerWords, ...data.splitSkipAnswers, ...data.connectorWords])
+  return parts
+    .filter((part) => !stop.has(part))
+    .map((part) => part.split(/\s+/).map(capitalize).join(' '))
+}
+
+/** True when a reply to "who shall I add?" means "just me". */
+export function isSkipAnswer(input: string, data: SmartDataset): boolean {
+  const cleaned = tidy(input.toLowerCase().replace(/[.,!?]+/g, ' '))
+  if (!cleaned) return true
+  return data.splitSkipAnswers.some((answer) => answer === cleaned)
+}
+
 /**
  * True only when the WHOLE utterance is a close/cancel command.
  *
@@ -332,11 +460,98 @@ export function parseSmartInput(
   const category = detectCategory(remaining, data)
   if (category) matched.category = category.text
 
+  // ---- intent: expense first (money verb + amount), then reminder, else task
+
+  const paidByMe = findPhrase(remaining, data.expense.paidByMe)
+  const paidToMe = findPhrase(remaining, data.expense.paidToMe)
+  const moneyVerb = paidToMe ?? paidByMe
+  const amount = moneyVerb ? extractAmount(remaining, data) : null
+
+  let intent: ParsedIntent = 'task'
+  let direction: ExpenseDirection | undefined
+  let personName: string | undefined
+  let reason: string | undefined
+  let recurrenceRule: string | undefined
+
+  if (moneyVerb && amount) {
+    intent = 'expense'
+    // The participants are captured separately, so a trailing "with Rahul and
+    // Ravina" must not end up inside the expense title.
+    remaining = tidy(remaining.replace(/\bwith\b\s+.*$/i, ' '))
+    // "they paid me" -> I owe them. "I paid them" -> they owe me.
+    direction = paidToMe ? 'PAYABLE' : 'RECEIVABLE'
+    matched.intent = moneyVerb.text
+    matched.amount = amount.text
+
+    if (paidToMe) {
+      // "Rahul paid me 500" — the payer is whatever precedes the verb
+      const lead = trimConnectors(tidy(remaining.slice(0, paidToMe.index)), data)
+      const words = lead.split(/\s+/).filter(Boolean)
+      const isAnonymous = data.expense.anonymousPersons.includes(lead.toLowerCase())
+      if (lead && !isAnonymous && words.length <= 2) {
+        personName = words.map(capitalize).join(' ')
+        matched.person = personName
+      }
+      if (lead) remaining = remaining.replace(lead, ' ')
+    } else {
+      const person = extractPerson(remaining, data)
+      if (person?.name) {
+        personName = person.name
+        matched.person = person.name
+      }
+      if (person) remaining = stripFirst(remaining, person.text)
+    }
+
+    const reasonMatch = extractReason(remaining, data)
+    if (reasonMatch) {
+      reason = reasonMatch.reason
+      remaining = stripFirst(remaining, reasonMatch.text)
+    }
+
+    remaining = stripFirst(remaining, amount.text)
+    remaining = stripFirst(remaining, moneyVerb.text)
+    for (const word of data.expense.currencyWords) remaining = stripFirst(remaining, word)
+  } else {
+    const reminder = findPhrase(remaining, data.reminderTriggers)
+    if (reminder) {
+      intent = 'reminder'
+      matched.intent = reminder.text
+      remaining = stripFirst(remaining, reminder.text)
+
+      const recurrence = extractRecurrence(remaining, data)
+      if (recurrence) {
+        recurrenceRule = recurrence.rule
+        remaining = stripFirst(remaining, recurrence.text)
+      }
+    }
+  }
+
   remaining = stripIntentPrefix(tidy(remaining), data)
   for (const filler of data.fillerWords) remaining = stripFirst(remaining, filler)
   remaining = trimConnectors(tidy(remaining), data)
 
-  const title = capitalize(remaining)
+  // A bare trigger ("set an alarm") strips down to nothing, so fall back to a
+  // sensible label rather than rejecting the utterance.
+  let title = capitalize(remaining)
+  if (!title && intent === 'expense') {
+    title = capitalize(reason ?? (personName ? `Paid ${personName}` : 'Expense'))
+  }
+  // Reminder triggers are often the noun itself ("doctor appointment"), so
+  // keep that word in the title rather than consuming it with the trigger.
+  if (intent === 'reminder') {
+    const trigger = matched.intent ?? ''
+    const noun = /appointment/i.test(trigger) ? 'appointment'
+      : /alarm/i.test(trigger) ? 'alarm'
+        : /meeting/i.test(trigger) ? 'meeting'
+          : null
+
+    if (noun) {
+      if (!title) title = capitalize(noun)
+      else if (!phraseRegExp(noun).test(title)) title = `${title} ${noun}`
+    } else if (!title) {
+      title = 'Reminder'
+    }
+  }
   if (!title) return null
 
   // A time with no date means the soonest sensible slot: today, or tomorrow if
@@ -358,10 +573,16 @@ export function parseSmartInput(
   }
 
   return {
+    intent,
     title,
     dueDate,
     priority: priority?.priority ?? (data.defaults.priority as TaskPriority),
     category: category?.category,
+    recurrenceRule,
+    amount: amount?.amount,
+    direction,
+    personName,
+    reason,
     matched,
   }
 }
