@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { PartyPopper } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
+import './Celebration.scss'
 
 const COLORS = ['#0fb58a', '#2ecfa1', '#6c7bff', '#f2871f', '#e0526d', '#ffd166']
 const PIECES = 46

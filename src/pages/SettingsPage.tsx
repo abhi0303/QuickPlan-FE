@@ -1,5 +1,7 @@
 import { BellRing, Globe, LogOut, Moon, Palette, Repeat, Sun } from 'lucide-react'
+import { PushToggle } from '../components/common/PushToggle'
 import { useAppStore } from '../store/useAppStore'
+import './SettingsPage.scss'
 
 export function SettingsPage() {
   const theme = useAppStore((state) => state.theme)
@@ -13,6 +15,8 @@ export function SettingsPage() {
       <p className="muted">Make Quickplan feel like yours.</p>
 
       <div className="settings-card">
+        <PushToggle />
+
         <div className="setting-row">
           <div className="setting-label">
             <span className="setting-icon"><Palette size={20} /></span>

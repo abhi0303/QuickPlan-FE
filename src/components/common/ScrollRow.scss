@@ -1,0 +1,64 @@
+/* ScrollRow — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+/* --- horizontal scroll strip --- */
+
+.scroll-row {
+    flex: 1 1 0;
+    max-width: 100%;
+    min-width: 0;
+    position: relative;
+}
+
+.scroll-row-track {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    scroll-padding-inline: 34px;
+    overscroll-behavior-x: contain;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+
+.scroll-row-track::-webkit-scrollbar { display: none; }
+
+/* fade whichever edge has more content behind it */
+/* narrow fades — just enough to signal "more this way" */
+
+.scroll-row.can-right .scroll-row-track {
+    mask-image: linear-gradient(to right, #000 calc(100% - 42px), transparent 100%);
+}
+
+.scroll-row.can-left .scroll-row-track {
+    mask-image: linear-gradient(to right, transparent 0, #000 42px);
+}
+
+.scroll-row.can-left.can-right .scroll-row-track {
+    mask-image: linear-gradient(to right, transparent 0, #000 42px, #000 calc(100% - 42px), transparent 100%);
+}
+
+/* Just the glyph — the edge fade already separates it from the content, so a
+   chip with its own surface and border was competing with the controls. */
+
+.scroll-row-arrow {
+    align-items: center;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    display: flex;
+    height: 28px;
+    justify-content: center;
+    opacity: .7;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: color .18s ease, opacity .18s ease;
+    width: 28px;
+    z-index: 2;
+}
+
+.scroll-row-arrow:hover { color: var(--primary); opacity: 1; }
+
+.scroll-row-arrow.left { left: 0; }
+
+.scroll-row-arrow.right { right: 0; }

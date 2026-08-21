@@ -1,0 +1,22 @@
+/* EditTaskModal — styles owned by this component.
+   The modal shell, .field, .control and .chip primitives are shared and live in
+   src/styles/global.scss. */
+
+.edit-modal {
+    max-width: 480px;
+}
+
+.edit-modal form {
+    display: grid;
+    gap: 20px;
+}
+
+.edit-modal .field-pair {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1.25fr 1fr;
+}
+
+@media (max-width: 560px) {
+    .edit-modal .field-pair { grid-template-columns: 1fr; }
+}

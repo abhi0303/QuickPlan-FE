@@ -30,6 +30,7 @@ import {
 import { getApiErrorMessage } from '../services/api'
 import { login, register } from '../services/auth'
 import { useAppStore } from '../store/useAppStore'
+import './AuthPage.scss'
 
 type Mode = 'login' | 'signup'
 type Field = 'name' | 'email' | 'password' | 'confirmPassword'

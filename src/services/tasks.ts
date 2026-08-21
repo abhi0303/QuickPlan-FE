@@ -86,6 +86,15 @@ export async function createTask(payload: CreateTaskPayload): Promise<Task | nul
   return normalizeSingle(data)
 }
 
+/**
+ * Partial update. UpdateTaskDto is a PartialType of CreateTaskDto and the spec
+ * documents no properties, so only fields the form actually changed are sent.
+ */
+export async function updateTask(id: string, patch: Partial<CreateTaskPayload>): Promise<Task | null> {
+  const { data } = await api.patch(`/api/tasks/${id}`, patch)
+  return normalizeSingle(data)
+}
+
 export async function setTaskCompleted(id: string, isCompleted: boolean): Promise<Task | null> {
   const { data } = await api.patch(`/api/tasks/${id}`, {
     isCompleted,

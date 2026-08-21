@@ -16,6 +16,7 @@ import { QuickAdd } from '../components/common/QuickAdd'
 import { TaskPreview } from '../components/dashboard/TaskPreview'
 import { useTasks } from '../hooks/useTasks'
 import { useAppStore } from '../store/useAppStore'
+import './DashboardPage.scss'
 
 const upcoming = [
   { day: 'Fri', date: '21', title: 'Send client proposal', when: 'Tomorrow · 10:00 AM' },
@@ -32,6 +33,7 @@ function greeting(hour: number) {
 export function DashboardPage() {
   const session = useAppStore((state) => state.session)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+  const setEditingTask = useAppStore((state) => state.setEditingTask)
   const { tasks, loading, error: loadError, busyId, retry, toggle } = useTasks('today')
 
   const now = new Date()
@@ -122,7 +124,7 @@ export function DashboardPage() {
           {!loading && !loadError && tasks.length > 0 && (
             <div className="task-list">
               {tasks.map((task) => (
-                <TaskPreview key={task.id} task={task} onToggle={toggle} busy={busyId === task.id} />
+                <TaskPreview key={task.id} task={task} onToggle={toggle} onEdit={setEditingTask} busy={busyId === task.id} />
               ))}
             </div>
           )}

@@ -1,0 +1,121 @@
+/* RingtonePicker — styles owned by this component.
+   Shared tokens live in src/styles/global.scss. */
+
+.ringtone-picker { position: relative; }
+
+.ringtone-trigger {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 8px;
+    padding: 11px 14px;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.ringtone-trigger:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary-strong);
+}
+
+.ringtone-trigger svg { transition: transform .2s ease; }
+.ringtone-trigger svg.flip { transform: rotate(180deg); }
+
+.ringtone-menu {
+    animation: ringtoneIn .16s ease;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    display: grid;
+    gap: 2px;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 262px;
+    z-index: 30;
+}
+
+@keyframes ringtoneIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
+}
+
+.ringtone-menu-title {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 8px 8px;
+    text-transform: uppercase;
+}
+
+.ringtone-option {
+    align-items: center;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 11px;
+    padding: 9px 10px;
+    text-align: left;
+    transition: background .16s ease;
+    width: 100%;
+}
+
+.ringtone-option:hover { background: var(--surface-soft); }
+.ringtone-option.active { background: var(--primary-soft); }
+
+.ringtone-mark {
+    align-items: center;
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.ringtone-option.active .ringtone-mark { background: var(--primary); color: var(--on-primary); }
+
+.ringtone-copy strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.ringtone-copy small {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+    margin-top: 1px;
+}
+
+.ringtone-option.active .ringtone-copy strong { color: var(--primary-strong); }
+
+.ringtone-replay {
+    align-items: center;
+    border-radius: var(--r-md);
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 7px;
+    justify-content: center;
+    margin-top: 6px;
+    padding: 10px 8px 4px;
+    width: 100%;
+}
+
+.ringtone-replay:hover { color: var(--primary-strong); }
+
+@media (max-width: 560px) {
+    .ringtone-menu { left: 0; right: auto; width: min(280px, calc(100vw - 40px)); }
+}

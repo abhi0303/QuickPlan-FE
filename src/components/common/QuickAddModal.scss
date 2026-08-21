@@ -1,0 +1,198 @@
+/* QuickAddModal — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+
+/* QuickAddModal — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
+/* --- smart / voice input row --- */
+.smart-row {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.smart-field {
+    align-items: center;
+    background: var(--gradient-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    display: flex;
+    flex: 1;
+    gap: 11px;
+    min-width: 0;
+    padding: 0 16px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.smart-field:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.smart-field>svg {
+    color: var(--primary);
+    flex: none;
+}
+
+.smart-field input {
+    background: none;
+    border: 0;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    min-width: 0;
+    outline: 0;
+    padding: 15px 0;
+    width: 100%;
+}
+
+.smart-field input::placeholder {
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.mic-button {
+    align-items: center;
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    display: flex;
+    flex: none;
+    height: 50px;
+    justify-content: center;
+    transition: background .18s ease, color .18s ease;
+    width: 50px;
+}
+
+.mic-button:hover {
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+}
+
+.mic-button.is-listening {
+    animation: pulse 1.4s ease-in-out infinite;
+    background: var(--rose);
+    color: #fff;
+}
+
+.smart-note {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.smart-note.warn {
+    color: var(--tangerine);
+}
+
+.smart-preview {
+    align-items: flex-start;
+    background: var(--primary-soft);
+    border-radius: var(--r-md);
+    color: var(--primary-strong);
+    display: flex;
+    gap: 11px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+}
+
+.smart-preview>svg {
+    flex: none;
+    margin-top: 2px;
+}
+
+.smart-preview strong {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.smart-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.smart-chips span {
+    align-items: center;
+    background: var(--surface);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 5px;
+    padding: 5px 10px;
+    text-transform: capitalize;
+}
+
+/* --- intent tabs --- */
+.intent-tabs {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    display: flex;
+    gap: 3px;
+    margin-bottom: 20px;
+    padding: 4px;
+}
+
+.intent-tabs button {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: 1;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 6px;
+    justify-content: center;
+    padding: 10px 8px;
+    transition: background .18s ease, color .18s ease;
+}
+
+.intent-tabs button:hover:not(.active):not(:disabled) {
+    color: var(--text);
+}
+
+.intent-tabs button.active {
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+    color: var(--primary-strong);
+}
+
+.intent-tabs button:disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+/* --- form fields --- */
+.modal form {
+    display: grid;
+    gap: 20px;
+}
+
+.field-pair {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1.25fr 1fr;
+}
+
+@media (max-width: 560px) {
+.modal form {
+        gap: 18px;
+    }
+
+.field-pair {
+        grid-template-columns: 1fr;
+    }
+
+.modal-actions button {
+        width: 100%;
+    }
+}

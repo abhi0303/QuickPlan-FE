@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version-file: '.nvmrc'
           cache: npm
 
       - name: Install dependencies
@@ -39,6 +39,11 @@ jobs:
 
       - name: Build React application
         run: npm run build
+        env:
+          # The VAPID key is fetched at runtime from
+          # GET /api/notifications/vapid-public-key, so no build-time secret is
+          # needed. Set VITE_VAPID_PUBLIC_KEY only to override that.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5

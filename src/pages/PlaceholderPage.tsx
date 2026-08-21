@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { QuickAdd } from '../components/common/QuickAdd'
+import './PlaceholderPage.scss'
 
 type Props = {
   title: string
