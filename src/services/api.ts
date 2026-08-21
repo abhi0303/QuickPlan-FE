@@ -1,8 +1,18 @@
 import axios from 'axios'
 import { useAppStore } from '../store/useAppStore'
 
+const FALLBACK_BASE_URL = 'https://quickplan-u2wx.onrender.com'
+
+/**
+ * CI injects VITE_API_BASE_URL from a repository variable, which is an empty
+ * string when that variable is unset. `??` would accept that empty string and
+ * leave axios resolving every request against the page origin, so treat blank
+ * as absent.
+ */
+const configuredBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim()
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'https://quickplan-u2wx.onrender.com',
+  baseURL: configuredBaseUrl || FALLBACK_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 })
 

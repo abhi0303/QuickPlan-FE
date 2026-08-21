@@ -26,6 +26,13 @@ self.addEventListener('activate', (event) => {
  */
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
+
+  // Only touch our own origin. API calls go to a different host and must not
+  // be routed through here — doing so adds nothing and makes failures read as
+  // "404 (from service worker)", which points debugging in the wrong direction.
+  const url = new URL(event.request.url)
+  if (url.origin !== self.location.origin) return
+
   event.respondWith(fetch(event.request).catch(() => caches.match(event.request)))
 })
 
