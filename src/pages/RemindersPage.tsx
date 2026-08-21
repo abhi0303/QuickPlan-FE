@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { AlarmClock, BellOff, CircleAlert, Plus, Zap } from 'lucide-react'
+import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ScrollRow } from '../components/common/ScrollRow'
 import { ReminderCard } from '../components/reminders/ReminderCard'
 import { RingtonePicker } from '../components/reminders/RingtonePicker'
@@ -33,6 +34,7 @@ export function RemindersPage() {
   const setEditingReminder = useAppStore((state) => state.setEditingReminder)
 
   const [filter, setFilter] = useState<ReminderFilter>('all')
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null)
   const nowMs = useNow()
   const now = new Date(nowMs)
 
@@ -123,11 +125,23 @@ export function RemindersPage() {
               reminder={reminder}
               busy={busyId === reminder.id}
               onEdit={setEditingReminder}
-              onDelete={remove}
+              onDelete={(item) => setPendingDelete({ id: item.id, title: item.title })}
             />
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        busy={busyId === pendingDelete?.id}
+        title="Delete this reminder?"
+        message={`"${pendingDelete?.title ?? ''}" will be removed and will no longer alert you.`}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={async () => {
+          const target = reminders.find((item) => item.id === pendingDelete?.id)
+          if (target) await remove(target)
+          setPendingDelete(null)
+        }}
+      />
     </section>
   )
 }

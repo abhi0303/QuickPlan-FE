@@ -111,29 +111,74 @@ export function countdown(due: Date | null, now: Date): string {
   return format(due, 'd MMM')
 }
 
+/**
+ * When a repeating reminder next fires.
+ *
+ * A repeating reminder is never "in the past" — its stored dueAt is only the
+ * first occurrence, so the card should count down to the next one instead of
+ * counting up from a date that has already been and gone.
+ */
+export function nextOccurrence(reminder: Reminder, now: Date): Date | null {
+  const due = parseDue(reminder)
+  if (!due) return null
+
+  const rule = reminder.recurrenceRule?.toUpperCase()
+  if (!rule || due > now) return due
+
+  const next = new Date(due)
+  let guard = 0
+  while (next <= now && guard < 1000) {
+    guard += 1
+    if (rule === 'DAILY') next.setDate(next.getDate() + 1)
+    else if (rule === 'WEEKLY') next.setDate(next.getDate() + 7)
+    else if (rule === 'MONTHLY') next.setMonth(next.getMonth() + 1)
+    else if (rule === 'WEEKDAYS') {
+      do { next.setDate(next.getDate() + 1) } while (next.getDay() === 0 || next.getDay() === 6)
+    } else {
+      return due   // unknown rule — treat it as one-off rather than looping
+    }
+  }
+  return next
+}
+
+/**
+ * A missed reminder gets a plain statement of when it was due, not a counter.
+ * Watching "00:01:11 ago" climb tells the user nothing they can act on.
+ */
+export function describePast(due: Date | null, now: Date): string {
+  if (!due) return 'No time set'
+  const days = differenceInCalendarDays(now, due)
+  const time = format(due, 'h:mm a')
+  if (days <= 0) return `Earlier today, ${time}`
+  if (days === 1) return `Yesterday, ${time}`
+  if (days < 7) return `${days} days ago, ${time}`
+  return format(due, 'EEE d MMM, h:mm a')
+}
+
 export type ReminderFilter = 'all' | 'today' | 'upcoming' | 'repeating' | 'past'
 
 export function matchesFilter(reminder: Reminder, filter: ReminderFilter, now: Date): boolean {
-  const due = parseDue(reminder)
+  // a repeating reminder is judged by when it next fires, not by its first run
+  const when = nextOccurrence(reminder, now)
   switch (filter) {
     case 'today':
-      return Boolean(due) && differenceInCalendarDays(due as Date, now) === 0 && !isPast(due as Date)
+      return Boolean(when) && differenceInCalendarDays(when as Date, now) === 0 && !isPast(when as Date)
     case 'upcoming':
-      return Boolean(due) && !isPast(due as Date)
+      return Boolean(when) && !isPast(when as Date)
     case 'repeating':
       return Boolean(reminder.recurrenceRule)
     case 'past':
-      return Boolean(due) && isPast(due as Date) && !reminder.recurrenceRule
+      return Boolean(when) && isPast(when as Date) && !reminder.recurrenceRule
     default:
       return true
   }
 }
 
 /** Soonest first; undated last. */
-export function sortByDue(reminders: Reminder[]): Reminder[] {
+export function sortByDue(reminders: Reminder[], now: Date = new Date()): Reminder[] {
   return [...reminders].sort((a, b) => {
-    const at = parseDue(a)?.getTime() ?? Number.POSITIVE_INFINITY
-    const bt = parseDue(b)?.getTime() ?? Number.POSITIVE_INFINITY
+    const at = nextOccurrence(a, now)?.getTime() ?? Number.POSITIVE_INFINITY
+    const bt = nextOccurrence(b, now)?.getTime() ?? Number.POSITIVE_INFINITY
     return at - bt
   })
 }
