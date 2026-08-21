@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CircleAlert, Flag, ListChecks, Plus, Search, SlidersHorizontal, Tag, X } from 'lucide-react'
+import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ScrollRow } from '../components/common/ScrollRow'
 import { TaskRow } from '../components/tasks/TaskRow'
 import { groupTasks, searchTasks, SORT_OPTIONS } from '../components/tasks/taskGrouping'
@@ -36,6 +37,7 @@ export function TasksPage() {
 
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>('due')
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null)
 
   const now = new Date()
   const visible = searchTasks(tasks, query)
@@ -202,7 +204,7 @@ export function TasksPage() {
                   task={task}
                   busy={busyId === task.id}
                   onToggle={toggle}
-                  onDelete={remove}
+                  onDelete={(item) => setPendingDelete({ id: item.id, title: item.title })}
                   onEdit={setEditingTask}
                 />
               ))}
@@ -210,6 +212,18 @@ export function TasksPage() {
           </div>
         ))}
       </div>
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        busy={busyId === pendingDelete?.id}
+        title="Delete this task?"
+        message={`"${pendingDelete?.title ?? ''}" will be permanently removed.`}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={async () => {
+          const target = tasks.find((item) => item.id === pendingDelete?.id)
+          if (target) await remove(target)
+          setPendingDelete(null)
+        }}
+      />
     </section>
   )
 }

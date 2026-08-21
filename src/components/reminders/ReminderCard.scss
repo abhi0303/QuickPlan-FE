@@ -128,8 +128,31 @@
     font-weight: 700;
 }
 
-.reminder-countdown.is-past,
-.is-past .reminder-countdown { color: var(--muted); }
+.reminder-missed {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.reminder-missed span {
+    background: var(--rose-soft);
+    border-radius: var(--r-pill);
+    color: var(--rose);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    padding: 3px 9px;
+    text-transform: uppercase;
+}
+
+.reminder-missed em {
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 600;
+}
 
 /* the last five minutes get a heartbeat */
 .reminder-countdown.is-imminent {

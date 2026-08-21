@@ -1,0 +1,76 @@
+/* ConfirmDialog — styles owned by this component.
+   The modal shell lives in src/styles/global.scss. */
+
+.confirm-dialog {
+    max-width: 420px;
+    text-align: center;
+}
+
+.confirm-icon {
+    align-items: center;
+    background: var(--rose-soft);
+    border-radius: var(--r-pill);
+    color: var(--rose);
+    display: inline-flex;
+    height: 52px;
+    justify-content: center;
+    margin-bottom: 16px;
+    width: 52px;
+}
+
+.confirm-dialog h2 {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+}
+
+.confirm-dialog p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 8px auto 0;
+    max-width: 320px;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.confirm-cancel,
+.confirm-danger {
+    border: 0;
+    border-radius: var(--r-pill);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 13px 24px;
+    transition: background .18s ease, color .18s ease;
+}
+
+.confirm-cancel {
+    background: var(--surface-alt);
+    color: var(--text-soft);
+}
+
+.confirm-cancel:hover { background: var(--border); color: var(--text); }
+
+.confirm-danger {
+    align-items: center;
+    background: var(--rose);
+    color: #fff;
+    display: inline-flex;
+    gap: 8px;
+}
+
+.confirm-danger:hover { filter: brightness(1.06); }
+
+.confirm-cancel:disabled,
+.confirm-danger:disabled { cursor: wait; opacity: .7; }
+
+@media (max-width: 460px) {
+    .confirm-actions { flex-direction: column-reverse; }
+    .confirm-actions button { width: 100%; justify-content: center; }
+}
