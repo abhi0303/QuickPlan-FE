@@ -62,6 +62,8 @@ export function useSpeechSynthesis(options: { lang?: string } = {}) {
   // getVoices() is empty on first call in Chrome until `voiceschanged` fires.
   const voicesRef = useRef<SpeechSynthesisVoice[]>([])
   const supportedRef = useRef(supported)
+  const unlockedRef = useRef(false)
+  const watchdogRef = useRef<number | null>(null)
 
   useEffect(() => {
     supportedRef.current = supported
@@ -75,6 +77,25 @@ export function useSpeechSynthesis(options: { lang?: string } = {}) {
     return () => {
       synth.removeEventListener('voiceschanged', refresh)
       synth.cancel()
+    }
+  }, [supported])
+
+  /**
+   * iOS only permits speechSynthesis.speak() that descends from a user
+   * gesture. Our talk-back fires from a timer after an async recognition
+   * result, which iOS silently refuses — no audio, and no 'end' event, so the
+   * conversation stalls. Speaking a silent utterance from the button press
+   * primes the engine for the rest of the session.
+   */
+  const unlock = useCallback(() => {
+    if (!supported || unlockedRef.current) return
+    unlockedRef.current = true
+    try {
+      const primer = new SpeechSynthesisUtterance(' ')
+      primer.volume = 0
+      window.speechSynthesis.speak(primer)
+    } catch {
+      // nothing to do — speak() below still has the watchdog
     }
   }, [supported])
 
@@ -106,21 +127,43 @@ export function useSpeechSynthesis(options: { lang?: string } = {}) {
     utterance.pitch = 1.15
     utterance.volume = 1
 
+    let done = false
+    const timers: number[] = []
     const finish = () => {
+      if (done) return
+      done = true
+      timers.forEach(window.clearTimeout)
+      watchdogRef.current = null
       setSpeaking(false)
       onDone?.()
     }
+
     utterance.onend = finish
     utterance.onerror = finish
 
     setSpeaking(true)
     synth.speak(utterance)
+
+    // A refused utterance never enters the queue, so this catches the blocked
+    // case in a moment rather than after a long guessed duration.
+    timers.push(window.setTimeout(() => {
+      if (!synth.speaking && !synth.pending) finish()
+    }, 400))
+
+    // Backstop for platforms that start speaking but never report 'end'.
+    // Deliberately generous — firing early would reopen the mic mid-sentence.
+    const estimated = Math.max(6000, text.length * 160)
+    const watchdog = window.setTimeout(finish, estimated)
+    timers.push(watchdog)
+    watchdogRef.current = watchdog
   }, [lang, supported])
 
   const cancel = useCallback(() => {
+    if (watchdogRef.current !== null) window.clearTimeout(watchdogRef.current)
+    watchdogRef.current = null
     if (supported) window.speechSynthesis.cancel()
     setSpeaking(false)
   }, [supported])
 
-  return { supported, speaking, speak, cancel }
+  return { supported, speaking, speak, cancel, unlock }
 }

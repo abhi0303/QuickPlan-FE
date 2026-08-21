@@ -11,6 +11,33 @@ import { useCallback, useEffect, useRef, useState } from 'react'
  * and only end the turn after a real stretch of silence.
  */
 
+/**
+ * Joins the text of a finished session onto what earlier sessions captured,
+ * dropping any repeated overlap.
+ *
+ * Android re-processes buffered audio when a session restarts, so saying
+ * "set an alarm" once could arrive twice and read "set an alarm set an alarm".
+ */
+export function mergeTranscripts(carry: string, next: string): string {
+  const a = carry.trim()
+  const b = next.trim()
+  if (!a) return b
+  if (!b) return a
+
+  const aWords = a.split(/\s+/)
+  const bWords = b.split(/\s+/)
+  const lower = (words: string[]) => words.join(' ').toLowerCase().replace(/[.,!?]/g, '')
+
+  const max = Math.min(aWords.length, bWords.length)
+  for (let n = max; n > 0; n -= 1) {
+    if (lower(aWords.slice(-n)) === lower(bWords.slice(0, n))) {
+      const rest = bWords.slice(n).join(' ')
+      return rest ? `${a} ${rest}` : a
+    }
+  }
+  return `${a} ${b}`
+}
+
 function getRecognitionConstructor() {
   if (typeof window === 'undefined') return undefined
   return window.SpeechRecognition ?? window.webkitSpeechRecognition
@@ -53,7 +80,10 @@ export function useSpeechRecognition(options: Options = {}) {
   const onResultRef = useRef(onResult)
   const onEndRef = useRef(onEnd)
 
-  const finalRef = useRef('')
+  /** Finals from sessions that have already ended. */
+  const carryRef = useRef('')
+  /** Finals within the CURRENT session, rebuilt from index 0 each event. */
+  const sessionRef = useRef('')
   const heardSpeechRef = useRef(false)
   const activeRef = useRef(false)
   const settledRef = useRef(false)
@@ -82,7 +112,7 @@ export function useSpeechRecognition(options: Options = {}) {
     activeRef.current = false
     clearTimers()
 
-    const text = finalRef.current.trim()
+    const text = mergeTranscripts(carryRef.current, sessionRef.current).trim()
     try {
       recognitionRef.current?.stop()
     } catch {
@@ -113,17 +143,23 @@ export function useSpeechRecognition(options: Options = {}) {
     recognition.maxAlternatives = 1
 
     recognition.onresult = (event) => {
+      // Rebuild the session transcript from index 0 every time rather than
+      // appending from event.resultIndex. Android re-emits earlier results,
+      // and appending them duplicated the phrase.
+      let finals = ''
       let pending = ''
-      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+      for (let i = 0; i < event.results.length; i += 1) {
         const result = event.results[i]
         const text = result[0].transcript
-        if (result.isFinal) finalRef.current = `${finalRef.current} ${text}`.trim()
+        if (result.isFinal) finals = `${finals} ${text}`.trim()
         else pending += text
       }
 
-      if (finalRef.current || pending.trim()) heardSpeechRef.current = true
-      // show everything captured so far, so the user sees their full sentence
-      setInterim(`${finalRef.current} ${pending}`.trim())
+      sessionRef.current = finals
+      if (finals || pending.trim()) heardSpeechRef.current = true
+
+      const full = mergeTranscripts(carryRef.current, `${finals} ${pending}`.trim())
+      setInterim(full)
       armSilence()
     }
 
@@ -140,6 +176,9 @@ export function useSpeechRecognition(options: Options = {}) {
       // with continuous=true. Restart so a pause never ends the user's turn.
       if (activeRef.current && !settledRef.current && restartsRef.current < 20) {
         restartsRef.current += 1
+        // bank this session before the next one starts with a fresh results list
+        carryRef.current = mergeTranscripts(carryRef.current, sessionRef.current)
+        sessionRef.current = ''
         try {
           recognition.start()
           return
@@ -168,7 +207,8 @@ export function useSpeechRecognition(options: Options = {}) {
     const recognition = recognitionRef.current
     if (!recognition) return
 
-    finalRef.current = ''
+    carryRef.current = ''
+    sessionRef.current = ''
     heardSpeechRef.current = false
     settledRef.current = false
     activeRef.current = true
@@ -200,7 +240,8 @@ export function useSpeechRecognition(options: Options = {}) {
     settledRef.current = true
     activeRef.current = false
     clearTimers()
-    finalRef.current = ''
+    carryRef.current = ''
+    sessionRef.current = ''
     try {
       recognitionRef.current?.abort()
     } catch {
