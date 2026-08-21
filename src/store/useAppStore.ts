@@ -15,12 +15,15 @@ type AppStore = {
   sidebarOpen: boolean
   session: Session | null
   quickAddOpen: boolean
+  /** Transcript captured before the modal opened; consumed as its initial text. */
+  quickAddSeed: string
   /** Bumped after any task mutation so views know to refetch. */
   tasksVersion: number
   setTheme: (theme: Theme) => void
   toggleTheme: () => void
   setSidebarOpen: (open: boolean) => void
   setQuickAddOpen: (open: boolean) => void
+  openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
   signIn: (session: Session) => void
   updateSession: (patch: Partial<Omit<Session, 'token'>>) => void
@@ -34,15 +37,19 @@ export const useAppStore = create<AppStore>()(
       sidebarOpen: false,
       session: null,
       quickAddOpen: false,
+      quickAddSeed: '',
       tasksVersion: 0,
       setTheme: (theme) => set({ theme }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
-      setQuickAddOpen: (quickAddOpen) => set({ quickAddOpen }),
+      // closing always clears the seed so a stale transcript can never be
+      // re-applied the next time Quick Add opens
+      setQuickAddOpen: (quickAddOpen) => set(quickAddOpen ? { quickAddOpen } : { quickAddOpen, quickAddSeed: '' }),
+      openQuickAddWithText: (quickAddSeed) => set({ quickAddSeed, quickAddOpen: true }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
       signIn: (session) => set({ session, sidebarOpen: false }),
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
-      signOut: () => set({ session: null, sidebarOpen: false, quickAddOpen: false }),
+      signOut: () => set({ session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '' }),
     }),
     {
       name: 'quickplan-preferences',

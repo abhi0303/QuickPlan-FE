@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   AlarmClock,
   Bell,
@@ -17,8 +17,12 @@ import {
   Wallet,
 } from 'lucide-react'
 import { QuickAddModal } from '../common/QuickAddModal'
+import { SpeakButton } from '../common/SpeakButton'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
+
+/** Voice capture is a single entry point for tasks, reminders and money. */
+const VOICE_ROUTES = ['/', '/tasks', '/reminders', '/expenses']
 
 const navigation = [
   { to: '/', label: 'Home', icon: House, end: true },
@@ -34,6 +38,8 @@ export function AppShell() {
   const signOut = useAppStore((state) => state.signOut)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+  const { pathname } = useLocation()
+  const showVoiceButton = VOICE_ROUTES.includes(pathname)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -131,6 +137,8 @@ export function AppShell() {
       <button className="fab" aria-label="Quick add" onClick={() => setQuickAddOpen(true)}>
         <Plus size={26} strokeWidth={2.5} />
       </button>
+
+      {showVoiceButton && <SpeakButton floating />}
 
       <QuickAddModal />
 

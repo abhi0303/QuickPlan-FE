@@ -58,7 +58,6 @@ export function DashboardPage() {
         </div>
         <div className="hero-actions">
           <QuickAdd label="Quick add" />
-          <QuickAdd label="Speak it" variant="ghost" icon="mic" />
         </div>
       </section>
 
