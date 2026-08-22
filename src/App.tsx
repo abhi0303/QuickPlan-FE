@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react'
 import toast, { Toaster, ToastBar } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { Sparkles, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { ApiProgress } from './components/common/ApiProgress'
+import { Loader } from './components/common/Loader'
 import { useAppStore } from './store/useAppStore'
 import './styles/global.scss'
 
@@ -14,15 +16,6 @@ const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage').then((modul
 const TasksPage = lazy(() => import('./pages/TasksPage').then((module) => ({ default: module.TasksPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
-
-function LoadingScreen() {
-  return (
-    <div className="loading-screen">
-      <span className="brand-mark"><Sparkles size={19} strokeWidth={2.4} /></span>
-      <span>Loading Quickplan...</span>
-    </div>
-  )
-}
 
 function App() {
   const session = useAppStore((state) => state.session)
@@ -60,7 +53,8 @@ function App() {
           </ToastBar>
         )}
       </Toaster>
-      <Suspense fallback={<LoadingScreen />}>
+      <ApiProgress />
+      <Suspense fallback={<Loader full label="Loading Quickplan..." />}>
         <Routes>
           <Route path="/auth" element={session ? <Navigate to="/" replace /> : <AuthPage />} />
           <Route element={session ? <AppShell /> : <Navigate to="/auth" replace />}>

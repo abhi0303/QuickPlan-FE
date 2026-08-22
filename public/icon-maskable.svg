@@ -10,9 +10,9 @@
       <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="116" fill="url(#g)"/>
-  <rect width="512" height="512" rx="116" fill="url(#sheen)"/>
-  <g transform="translate(102.40 102.40) scale(12.8000)">
+  <rect width="512" height="512" fill="url(#g)"/>
+  <rect width="512" height="512" fill="url(#sheen)"/>
+  <g transform="translate(128.00 128.00) scale(10.6667)">
     <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z" fill="#fff"/>
     <path d="M20 2v4M22 4h-4" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".92"/>
     <circle cx="4" cy="20" r="2" fill="#fff" opacity=".92"/>

@@ -39,6 +39,9 @@
     --rose: #e0526d;
     --rose-soft: #ffe9ed;
 
+    /* the highlight that sweeps across a loading placeholder */
+    --sheen: rgba(255, 255, 255, .78);
+
     --gradient: linear-gradient(135deg, #0fb58a 0%, #2ecfa1 45%, #6c7bff 130%);
     --gradient-soft: linear-gradient(135deg, #ddf5ed 0%, #e9ebff 100%);
 
@@ -92,6 +95,7 @@
     --tangerine: #ffb570;
     --tangerine-soft: #33251a;
     --periwinkle: #9ba5ff;
+    --sheen: rgba(255, 255, 255, .07);
     --periwinkle-soft: #1f2440;
     --rose: #ff8098;
     --rose-soft: #351d24;
@@ -317,8 +321,11 @@ h2 {
 }
 
 .task-skeleton {
-    animation: shimmer 1.3s ease-in-out infinite;
-    background: var(--surface-alt);
+    animation: shimmer 1.5s linear infinite;
+    background-color: var(--surface-alt);
+    background-image: linear-gradient(100deg, transparent 20%, var(--sheen) 44%, transparent 68%);
+    background-repeat: no-repeat;
+    background-size: 260% 100%;
     border-radius: var(--r-md);
     height: 52px;
 }
@@ -333,13 +340,12 @@ h2 {
 
 @keyframes shimmer {
 
-    0%,
-    100% {
-        opacity: .55;
+    from {
+        background-position: 160% 0;
     }
 
-    50% {
-        opacity: 1;
+    to {
+        background-position: -60% 0;
     }
 }
 
@@ -693,33 +699,15 @@ textarea.control {
    loading screen
    ========================================================================== */
 
-.loading-screen {
-    align-items: center;
-    background: var(--bg);
-    color: var(--muted);
-    display: flex;
-    flex-direction: column;
-    font-size: 14px;
-    font-weight: 600;
-    gap: 16px;
-    justify-content: center;
-    min-height: 100vh;
-}
-
-.loading-screen .brand-mark {
-    animation: float 1.6s ease-in-out infinite;
-}
-
-@keyframes float {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-7px);
-    }
+/* announced to a screen reader, invisible to everyone else */
+.sr-only {
+    border: 0;
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
 }
 
 @keyframes spin {
@@ -1167,6 +1155,11 @@ select {
     display: grid;
     gap: 12px;
     grid-template-columns: 1.25fr 1fr;
+}
+
+/* a select is as wide as its widest option unless the column may shrink */
+.field-pair > * {
+    min-width: 0;
 }
 
 @media (max-width: 560px) {

@@ -198,3 +198,11 @@
 
 .reminder-clock { font-size: 30px; }
 }
+
+/* No hover on a touch screen: these controls would never appear. */
+@media (hover: none) {
+
+    .reminder-actions {
+        opacity: 1;
+    }
+}

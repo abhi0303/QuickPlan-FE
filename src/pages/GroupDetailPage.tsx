@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import {
-  ArrowLeft, CircleAlert, Crown, HandCoins, LoaderCircle, Pencil, Plus, Receipt, Trash2, UserPlus, Users,
+  ArrowLeft, BedDouble, CircleAlert, Crown, HandCoins, LoaderCircle, Pencil, Plane, Plus, Receipt,
+  ReceiptText, ShoppingBag, Trash2, UserPlus, Users, UtensilsCrossed, Wallet,
 } from 'lucide-react'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ExpenseModal } from '../components/groups/ExpenseModal'
@@ -14,6 +15,21 @@ import { avatarStyle } from '../utils/avatar'
 import './GroupDetailPage.scss'
 
 const money = (value: number) => `₹${Math.abs(value).toFixed(2)}`
+
+/**
+ * A glyph and a colour per category. Carrying the category as an icon rather
+ * than another chip lets the row be scanned by kind at a glance, and leaves the
+ * only bold thing in it as the number that matters.
+ */
+const CATEGORY_LOOK: Record<string, { icon: typeof Wallet, tone: string }> = {
+  food: { icon: UtensilsCrossed, tone: 'tone-food' },
+  travel: { icon: Plane, tone: 'tone-travel' },
+  stay: { icon: BedDouble, tone: 'tone-stay' },
+  shopping: { icon: ShoppingBag, tone: 'tone-shopping' },
+  bills: { icon: ReceiptText, tone: 'tone-bills' },
+}
+
+const DEFAULT_LOOK = { icon: Wallet, tone: 'tone-plain' }
 
 export function GroupDetailPage() {
   const { id = '' } = useParams()
@@ -131,42 +147,57 @@ export function GroupDetailPage() {
               <button className="text-button" onClick={() => setAdding(true)}>Add the first expense</button>
             </div>
           ) : (
-            expenses.map((expense) => {
-              // author or owner may edit and delete — mirror the server rule
-              const canEdit = expense.createdById === me || isOwner
-              return (
-                <div className={`expense-row ${busyId === expense.id ? 'is-busy' : ''}`} key={expense.id}>
-                  <div className="expense-copy">
-                    <strong>{expense.title}</strong>
+            <div className="expense-list">
+              {expenses.map((expense) => {
+                // author or owner may edit and delete — mirror the server rule
+                const canEdit = expense.createdById === me || isOwner
+                const look = CATEGORY_LOOK[expense.category?.toLowerCase() ?? ''] ?? DEFAULT_LOOK
+                const CategoryIcon = look.icon
+                return (
+                  <div className={`expense-row ${busyId === expense.id ? 'is-busy' : ''}`} key={expense.id}>
+                    <span className={`expense-icon ${look.tone}`} title={expense.category ?? 'Uncategorised'}>
+                      <CategoryIcon size={18} />
+                    </span>
+
+                    <strong className="expense-title">{expense.title}</strong>
+
                     <div className="expense-meta">
-                      <span>{expense.iPaid ? 'You paid' : `${expense.paidBy?.name ?? 'Someone'} paid`}</span>
-                      <span>{money(expense.totalAmount)}</span>
-                      {expense.category && <span className="expense-cat">{expense.category}</span>}
+                      {/* first name only: the full one pushes this line onto a
+                          second row on a phone, and the row already names them
+                          nowhere else */}
+                      <span>
+                        {expense.iPaid ? 'You' : expense.paidBy?.name?.split(' ')[0] ?? 'Someone'} paid {money(expense.totalAmount)}
+                      </span>
+                      {expense.category && <span className="expense-cat-text">{expense.category}</span>}
                       <span>{format(parseISO(expense.date), 'd MMM')}</span>
                     </div>
-                  </div>
 
-                  <div className="expense-share">
-                    <small>your share</small>
-                    {/* rendered as returned — the server assigns the rounding remainder */}
-                    <strong>{money(expense.myShare ?? 0)}</strong>
-                  </div>
-
-                  {canEdit && (
-                    <div className="expense-actions">
-                      <button className="expense-edit" onClick={() => setEditing(expense)}
-                        aria-label={`Edit ${expense.title}`}>
-                        <Pencil size={15} />
-                      </button>
-                      <button className="expense-delete" onClick={() => setPendingDelete(expense)}
-                        aria-label={`Delete ${expense.title}`}>
-                        <Trash2 size={15} />
-                      </button>
+                    <div className="expense-share">
+                      <small>your share</small>
+                      {/* rendered as returned — the server assigns the rounding remainder */}
+                      <strong>{money(expense.myShare ?? 0)}</strong>
                     </div>
-                  )}
-                </div>
-              )
-            })
+
+                    {/* the slot is always rendered, empty when this member may not
+                        touch the expense, so the columns stay aligned down the list */}
+                    <div className="expense-actions">
+                      {canEdit && (
+                        <>
+                          <button className="expense-edit" onClick={() => setEditing(expense)}
+                            aria-label={`Edit ${expense.title}`}>
+                            <Pencil size={15} />
+                          </button>
+                          <button className="expense-delete" onClick={() => setPendingDelete(expense)}
+                            aria-label={`Delete ${expense.title}`}>
+                            <Trash2 size={15} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
 

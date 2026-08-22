@@ -139,3 +139,12 @@
         white-space: normal;
     }
 }
+
+/* No hover on a touch screen: these controls would never appear. */
+@media (hover: none) {
+
+    .task-edit,
+    .task-delete {
+        opacity: 1;
+    }
+}
