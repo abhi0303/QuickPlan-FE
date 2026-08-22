@@ -208,7 +208,10 @@ that actually changed.
 - **The scheduler (section 5).** Nothing else blocks push. Until a server-side
   job fires at `notifyAt` and `dueAt`, no notification is ever sent — the
   in-app ringtone only works while a tab is open and counting down.
-- `UpdateTaskDto` and `UpdateUserDto` still document zero properties, so the
-  frontend guesses at those payloads.
-- No response schemas are published, so every response is normalised
-  defensively on the client.
+- ~~`UpdateTaskDto` and `UpdateUserDto` still document zero properties~~ —
+  fixed 23 Aug 2026; both now document their fields, and they match what the
+  frontend was already sending.
+- No response schemas outside the notification endpoints, so responses are
+  still normalised defensively on the client.
+- `ExpenseShareInputDto.value` is still `required`, so an `EQUAL` split keeps
+  sending the computed share rather than the `0` the description implies.
