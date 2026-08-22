@@ -14,6 +14,13 @@ export type Session = {
   token: string
 }
 
+/** Completion history behind the sidebar's streak card. */
+export type Activity = {
+  streak: number
+  /** One flag per day for the last week, oldest first. */
+  days: boolean[]
+}
+
 type AppStore = {
   theme: Theme
   /** Which ringtone reminder alerts use. */
@@ -31,6 +38,13 @@ type AppStore = {
   moneyComposerOpen: boolean
   /** Bumped after any task mutation so views know to refetch. */
   tasksVersion: number
+  /**
+   * Figures the shell shows but does not fetch. The dashboard publishes them;
+   * until it has, they are null and the shell shows nothing rather than a
+   * number it made up.
+   */
+  activity: Activity | null
+  openToday: number | null
   /** Bumped only when finishing the last open task, to fire the celebration. */
   celebrationId: number
   /** The task currently open in the edit dialog, if any. */
@@ -45,6 +59,7 @@ type AppStore = {
   setMoneyComposerOpen: (open: boolean) => void
   openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
+  publishActivity: (activity: Activity | null, openToday: number | null) => void
   celebrate: () => void
   setEditingTask: (task: Task | null) => void
   setEditingReminder: (reminder: Reminder | null) => void
@@ -64,6 +79,8 @@ export const useAppStore = create<AppStore>()(
       quickAddSeed: '',
       moneyComposerOpen: false,
       tasksVersion: 0,
+      activity: null,
+      openToday: null,
       celebrationId: 0,
       editingTask: null,
       editingReminder: null,
@@ -77,6 +94,7 @@ export const useAppStore = create<AppStore>()(
       openQuickAddWithText: (quickAddSeed) => set({ quickAddSeed, quickAddOpen: true }),
       setMoneyComposerOpen: (moneyComposerOpen) => set({ moneyComposerOpen }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
+      publishActivity: (activity, openToday) => set({ activity, openToday }),
       celebrate: () => set((state) => ({ celebrationId: state.celebrationId + 1 })),
       setEditingTask: (editingTask) => set({ editingTask }),
       setEditingReminder: (editingReminder) => set({ editingReminder }),
@@ -86,6 +104,7 @@ export const useAppStore = create<AppStore>()(
         set({
           session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '',
           moneyComposerOpen: false, editingTask: null, editingReminder: null,
+          activity: null, openToday: null,
         }),
     }),
     {

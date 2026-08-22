@@ -27,6 +27,13 @@ export type Task = {
   category?: string
   dueDate?: string
   isCompleted: boolean
+  /**
+   * When the task was finished. The API publishes no schemas, so this may be
+   * absent entirely — anything derived from it has to cope with that.
+   */
+  completedAt?: string
+  updatedAt?: string
+  createdAt?: string
 }
 
 function asString(value: unknown): string | undefined {
@@ -62,6 +69,9 @@ function normalizeTask(raw: unknown): Task | null {
     category: asString(source.category),
     dueDate: asString(source.dueDate) ?? asString(source.dueAt),
     isCompleted,
+    completedAt: asString(source.completedAt) ?? asString(source.completed_at),
+    updatedAt: asString(source.updatedAt) ?? asString(source.updated_at),
+    createdAt: asString(source.createdAt) ?? asString(source.created_at),
   }
 }
 
