@@ -2,10 +2,12 @@
    Shared tokens, base type and cross-component primitives live in
    src/styles/global.scss. */
 
+/* DashboardPage — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
 /* ==========================================================================
    hero greeting
    ========================================================================== */
-
 .hero-card {
     background: var(--gradient);
     border-radius: var(--r-xl);
@@ -79,7 +81,6 @@
 /* ==========================================================================
    stat cards
    ========================================================================== */
-
 .stats-grid {
     display: grid;
     gap: 16px;
@@ -155,7 +156,6 @@
 
 /* scoped to the label only — a bare `.stat-card span` also matches
    .stat-icon / .stat-trend and wins on specificity, killing their flex */
-
 .stat-label {
     color: var(--muted);
     display: block;
@@ -167,26 +167,11 @@
 /* ==========================================================================
    panels
    ========================================================================== */
-
 .dashboard-grid {
     align-items: start;
     display: grid;
     gap: 20px;
     grid-template-columns: 1.25fr 1fr;
-}
-
-.panel-heading {
-    align-items: center;
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
-    margin-bottom: 6px;
-}
-
-.panel-heading h2 {
-    align-items: center;
-    display: flex;
-    gap: 9px;
 }
 
 .add-task-line {
@@ -212,7 +197,6 @@
 }
 
 /* upcoming */
-
 .upcoming-list {
     display: grid;
     gap: 8px;
@@ -269,7 +253,6 @@
 }
 
 /* insight */
-
 .insight-card {
     align-items: center;
     background: var(--gradient-soft);

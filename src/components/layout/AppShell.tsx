@@ -25,15 +25,25 @@ import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
 import './AppShell.scss'
 
-/** Voice capture is a single entry point for tasks, reminders and money. */
-const VOICE_ROUTES = ['/', '/tasks', '/reminders', '/expenses']
+/** Voice capture creates tasks and reminders; expenses are made inside a group. */
+const VOICE_ROUTES = ['/', '/tasks', '/reminders']
+
+/**
+ * Quick Add only makes tasks and reminders, so across the money area the FAB
+ * offers that page's own create action instead.
+ */
+function moneyAction(pathname: string) {
+  if (pathname === '/expenses') return 'New group'
+  if (pathname.startsWith('/groups/')) return 'Add expense'
+  return null
+}
 
 const navigation = [
   { to: '/', label: 'Home', icon: House, end: true },
   { to: '/tasks', label: 'Tasks', icon: CircleCheckBig, badge: '4' },
   { to: '/reminders', label: 'Reminders', icon: AlarmClock },
   { to: '/expenses', label: 'Money', icon: Wallet },
-  { to: '/people', label: 'People', icon: Users },
+  { to: '/people', label: 'Friends', icon: Users },
 ]
 
 export function AppShell() {
@@ -42,8 +52,10 @@ export function AppShell() {
   const signOut = useAppStore((state) => state.signOut)
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
+  const setMoneyComposerOpen = useAppStore((state) => state.setMoneyComposerOpen)
   const { pathname } = useLocation()
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
+  const moneyLabel = moneyAction(pathname)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -137,7 +149,14 @@ export function AppShell() {
         </div>
       </main>
 
-      <button className="fab" aria-label="Quick add" onClick={() => setQuickAddOpen(true)}>
+      {/* with no voice button on this page the FAB takes its lower, easier to
+          reach slot rather than floating over the middle of the content */}
+      <button
+        className={`fab ${showVoiceButton ? '' : 'in-voice-slot'}`}
+        aria-label={moneyLabel ?? 'Quick add'}
+        title={moneyLabel ?? 'Quick add'}
+        onClick={() => (moneyLabel ? setMoneyComposerOpen(true) : setQuickAddOpen(true))}
+      >
         <Plus size={26} strokeWidth={2.5} />
       </button>
 

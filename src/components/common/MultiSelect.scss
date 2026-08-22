@@ -1,0 +1,199 @@
+/* MultiSelect — styles owned by this component.
+   Shared tokens live in src/styles/global.scss. */
+
+.multi-select { position: relative; }
+
+.multi-trigger {
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    gap: 10px;
+    padding: 14px 16px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+    width: 100%;
+}
+
+.multi-trigger.is-open,
+.multi-trigger:focus-visible {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.multi-trigger:disabled { cursor: not-allowed; opacity: .6; }
+
+.multi-summary {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.multi-summary em { color: var(--muted); font-style: normal; font-weight: 500; }
+
+.multi-count {
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    color: var(--on-primary);
+    flex: none;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 22px;
+    padding: 2px 7px;
+    text-align: center;
+}
+
+.multi-trigger svg { color: var(--muted); flex: none; transition: transform .2s ease; }
+.multi-trigger svg.flip { transform: rotate(180deg); }
+
+.multi-panel {
+    animation: multiIn .16s ease;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lg);
+    left: 0;
+    padding: 10px;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 40;
+}
+
+/* flipped above the trigger when there is not enough room below it */
+.multi-panel.is-up {
+    animation-name: multiInUp;
+    bottom: calc(100% + 6px);
+    top: auto;
+}
+
+@keyframes multiIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes multiInUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+}
+
+.multi-search {
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 0 12px;
+}
+
+.multi-search input {
+    background: none;
+    border: 0;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 0;
+    outline: 0;
+    padding: 9px 0;
+    width: 100%;
+}
+
+.multi-search button {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 20px;
+    justify-content: center;
+    width: 20px;
+}
+
+.multi-search button:hover { background: var(--surface-alt); color: var(--text); }
+
+/* fixed ceiling: twenty options scroll rather than growing the dialog */
+.multi-list {
+    display: grid;
+    gap: 2px;
+    max-height: 224px;
+    overflow-y: auto;
+}
+
+.multi-empty { color: var(--muted); font-size: 13px; padding: 14px 8px; text-align: center; }
+
+.multi-option {
+    align-items: center;
+    border-radius: var(--r-md);
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    padding: 8px 9px;
+    text-align: left;
+    transition: background .16s ease;
+    width: 100%;
+}
+
+.multi-option:hover { background: var(--surface-soft); }
+.multi-option.active { background: var(--primary-soft); }
+
+.multi-check {
+    align-items: center;
+    border: 2px solid var(--border-strong);
+    border-radius: 7px;
+    color: transparent;
+    display: flex;
+    flex: none;
+    height: 21px;
+    justify-content: center;
+    transition: background .16s ease, border-color .16s ease;
+    width: 21px;
+}
+
+.multi-option.active .multi-check {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+}
+
+.multi-copy { min-width: 0; }
+.multi-copy strong { display: block; font-size: 14px; font-weight: 600; }
+
+.multi-copy small {
+    color: var(--muted);
+    display: block;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.multi-foot {
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 6px;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+.multi-foot button {
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 12px;
+}
+
+.multi-foot button:hover { background: var(--surface-alt); color: var(--primary-strong); }

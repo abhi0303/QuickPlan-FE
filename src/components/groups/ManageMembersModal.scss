@@ -1,0 +1,87 @@
+/* ManageMembersModal — styles owned by this component.
+   The modal shell, member picker and person rows live in src/styles/global.scss
+   and CreateGroupModal.scss. */
+
+.members-modal { max-width: 520px; }
+
+.members-current {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.member-row {
+    align-items: center;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 12px;
+    padding: 8px 10px;
+    transition: background .16s ease;
+}
+
+.member-row:hover { background: var(--surface-soft); }
+
+.role-toggle,
+.role-static {
+    align-items: center;
+    border-radius: var(--r-pill);
+    display: inline-flex;
+    flex: none;
+    font-size: 11px;
+    font-weight: 700;
+    gap: 5px;
+    padding: 5px 11px;
+}
+
+.role-toggle {
+    background: var(--surface-alt);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background .16s ease, color .16s ease;
+}
+
+.role-toggle:hover:not(:disabled) { background: var(--tangerine-soft); color: var(--tangerine); }
+.role-toggle.is-owner { background: var(--tangerine-soft); color: var(--tangerine); }
+.role-toggle:disabled { cursor: wait; opacity: .6; }
+
+.role-static { background: var(--surface-alt); color: var(--muted); }
+.role-static.is-owner { background: var(--tangerine-soft); color: var(--tangerine); }
+
+.member-remove {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 32px;
+    justify-content: center;
+    transition: background .18s ease, color .18s ease;
+    width: 32px;
+}
+
+.member-remove:hover:not(:disabled) { background: var(--rose-soft); color: var(--rose); }
+.member-remove:disabled { cursor: wait; opacity: .6; }
+
+.members-add {
+    border-top: 1px solid var(--border);
+    margin-top: 14px;
+    padding-top: 18px;
+}
+
+.members-add h3 {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 6px;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.members-add .modal-submit { margin-top: 14px; width: 100%; }
+
+.members-note { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 16px; }

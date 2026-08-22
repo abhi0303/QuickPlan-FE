@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { Mic, Sparkles, Volume2, X } from 'lucide-react'
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import { useSpeechSynthesis } from '../../hooks/useSpeechSynthesis'
-import { isQuickAddCancel, isSelfOnlyAnswer, parseQuickAdd } from '../../services/smartInput'
+import { isQuickAddCancel, parseQuickAdd } from '../../services/smartInput'
 import { useAppStore } from '../../store/useAppStore'
 import './SpeakButton.scss'
 
@@ -41,10 +41,6 @@ function followUpQuestion(title: string, turn: number) {
   return FOLLOW_UPS[turn % FOLLOW_UPS.length](subject)
 }
 
-function splitQuestion(amount?: number) {
-  const sum = amount ? `the ${amount}` : 'this'
-  return `Got it! Who shall I split ${sum} with? Say their names, or say just me.`
-}
 
 function Dots() {
   return <span className="listening-dots"><i /><i /><i /></span>
@@ -56,15 +52,6 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
 
   const [phase, setPhaseState] = useState<Phase>('idle')
   const [question, setQuestion] = useState('')
-  /** Which follow-up is outstanding — they merge differently.
-      Ref for the recognition callbacks, state for rendering. */
-  const askKindRef = useRef<'time' | 'split'>('time')
-  const [askKind, setAskKindState] = useState<'time' | 'split'>('time')
-
-  function setAskKind(next: 'time' | 'split') {
-    askKindRef.current = next
-    setAskKindState(next)
-  }
 
   const phaseRef = useRef<Phase>('idle')
   const firstTranscriptRef = useRef('')
@@ -106,12 +93,6 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
       }
 
       if (phaseRef.current === 'answering') {
-        if (askKindRef.current === 'split') {
-          // "just me" / "no one" means keep it to yourself
-          const names = isSelfOnlyAnswer(transcript) ? '' : transcript
-          finish(names ? `${firstTranscriptRef.current} with ${names}` : firstTranscriptRef.current)
-          return
-        }
         const combined = `${firstTranscriptRef.current} ${transcript}`.trim()
         const merged = parseQuickAdd(combined)
         finish(merged?.matched.time ? combined : firstTranscriptRef.current)
@@ -124,21 +105,16 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
         return
       }
 
-      // An expense with nobody named is either a shared bill or your own
-      // spend, and only you can say which.
-      const needsSplit = parsed.intent === 'expense' && !parsed.personName
+      // Expenses are created inside a group, so there is nothing to ask about
+      // here — Quick add explains where money lives.
       const needsTime = parsed.intent !== 'expense' && !parsed.matched.time
-
-      if (!needsSplit && !needsTime) {
+      if (!needsTime) {
         finish(transcript)
         return
       }
 
-      setAskKind(needsSplit ? 'split' : 'time')
       firstTranscriptRef.current = transcript
-      const prompt = needsSplit
-        ? splitQuestion(parsed.amount)
-        : followUpQuestion(parsed.title, turnRef.current)
+      const prompt = followUpQuestion(parsed.title, turnRef.current)
       turnRef.current += 1
       setQuestion(prompt)
       setPhase('asking')
@@ -283,9 +259,7 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
             <button className="voice-done" onClick={speech.stop}>Done</button>
           )}
           {phase === 'answering' && (
-            <button className="voice-ghost" onClick={skip}>
-              {askKind === 'split' ? 'Just me' : 'Skip time'}
-            </button>
+            <button className="voice-ghost" onClick={skip}>Skip time</button>
           )}
           <button className="voice-ghost" onClick={cancel}>
             <X size={15} /> Cancel
