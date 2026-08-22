@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   AlarmClock,
-  Bell,
   CircleCheckBig,
   Flame,
   House,
@@ -16,6 +15,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import { Celebration } from '../common/Celebration'
+import { NotificationBell } from '../notifications/NotificationBell'
 import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
@@ -145,10 +145,7 @@ export function AppShell() {
             >
               {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
             </button>
-            <button className="icon-button" aria-label="Notifications">
-              <Bell size={19} />
-              <i className="dot" />
-            </button>
+            <NotificationBell />
             <NavLink to="/settings" className="icon-button" aria-label="Settings">
               <Settings size={19} />
             </NavLink>

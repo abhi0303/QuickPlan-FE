@@ -8,7 +8,7 @@
  * registered before any subscription can be created.
  */
 
-const VERSION = 'quickplan-v1'
+const VERSION = 'quickplan-v2'
 
 self.addEventListener('install', () => {
   // take over straight away rather than waiting for every tab to close
@@ -64,24 +64,35 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200],
   }
 
-  event.waitUntil(self.registration.showNotification(title, options))
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(() =>
+      // an open tab refreshes its unread badge without waiting for the poll
+      self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
+        for (const client of clients) client.postMessage({ type: 'PUSH_RECEIVED' })
+      })),
+  )
 })
 
 /** Focus an existing tab if one is open, otherwise start a new one. */
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
 
-  const target = new URL(event.notification.data?.url || './', self.location.origin + self.registration.scope).href
+  const target = new URL(event.notification.data?.url || './', self.location.origin + self.registration.scope)
+
+  // the app marks this one read on arrival, whether it was already open or is
+  // starting cold from the tap
+  const opened = event.notification.data?.notificationId
+  if (opened) target.searchParams.set('n', opened)
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if (client.url.startsWith(self.registration.scope) && 'focus' in client) {
-          client.navigate(target)
+          client.navigate(target.href)
           return client.focus()
         }
       }
-      return self.clients.openWindow(target)
+      return self.clients.openWindow(target.href)
     }),
   )
 })
