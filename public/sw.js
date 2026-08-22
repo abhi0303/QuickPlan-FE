@@ -52,8 +52,9 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'QuickPlan reminder'
   const options = {
     body: data.body || '',
-    icon: data.icon || './favicon.svg',
-    badge: data.badge || './favicon.svg',
+    // PNG rather than the SVG: Android does not reliably render an SVG here
+    icon: data.icon || './icon-192.png',
+    badge: data.badge || './icon-192.png',
     tag: data.tag || 'quickplan-reminder',
     renotify: true,
     requireInteraction: data.requireInteraction ?? true,

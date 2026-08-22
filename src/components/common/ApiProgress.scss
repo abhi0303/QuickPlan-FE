@@ -1,0 +1,28 @@
+/* ApiProgress — styles owned by this component.
+   Shared tokens live in src/styles/global.scss. */
+
+.api-progress {
+    background: var(--primary-soft);
+    height: 3px;
+    left: 0;
+    overflow: hidden;
+    position: fixed;
+    right: 0;
+    /* above the app chrome, below dialogs so it never covers a decision */
+    top: 0;
+    z-index: 38;
+}
+
+.api-progress i {
+    animation: apiSweep 1.15s cubic-bezier(.65, .12, .35, .9) infinite;
+    background: var(--gradient);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 100%;
+    width: 40%;
+}
+
+@keyframes apiSweep {
+    from { transform: translateX(-105%); }
+    to { transform: translateX(255%); }
+}

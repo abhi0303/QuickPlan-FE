@@ -122,8 +122,11 @@
 }
 
 .reminder-skeleton {
-    animation: shimmer 1.3s ease-in-out infinite;
-    background: var(--surface-alt);
+    animation: shimmer 1.5s linear infinite;
+    background-color: var(--surface-alt);
+    background-image: linear-gradient(100deg, transparent 20%, var(--sheen) 44%, transparent 68%);
+    background-repeat: no-repeat;
+    background-size: 260% 100%;
     border-radius: var(--r-xl);
     height: 230px;
 }

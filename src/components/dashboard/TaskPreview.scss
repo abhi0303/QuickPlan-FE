@@ -56,3 +56,11 @@
         opacity: 1;
     }
 }
+
+/* No hover on a touch screen: these controls would never appear. */
+@media (hover: none) {
+
+    .task-menu {
+        opacity: 1;
+    }
+}

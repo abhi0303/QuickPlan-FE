@@ -1,0 +1,92 @@
+/* Loader — styles owned by this component.
+   Shared tokens live in src/styles/global.scss. */
+
+.loader {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.loader.is-full {
+    background: var(--bg);
+    min-height: 100vh;
+    min-height: 100svh;
+}
+
+.loader-orb {
+    display: grid;
+    height: 76px;
+    place-items: center;
+    position: relative;
+    width: 76px;
+}
+
+.loader.is-compact .loader-orb { height: 52px; width: 52px; }
+
+/* two rings turning at different speeds read as motion even on a slow frame */
+.loader-ring {
+    animation: loaderSpin 1.05s linear infinite;
+    border: 3px solid transparent;
+    border-radius: var(--r-pill);
+    border-top-color: var(--primary);
+    inset: 0;
+    position: absolute;
+}
+
+.loader-ring.alt {
+    animation-duration: 1.7s;
+    animation-direction: reverse;
+    border-top-color: transparent;
+    border-bottom-color: var(--periwinkle);
+    inset: 8px;
+    opacity: .8;
+}
+
+.loader.is-compact .loader-ring.alt { inset: 6px; }
+
+.loader-mark {
+    align-items: center;
+    animation: loaderPulse 1.9s ease-in-out infinite;
+    background: var(--gradient);
+    border-radius: 15px;
+    box-shadow: var(--shadow-primary);
+    color: #fff;
+    display: flex;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+}
+
+.loader.is-compact .loader-mark { border-radius: 11px; height: 30px; width: 30px; }
+
+.loader-label {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+@keyframes loaderSpin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes loaderPulse {
+
+    0%,
+    100% { transform: scale(1); }
+
+    50% { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .loader-ring,
+    .loader-mark {
+        animation-duration: 3s;
+    }
+
+    .loader-mark { animation: none; }
+}

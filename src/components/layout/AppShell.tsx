@@ -40,7 +40,7 @@ function moneyAction(pathname: string) {
 
 const navigation = [
   { to: '/', label: 'Home', icon: House, end: true },
-  { to: '/tasks', label: 'Tasks', icon: CircleCheckBig, badge: '4' },
+  { to: '/tasks', label: 'Tasks', icon: CircleCheckBig },
   { to: '/reminders', label: 'Reminders', icon: AlarmClock },
   { to: '/expenses', label: 'Money', icon: Wallet },
   { to: '/people', label: 'Friends', icon: Users },
@@ -53,6 +53,9 @@ export function AppShell() {
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
   const setMoneyComposerOpen = useAppStore((state) => state.setMoneyComposerOpen)
+  // both are published by the dashboard; null until it has loaded once
+  const activity = useAppStore((state) => state.activity)
+  const openToday = useAppStore((state) => state.openToday)
   const { pathname } = useLocation()
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
   const moneyLabel = moneyAction(pathname)
@@ -80,25 +83,34 @@ export function AppShell() {
         </div>
 
         <nav className="sidebar-nav">
-          {navigation.map(({ to, label, icon: Icon, end, badge }) => (
+          {navigation.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
               <Icon size={19} strokeWidth={2} />
               {label}
-              {badge && <span className="nav-badge">{badge}</span>}
+              {to === '/tasks' && openToday !== null && openToday > 0 && (
+                <span className="nav-badge">{openToday}</span>
+              )}
             </NavLink>
           ))}
         </nav>
 
-        <div className="streak-card">
-          <span className="streak-icon"><Flame size={20} strokeWidth={2.2} /></span>
-          <strong>5 day streak</strong>
-          <small>Keep it going, {firstName}!</small>
-          <div className="streak-dots">
-            {[true, true, true, true, true, false, false].map((done, index) => (
-              <i key={index} className={done ? 'on' : ''} />
-            ))}
+        {/* hidden until the dashboard has real completion history: the API
+            sends no completion timestamps for some accounts, and a streak is
+            not worth inventing */}
+        {activity && (
+          <div className="streak-card">
+            <span className="streak-icon"><Flame size={20} strokeWidth={2.2} /></span>
+            <strong>{activity.streak > 0 ? `${activity.streak} day streak` : 'No streak yet'}</strong>
+            <small>
+              {activity.streak > 0 ? `Keep it going, ${firstName}!` : `Finish one task today, ${firstName}.`}
+            </small>
+            <div className="streak-dots">
+              {activity.days.map((done, index) => (
+                <i key={index} className={done ? 'on' : ''} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="user-card">
           <span className="avatar">{initial}</span>
