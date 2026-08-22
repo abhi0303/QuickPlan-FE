@@ -5,6 +5,9 @@
 /* QuickAddModal — styles owned by this component.
    Shared tokens, base type and cross-component primitives live in
    src/styles/global.scss. */
+/* QuickAddModal — styles owned by this component.
+   Shared tokens, base type and cross-component primitives live in
+   src/styles/global.scss. */
 /* --- smart / voice input row --- */
 .smart-row {
     align-items: center;
@@ -177,22 +180,38 @@
     gap: 20px;
 }
 
-.field-pair {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: 1.25fr 1fr;
-}
-
 @media (max-width: 560px) {
 .modal form {
         gap: 18px;
-    }
-
-.field-pair {
-        grid-template-columns: 1fr;
     }
 
 .modal-actions button {
         width: 100%;
     }
 }
+
+/* Shown on the Money tab now that expenses belong to a group rather than to
+   the individual user. */
+
+/* Shown when a phrase parses as money — expenses are created inside a group,
+   so the hint points there rather than offering a form that cannot submit. */
+.smart-note.money {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-md);
+    color: var(--primary-strong);
+    flex-wrap: wrap;
+    padding: 10px 12px;
+}
+
+.smart-note.money button {
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    color: var(--on-primary);
+    font-size: 12px;
+    font-weight: 700;
+    margin-left: auto;
+    padding: 5px 12px;
+}
+
+.smart-note.money button:hover { background: var(--primary-strong); }

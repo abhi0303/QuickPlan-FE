@@ -3,6 +3,7 @@ import toast from 'react-hot-toast'
 import { BellRing, LoaderCircle, Send, ShieldAlert, Smartphone } from 'lucide-react'
 import { disablePush, enablePush, getPushState, sendTestPush } from '../../services/push'
 import type { PushState } from '../../services/push'
+import './PushToggle.scss'
 
 const COPY: Record<PushState, string> = {
   on: 'Reminders will alert you even when QuickPlan is closed.',

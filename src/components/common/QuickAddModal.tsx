@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { FormEvent } from 'react'
 import toast from 'react-hot-toast'
 import { addDays, format, parseISO } from 'date-fns'
@@ -9,9 +9,8 @@ import {
 } from 'lucide-react'
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import { getApiErrorMessage } from '../../services/api'
-import { isQuickAddCancel, parseNames, parseQuickAdd } from '../../services/smartInput'
+import { isQuickAddCancel, parseQuickAdd } from '../../services/smartInput'
 import type { ParsedIntent } from '../../services/smartParser'
-import { createIOU, createSplitExpense } from '../../services/expenses'
 import { createReminder } from '../../services/reminders'
 import { createTask, TASK_PRIORITIES } from '../../services/tasks'
 import type { TaskPriority } from '../../services/tasks'
@@ -27,30 +26,15 @@ const DAY_PRESETS = [{ label: 'Today', days: 0 }, { label: 'Tomorrow', days: 1 }
 const INTENT_TABS: { value: ParsedIntent; label: string; icon: typeof CircleCheckBig }[] = [
   { value: 'task', label: 'Task', icon: CircleCheckBig },
   { value: 'reminder', label: 'Reminder', icon: AlarmClock },
-  { value: 'expense', label: 'Money', icon: IndianRupee },
 ]
 
 const DEFAULT_TIME = '09:00'
 
-/**
- * The money API has two distinct shapes, so the form asks which one up front
- * rather than inferring it from whichever field was left blank.
- *   self   -> /expenses/split, participantsCount 1  (your own spend)
- *   person -> /expenses/iou                          (one person owes, or is owed)
- *   split  -> /expenses/split with names             (shared bill)
- */
-type ExpenseMode = 'self' | 'person' | 'split'
 
-const EXPENSE_MODES: { value: ExpenseMode; label: string; hint: string }[] = [
-  { value: 'self', label: 'Just me', hint: 'A personal expense — nobody owes anything.' },
-  { value: 'person', label: 'One person', hint: 'A single IOU between you and one person.' },
-  { value: 'split', label: 'Split', hint: 'Shared evenly between everyone listed, including you.' },
-]
 
 /** Opening Quick add from a section starts on that section's form. */
 const ROUTE_INTENT: Record<string, ParsedIntent> = {
   '/reminders': 'reminder',
-  '/expenses': 'expense',
   '/tasks': 'task',
 }
 
@@ -65,11 +49,9 @@ const EMPTY = {
   offsetMinutes: '15',
   recurrenceRule: '',
   amount: '',
-  expenseMode: 'self' as ExpenseMode,
   direction: 'RECEIVABLE' as 'PAYABLE' | 'RECEIVABLE',
   personName: '',
   reason: '',
-  participants: '',
 }
 
 type FormState = typeof EMPTY
@@ -78,7 +60,6 @@ function applyParsed(current: FormState, text: string): FormState {
   const parsed = parseQuickAdd(text)
   if (!parsed) return current
 
-  const splitNames = parseNames(text.split(/\bwith\b/i).slice(1).join(' '))
 
   let dueDay = current.dueDay
   let dueTime = current.dueTime
@@ -92,8 +73,9 @@ function applyParsed(current: FormState, text: string): FormState {
 
   return {
     ...current,
-    intent: parsed.intent,
-    title: parsed.intent === 'expense' && parsed.title === 'Expense' ? current.title : parsed.title,
+    // Expenses are created inside a group, so an expense-sounding phrase keeps
+    // the current tab; the hint below points at Money.
+    intent: parsed.intent === 'expense' ? current.intent : parsed.intent,
     priority: parsed.priority,
     category: parsed.category ?? current.category,
     recurrenceRule: parsed.recurrenceRule ?? current.recurrenceRule,
@@ -102,12 +84,8 @@ function applyParsed(current: FormState, text: string): FormState {
     personName: parsed.personName ?? current.personName,
     dueDay,
     dueTime,
-    // the voice flow appends "with <names>" after the split question
-    participants: splitNames.join(', ') || current.participants,
-    expenseMode: parsed.personName ? 'person' : splitNames.length ? 'split' : current.expenseMode,
     // "Expense" is the parser's generic fallback; leave the field empty so the
     // placeholder shows instead of a meaningless pre-filled value
-    reason: parsed.reason ?? (parsed.title === 'Expense' ? current.reason : parsed.title),
   }
 }
 
@@ -128,6 +106,7 @@ function QuickAddDialog() {
   const bumpTasksVersion = useAppStore((state) => state.bumpTasksVersion)
   const seed = useAppStore((state) => state.quickAddSeed)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
 
   // The page sets the starting form; anything spoken or typed overrides it,
   // since applyParsed writes the detected intent.
@@ -153,13 +132,9 @@ function QuickAddDialog() {
   })
 
   const preview = smartText.trim() ? parseQuickAdd(smartText) : null
+  // the parser still recognises money, but expenses are created inside a group
+  const looksLikeMoney = preview?.intent === 'expense'
   const isReminder = form.intent === 'reminder'
-  const isExpense = form.intent === 'expense'
-  const splitNames = parseNames(form.participants)
-  const amountValue = Number(form.amount)
-  const perHead = Number.isFinite(amountValue) && amountValue > 0 && splitNames.length
-    ? Math.round((amountValue / (splitNames.length + 1)) * 100) / 100
-    : null
 
   function applySmart(text: string) {
     setForm((current) => applyParsed(current, text))
@@ -201,16 +176,7 @@ function QuickAddDialog() {
     const title = form.title.trim()
     const dueAt = toIsoDue(form)
 
-    if (isExpense) {
-      const amount = Number(form.amount)
-      if (!Number.isFinite(amount) || amount <= 0) return setError('Enter an amount greater than zero.')
-      if (form.expenseMode === 'person' && !form.personName.trim()) {
-        return setError('Who is this with? Add a name, or switch to Just me.')
-      }
-      if (form.expenseMode === 'split' && splitNames.length === 0) {
-        return setError('List who you are splitting with, or switch to Just me.')
-      }
-    } else if (!title) {
+    if (!title) {
       setError('Give it a title.')
       titleRef.current?.focus()
       return
@@ -229,25 +195,6 @@ function QuickAddDialog() {
           recurrenceRule: form.recurrenceRule || undefined,
         })
         toast.success('Reminder set')
-      } else if (isExpense) {
-        const amount = Number(form.amount)
-        const label = form.reason.trim() || title || 'Expense'
-
-        if (form.expenseMode === 'person') {
-          const person = form.personName.trim()
-          await createIOU({ personName: person, amount, direction: form.direction, reason: form.reason.trim() || undefined })
-          toast.success(form.direction === 'RECEIVABLE' ? `${person} owes you ₹${amount}` : `You owe ${person} ₹${amount}`)
-        } else {
-          const names = form.expenseMode === 'split' ? splitNames : []
-          await createSplitExpense({
-            title: label,
-            totalAmount: amount,
-            participantsCount: names.length + 1,
-            paidByMe: true,
-            names,
-          })
-          toast.success(names.length ? `Split between ${names.length + 1} people` : 'Expense saved')
-        }
       } else {
         await createTask({
           title,
@@ -302,6 +249,14 @@ function QuickAddDialog() {
 
         {speech.error && <p className="smart-note warn"><CircleAlert size={13} /> {speech.error}</p>}
 
+        {looksLikeMoney && (
+          <p className="smart-note money">
+            <IndianRupee size={13} />
+            That sounds like an expense — those live in a group.
+            <button type="button" onClick={() => { setOpen(false); navigate('/expenses') }}>Open Money</button>
+          </p>
+        )}
+
         {preview && (
           <div className="smart-preview">
             <Sparkles size={15} />
@@ -328,82 +283,7 @@ function QuickAddDialog() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          {isExpense ? (
-            <>
-              <div className="field">
-                <span className="field-label">Who is involved?</span>
-                <div className="segmented">
-                  {EXPENSE_MODES.map((mode) => (
-                    <button key={mode.value} type="button" className={form.expenseMode === mode.value ? 'active' : ''}
-                      onClick={() => update('expenseMode', mode.value)} disabled={saving}>{mode.label}</button>
-                  ))}
-                </div>
-                <p className="field-hint">{EXPENSE_MODES.find((mode) => mode.value === form.expenseMode)?.hint}</p>
-              </div>
-
-              <div className="field-pair">
-                <div className="field">
-                  <label className="field-label" htmlFor="amount">Amount</label>
-                  <span className="control adorned">
-                    <IndianRupee size={17} />
-                    <input id="amount" type="number" inputMode="decimal" min="0" step="any" value={form.amount}
-                      onChange={(e) => update('amount', e.target.value)} placeholder="500" disabled={saving} />
-                  </span>
-                </div>
-
-                {form.expenseMode === 'person' && (
-                  <div className="field">
-                    <span className="field-label">Direction</span>
-                    <div className="segmented">
-                      <button type="button" className={form.direction === 'RECEIVABLE' ? 'active' : ''}
-                        onClick={() => update('direction', 'RECEIVABLE')} disabled={saving}>They owe me</button>
-                      <button type="button" className={form.direction === 'PAYABLE' ? 'active' : ''}
-                        onClick={() => update('direction', 'PAYABLE')} disabled={saving}>I owe them</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {form.expenseMode === 'person' && (
-                <div className="field">
-                  <label className="field-label" htmlFor="person">Who?</label>
-                  <span className="control adorned">
-                    <Users size={17} />
-                    <input id="person" ref={titleRef} value={form.personName}
-                      onChange={(e) => update('personName', e.target.value)}
-                      placeholder="e.g. Rahul" disabled={saving} autoComplete="off" />
-                  </span>
-                </div>
-              )}
-
-              {form.expenseMode === 'split' && (
-                <div className="field">
-                  <label className="field-label" htmlFor="participants">
-                    Split between
-                    {splitNames.length > 0 && perHead && (
-                      <span className="field-optional">{splitNames.length + 1} people · ₹{perHead} each</span>
-                    )}
-                  </label>
-                  <span className="control adorned">
-                    <Users size={17} />
-                    <input id="participants" value={form.participants}
-                      onChange={(e) => update('participants', e.target.value)}
-                      placeholder="Rahul, Ravina and Suraj" disabled={saving} autoComplete="off" />
-                  </span>
-                  <p className="field-hint">You are counted automatically — just list the others.</p>
-                </div>
-              )}
-
-              <div className="field">
-                <label className="field-label" htmlFor="reason">What for?</label>
-                <input id="reason" className="control" value={form.reason}
-                  onChange={(e) => { update('reason', e.target.value); update('title', e.target.value) }}
-                  placeholder="Pizza" disabled={saving} autoComplete="off" />
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="field">
+          <div className="field">
                 <label className="field-label" htmlFor="task-title">{isReminder ? 'Remind me to' : 'What needs doing?'}</label>
                 <input id="task-title" className="control" ref={titleRef} value={form.title}
                   onChange={(e) => update('title', e.target.value)}
@@ -484,8 +364,6 @@ function QuickAddDialog() {
                   </div>
                 </>
               )}
-            </>
-          )}
 
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
 
@@ -493,7 +371,7 @@ function QuickAddDialog() {
             <button type="button" className="voice-ghost" onClick={() => setOpen(false)} disabled={saving}>Cancel</button>
             <button className="modal-submit" disabled={saving}>
               {saving ? <><LoaderCircle size={18} className="spin" /> Saving...</>
-                : <><Plus size={18} /> {isReminder ? 'Set reminder' : isExpense ? 'Save expense' : 'Add task'}</>}
+                : <><Plus size={18} /> {isReminder ? 'Set reminder' : 'Add task'}</>}
             </button>
           </footer>
         </form>

@@ -1,0 +1,63 @@
+/* ExpenseModal — styles owned by this component.
+   The modal shell and field primitives live in src/styles/global.scss. */
+
+.expense-modal { max-width: 540px; }
+.expense-modal form { display: grid; gap: 20px; }
+
+.expense-modal .field-pair {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* the running total turns red when it will not balance */
+.field-optional.off { color: var(--rose); font-weight: 700; }
+
+/* one box per person in the split — capped so a large group scrolls */
+.share-list {
+    display: grid;
+    gap: 4px;
+    margin-top: 10px;
+    max-height: 188px;
+    overflow-y: auto;
+}
+
+.share-row {
+    align-items: center;
+    background: var(--surface-soft);
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 5px 6px 5px 12px;
+}
+
+.share-name {
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.split-value {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    color: var(--text);
+    flex: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    outline: 0;
+    padding: 8px 10px;
+    text-align: right;
+    width: 104px;
+}
+
+.split-value:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+@media (max-width: 560px) {
+    .expense-modal .field-pair { grid-template-columns: 1fr; }
+    .split-value { width: 88px; }
+}

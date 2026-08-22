@@ -1,14 +1,16 @@
 import { lazy, Suspense } from 'react'
 import toast, { Toaster, ToastBar } from 'react-hot-toast'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { Sparkles, Users, Wallet, X } from 'lucide-react'
+import { Sparkles, X } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 import './styles/global.scss'
 
 const AppShell = lazy(() => import('./components/layout/AppShell').then((module) => ({ default: module.AppShell })))
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })))
-const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage').then((module) => ({ default: module.PlaceholderPage })))
 const RemindersPage = lazy(() => import('./pages/RemindersPage').then((module) => ({ default: module.RemindersPage })))
+const FriendsPage = lazy(() => import('./pages/FriendsPage').then((module) => ({ default: module.FriendsPage })))
+const GroupsPage = lazy(() => import('./pages/GroupsPage').then((module) => ({ default: module.GroupsPage })))
+const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage').then((module) => ({ default: module.GroupDetailPage })))
 const TasksPage = lazy(() => import('./pages/TasksPage').then((module) => ({ default: module.TasksPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
@@ -65,8 +67,9 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/reminders" element={<RemindersPage />} />
-            <Route path="/expenses" element={<PlaceholderPage icon={Wallet} title="Money" eyebrow="Simple finances" description="Track IOUs, expenses, and shared costs without the spreadsheet." />} />
-            <Route path="/people" element={<PlaceholderPage icon={Users} title="People" eyebrow="Your circle" description="See balances and transaction history with the people you know." />} />
+            <Route path="/expenses" element={<GroupsPage />} />
+            <Route path="/groups/:id" element={<GroupDetailPage />} />
+            <Route path="/people" element={<FriendsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to={session ? '/' : '/auth'} replace />} />

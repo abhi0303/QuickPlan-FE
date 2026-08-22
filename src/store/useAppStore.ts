@@ -23,6 +23,12 @@ type AppStore = {
   quickAddOpen: boolean
   /** Transcript captured before the modal opened; consumed as its initial text. */
   quickAddSeed: string
+  /**
+   * The money area's primary create dialog — a new group on the list, a new
+   * expense inside one. Only one of those pages is ever mounted, so a single
+   * flag lets the app shell's FAB open whichever is in front of the user.
+   */
+  moneyComposerOpen: boolean
   /** Bumped after any task mutation so views know to refetch. */
   tasksVersion: number
   /** Bumped only when finishing the last open task, to fire the celebration. */
@@ -36,6 +42,7 @@ type AppStore = {
   toggleTheme: () => void
   setSidebarOpen: (open: boolean) => void
   setQuickAddOpen: (open: boolean) => void
+  setMoneyComposerOpen: (open: boolean) => void
   openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
   celebrate: () => void
@@ -55,6 +62,7 @@ export const useAppStore = create<AppStore>()(
       session: null,
       quickAddOpen: false,
       quickAddSeed: '',
+      moneyComposerOpen: false,
       tasksVersion: 0,
       celebrationId: 0,
       editingTask: null,
@@ -67,6 +75,7 @@ export const useAppStore = create<AppStore>()(
       // re-applied the next time Quick Add opens
       setQuickAddOpen: (quickAddOpen) => set(quickAddOpen ? { quickAddOpen } : { quickAddOpen, quickAddSeed: '' }),
       openQuickAddWithText: (quickAddSeed) => set({ quickAddSeed, quickAddOpen: true }),
+      setMoneyComposerOpen: (moneyComposerOpen) => set({ moneyComposerOpen }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
       celebrate: () => set((state) => ({ celebrationId: state.celebrationId + 1 })),
       setEditingTask: (editingTask) => set({ editingTask }),
@@ -74,7 +83,10 @@ export const useAppStore = create<AppStore>()(
       signIn: (session) => set({ session, sidebarOpen: false }),
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
       signOut: () =>
-        set({ session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '', editingTask: null, editingReminder: null }),
+        set({
+          session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '',
+          moneyComposerOpen: false, editingTask: null, editingReminder: null,
+        }),
     }),
     {
       name: 'quickplan-preferences',

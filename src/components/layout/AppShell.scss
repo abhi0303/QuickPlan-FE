@@ -2,29 +2,9 @@
    Shared tokens, base type and cross-component primitives live in
    src/styles/global.scss. */
 
-.brand-mark {
-    align-items: center;
-    background: var(--gradient);
-    border-radius: 14px;
-    box-shadow: var(--shadow-primary);
-    color: #fff;
-    display: flex;
-    flex: none;
-    height: 38px;
-    justify-content: center;
-    width: 38px;
-}
-
-.brand-mark.sm {
-    border-radius: 11px;
-    height: 30px;
-    width: 30px;
-}
-
 /* ==========================================================================
    shell + floating sidebar
    ========================================================================== */
-
 .app-shell {
     display: flex;
     min-height: 100vh;
@@ -109,7 +89,6 @@
 }
 
 /* streak card — the friendly bit that replaces the admin "workspace" label */
-
 .streak-card {
     background: var(--gradient-soft);
     border-radius: var(--r-lg);
@@ -228,7 +207,6 @@
 /* ==========================================================================
    main column + topbar
    ========================================================================== */
-
 .main-content {
     margin-left: calc(var(--sidebar-w) + var(--shell-gap));
     min-height: 100vh;
@@ -301,7 +279,6 @@
 /* ==========================================================================
    mobile bottom nav + FAB
    ========================================================================== */
-
 .bottom-nav {
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     backdrop-filter: blur(18px);
@@ -394,6 +371,15 @@
         display: flex;
     }
 
+    /* pages without the voice button leave its slot free, and it is the
+       comfortable one for a thumb */
+.fab.in-voice-slot {
+        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+        height: 64px;
+        right: calc(18px + env(safe-area-inset-right, 0px));
+        width: 64px;
+    }
+
 .page-container {
         padding: 6px calc(20px + env(safe-area-inset-right, 0px)) calc(110px + env(safe-area-inset-bottom, 0px)) calc(20px + env(safe-area-inset-left, 0px));
     }
@@ -412,7 +398,6 @@
         padding-top: max(calc(14px + env(safe-area-inset-top, 0px)), 50px);
     }
 
-/* iOS home indicator sits over the tab bar on gesture-nav devices */
 .bottom-nav {
         padding-bottom: max(calc(8px + env(safe-area-inset-bottom, 0px)), 12px);
     }
