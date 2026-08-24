@@ -1,14 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { format, parseISO } from 'date-fns'
 import { createPortal } from 'react-dom'
 import toast from 'react-hot-toast'
-import { CircleAlert, IndianRupee, LoaderCircle, Plus, Save, X } from 'lucide-react'
+import { CalendarDays, CircleAlert, Clock3, IndianRupee, LoaderCircle, Plus, Save, X } from 'lucide-react'
 import { MultiSelect } from '../common/MultiSelect'
 import { getApiErrorMessage } from '../../services/api'
 import { createExpense, SPLIT_TYPES, updateExpense } from '../../services/expenses'
 import type { CreateExpensePayload, Expense, SplitType } from '../../services/expenses'
 import type { GroupMember } from '../../services/groups'
+import { EXPENSE_CATEGORIES } from '../../data/expenseCategories'
 import './ExpenseModal.scss'
+
+/** An expense that happened is dated; only the clock time is ever guessed at. */
+function splitWhen(iso?: string) {
+  const parsed = iso ? parseISO(iso) : new Date()
+  const at = Number.isNaN(parsed.getTime()) ? new Date() : parsed
+  return { day: format(at, 'yyyy-MM-dd'), time: format(at, 'HH:mm') }
+}
 
 const SPLIT_LABEL: Record<SplitType, string> = {
   EQUAL: 'Equally',
@@ -16,7 +25,6 @@ const SPLIT_LABEL: Record<SplitType, string> = {
   PERCENTAGE: 'Percentages',
 }
 
-const CATEGORIES = ['Food', 'Travel', 'Stay', 'Shopping', 'Bills', 'Other']
 
 type Props = {
   open: boolean
@@ -48,6 +56,12 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
   const [category, setCategory] = useState(expense?.category ?? '')
   const [paidById, setPaidById] = useState(expense?.paidById ?? currentUserId)
   const [splitType, setSplitType] = useState<SplitType>(expense?.splitType ?? 'EQUAL')
+
+  // defaults to now for a new expense, so backdating is a change the user makes
+  // rather than a field they must fill in every time
+  const when = splitWhen(expense?.date)
+  const [day, setDay] = useState(when.day)
+  const [time, setTime] = useState(when.time)
 
   const [included, setIncluded] = useState<string[]>(
     expense ? expense.shares.map((s) => s.userId) : members.map((m) => m.id),
@@ -84,6 +98,13 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
   }, [onClose])
 
   const total = Number(amount) || 0
+
+  /** The chosen moment as an ISO string, or undefined if the date is cleared. */
+  function whenIso() {
+    if (!day) return undefined
+    const combined = new Date(`${day}T${time || '12:00'}`)
+    return Number.isNaN(combined.getTime()) ? undefined : combined.toISOString()
+  }
 
   const options = useMemo(
     () => members.map((member) => ({
@@ -145,8 +166,13 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
           || included.some((id) => !expense.shares.some((s) => s.userId === id))
           || splitType !== 'EQUAL'
 
+        const nextDate = whenIso()
+        const dateChanged = Boolean(nextDate)
+          && new Date(nextDate as string).getTime() !== new Date(expense.date).getTime()
+
         await updateExpense(expense.id, {
           ...(trimmed !== expense.title ? { title: trimmed } : {}),
+          ...(dateChanged ? { date: nextDate } : {}),
           ...((category || undefined) !== (expense.category ?? undefined) ? { category: category || undefined } : {}),
           ...(paidById !== expense.paidById ? { paidById } : {}),
           ...(splitChanged ? { totalAmount: total, splitType, shares: buildShares() } : {}),
@@ -158,6 +184,7 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
           totalAmount: total,
           category: category || undefined,
           paidById,
+          date: whenIso(),
           splitType,
           shares: buildShares(),
         })
@@ -218,12 +245,30 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
             </div>
           </div>
 
+          <div className="field">
+            <span className="field-label">When</span>
+            <div className="field-pair">
+              <span className="control adorned">
+                <CalendarDays size={17} />
+                <input type="date" aria-label="Date of the expense" value={day}
+                  onChange={(e) => { setDay(e.target.value); setError('') }} disabled={saving} />
+              </span>
+              <span className="control adorned">
+                <Clock3 size={17} />
+                <input type="time" aria-label="Time of the expense" value={time}
+                  onChange={(e) => setTime(e.target.value)} disabled={saving} />
+              </span>
+            </div>
+          </div>
+
           <div className="field-pair">
             <div className="field">
               <label className="field-label" htmlFor="exp-category">Category</label>
               <select id="exp-category" value={category} onChange={(e) => setCategory(e.target.value)} disabled={saving}>
                 <option value="">None</option>
-                {CATEGORIES.map((option) => <option key={option} value={option}>{option}</option>)}
+                {EXPENSE_CATEGORIES.map((option) => (
+                  <option key={option.label} value={option.label}>{option.label}</option>
+                ))}
               </select>
             </div>
 

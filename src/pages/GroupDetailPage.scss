@@ -3,20 +3,6 @@
 
 .group-detail { padding-top: 10px; }
 
-.back-link {
-    align-items: center;
-    color: var(--muted);
-    display: inline-flex;
-    font-size: 13px;
-    font-weight: 700;
-    gap: 6px;
-    margin-bottom: 14px;
-    text-decoration: none;
-    transition: color .18s ease;
-}
-
-.back-link:hover { color: var(--primary-strong); }
-
 .detail-skeleton {
     animation: shimmer 1.5s linear infinite;
     background-color: var(--surface-alt);
@@ -46,6 +32,52 @@
 .net-banner.up { background: var(--gradient); }
 .net-banner.down { background: linear-gradient(120deg, #e0526d 0%, #f2871f 100%); }
 .net-banner.level { background: linear-gradient(120deg, #6e8a80 0%, #8fa8a0 100%); }
+
+/* the banner carries two figures now: mine on the left, the group's on the right */
+.net-banner > div:first-of-type { flex: 1; min-width: 0; }
+
+.net-total {
+    border-left: 1px solid rgba(255, 255, 255, .28);
+    flex: none;
+    padding-left: 18px;
+    text-align: right;
+}
+
+.net-total small {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 3px;
+    opacity: .85;
+}
+
+.head-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 10px;
+}
+
+.head-link {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: inline-flex;
+    font-size: 13.5px;
+    font-weight: 700;
+    gap: 7px;
+    padding: 12px 17px;
+    text-decoration: none;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.head-link:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
 
 .net-icon {
     align-items: center;
@@ -130,7 +162,11 @@
 
 .expense-icon {
     align-items: center;
+    /* one rule for every category: the tile is a wash of its own colour, mixed
+       against the surface so it works in either theme */
+    background: color-mix(in srgb, var(--tone) 15%, var(--surface));
     border-radius: 13px;
+    color: var(--tone);
     display: flex;
     grid-area: icon;
     height: 40px;
@@ -138,12 +174,22 @@
     width: 40px;
 }
 
-.expense-icon.tone-food { background: var(--tangerine-soft); color: var(--tangerine); }
-.expense-icon.tone-travel { background: var(--periwinkle-soft); color: var(--periwinkle); }
-.expense-icon.tone-stay { background: var(--primary-soft); color: var(--primary-strong); }
-.expense-icon.tone-shopping { background: var(--rose-soft); color: var(--rose); }
-.expense-icon.tone-bills { background: var(--surface-alt); color: var(--text-soft); }
-.expense-icon.tone-plain { background: var(--surface-alt); color: var(--muted); }
+.expense-icon.tone-food { --tone: var(--tangerine); }
+.expense-icon.tone-groceries { --tone: #16a34a; }
+.expense-icon.tone-drinks { --tone: #a855f7; }
+.expense-icon.tone-smoke { --tone: #a16207; }
+.expense-icon.tone-travel { --tone: var(--periwinkle); }
+.expense-icon.tone-fuel { --tone: #ef4444; }
+.expense-icon.tone-parking { --tone: #0ea5e9; }
+.expense-icon.tone-transport { --tone: #f59e0b; }
+.expense-icon.tone-stay { --tone: var(--primary); }
+.expense-icon.tone-activities { --tone: #14b8a6; }
+.expense-icon.tone-shopping { --tone: var(--rose); }
+.expense-icon.tone-bills { --tone: #6366f1; }
+.expense-icon.tone-health { --tone: #e11d48; }
+.expense-icon.tone-gifts { --tone: #d946ef; }
+.expense-icon.tone-other { --tone: #64748b; }
+.expense-icon.tone-plain { --tone: var(--muted); }
 
 .expense-title {
     font-size: 15px;
@@ -337,7 +383,21 @@
 @media (max-width: 860px) {
     .expense-delete,
     .expense-edit { opacity: 1; }
+
     .net-banner { align-items: flex-start; flex-direction: column; }
+
+    /* stacked, so the rule that divided the two figures becomes a line above */
+    .net-total {
+        border-left: 0;
+        border-top: 1px solid rgba(255, 255, 255, .28);
+        padding-left: 0;
+        padding-top: 14px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .head-actions { width: 100%; }
+    .head-link { flex: 1; justify-content: center; }
 }
 
 /* the floating action button offers the same thing below this width */

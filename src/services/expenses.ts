@@ -71,6 +71,20 @@ export type ExpenseFilters = {
   offset?: number
 }
 
+/**
+ * Newest first, by when the expense happened rather than when it was typed in.
+ *
+ * The API documents no ordering, and a backdated expense should sit in its own
+ * place in the timeline, so the order is settled here for every caller. Ties
+ * fall back to the id, which keeps the order stable between renders.
+ */
+export function byDateDesc(a: Expense, b: Expense) {
+  const left = new Date(a.date).getTime()
+  const right = new Date(b.date).getTime()
+  if (Number.isNaN(left) || Number.isNaN(right) || left === right) return b.id.localeCompare(a.id)
+  return right - left
+}
+
 export async function listGroupExpenses(groupId: string, filters: ExpenseFilters = {}): Promise<ExpenseListPage> {
   const { data } = await api.get(`/api/groups/${groupId}/expenses`, { params: filters })
   const page = (data ?? {}) as Partial<ExpenseListPage>
@@ -78,8 +92,37 @@ export async function listGroupExpenses(groupId: string, filters: ExpenseFilters
     total: page.total ?? 0,
     limit: page.limit ?? 50,
     offset: page.offset ?? 0,
-    items: Array.isArray(page.items) ? page.items : [],
+    items: (Array.isArray(page.items) ? page.items : []).sort(byDateDesc),
   }
+}
+
+/** Hard stop so a runaway group cannot spin the client forever. */
+const ALL_PAGE_SIZE = 100
+const ALL_CAP = 2000
+
+/**
+ * Every expense in a group, walked page by page.
+ *
+ * The analytics endpoints publish no response schema yet (see
+ * docs/analytics-api.md), so the charts are computed from the raw list. Returns
+ * `truncated` when the group is larger than the cap, and the page says so
+ * rather than quietly charting a subset.
+ */
+export async function listAllGroupExpenses(
+  groupId: string,
+  filters: Omit<ExpenseFilters, 'limit' | 'offset'> = {},
+): Promise<{ items: Expense[]; total: number; truncated: boolean }> {
+  const first = await listGroupExpenses(groupId, { ...filters, limit: ALL_PAGE_SIZE, offset: 0 })
+  const items = [...first.items]
+
+  while (items.length < Math.min(first.total, ALL_CAP)) {
+    const page = await listGroupExpenses(groupId, { ...filters, limit: ALL_PAGE_SIZE, offset: items.length })
+    if (page.items.length === 0) break
+    items.push(...page.items)
+  }
+
+  // each page arrived sorted; the concatenation of pages is not, so sort again
+  return { items: items.sort(byDateDesc), total: first.total, truncated: first.total > items.length }
 }
 
 export async function createExpense(groupId: string, payload: CreateExpensePayload): Promise<Expense> {

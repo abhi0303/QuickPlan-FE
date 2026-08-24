@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { format, parseISO } from 'date-fns'
+import { format, isToday, parseISO } from 'date-fns'
 import {
-  ArrowLeft, BedDouble, CircleAlert, Crown, HandCoins, LoaderCircle, Pencil, Plane, Plus, Receipt,
-  ReceiptText, ShoppingBag, Trash2, UserPlus, Users, UtensilsCrossed, Wallet,
+  ArrowLeft, ChartPie, CircleAlert, Crown, HandCoins, LoaderCircle, Pencil, Plus,
+  Receipt, Trash2, UserPlus, Users,
 } from 'lucide-react'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ExpenseModal } from '../components/groups/ExpenseModal'
@@ -11,25 +11,19 @@ import { ManageMembersModal } from '../components/groups/ManageMembersModal'
 import { useGroupDetail } from '../hooks/useGroupDetail'
 import type { Expense } from '../services/expenses'
 import { useAppStore } from '../store/useAppStore'
+import { categoryLook } from '../data/expenseCategories'
 import { avatarStyle } from '../utils/avatar'
 import './GroupDetailPage.scss'
 
 const money = (value: number) => `₹${Math.abs(value).toFixed(2)}`
 
-/**
- * A glyph and a colour per category. Carrying the category as an icon rather
- * than another chip lets the row be scanned by kind at a glance, and leaves the
- * only bold thing in it as the number that matters.
- */
-const CATEGORY_LOOK: Record<string, { icon: typeof Wallet, tone: string }> = {
-  food: { icon: UtensilsCrossed, tone: 'tone-food' },
-  travel: { icon: Plane, tone: 'tone-travel' },
-  stay: { icon: BedDouble, tone: 'tone-stay' },
-  shopping: { icon: ShoppingBag, tone: 'tone-shopping' },
-  bills: { icon: ReceiptText, tone: 'tone-bills' },
+/** Today's expenses show the clock, older ones the date — same width either way. */
+function whenLabel(iso: string) {
+  const at = parseISO(iso)
+  if (Number.isNaN(at.getTime())) return ''
+  return isToday(at) ? format(at, 'h:mm a') : format(at, 'd MMM')
 }
 
-const DEFAULT_LOOK = { icon: Wallet, tone: 'tone-plain' }
 
 export function GroupDetailPage() {
   const { id = '' } = useParams()
@@ -76,6 +70,9 @@ export function GroupDetailPage() {
   }
 
   const myNet = balances?.myNetBalance ?? group.myNetBalance
+
+  // every rupee anyone fronted — the group's own total, not the caller's share
+  const groupTotal = (balances?.members ?? []).reduce((sum, member) => sum + member.paid, 0)
   const mySettlements = (balances?.suggestedSettlements ?? []).filter((s) => s.fromUserId === me)
 
   return (
@@ -88,14 +85,23 @@ export function GroupDetailPage() {
           <h1>{group.name}</h1>
           {group.description && <p className="muted">{group.description}</p>}
         </div>
-        {/* the mobile FAB already offers this, so drop the duplicate once
-            there is a list to look at */}
-        <button
-          className={`quick-add solid ${expenses.length > 0 ? 'fab-covered' : ''}`}
-          onClick={() => setAdding(true)}
-        >
-          <Plus size={18} strokeWidth={2.4} /> Add expense
-        </button>
+        <div className="head-actions">
+          {/* worth offering as soon as there is anything to analyse */}
+          {expenses.length > 0 && (
+            <Link to={`/groups/${id}/analysis`} className="head-link">
+              <ChartPie size={16} /> Analysis
+            </Link>
+          )}
+
+          {/* the mobile FAB already offers this, so drop the duplicate once
+              there is a list to look at */}
+          <button
+            className={`quick-add solid ${expenses.length > 0 ? 'fab-covered' : ''}`}
+            onClick={() => setAdding(true)}
+          >
+            <Plus size={18} strokeWidth={2.4} /> Add expense
+          </button>
+        </div>
       </div>
 
       <div className={`net-banner ${myNet > 0.005 ? 'up' : myNet < -0.005 ? 'down' : 'level'}`}>
@@ -107,6 +113,17 @@ export function GroupDetailPage() {
               : myNet < -0.005 ? `You owe ${money(myNet)}`
                 : 'You are settled up'}
           </strong>
+        </div>
+
+        {/* what the group has spent between everyone: the sum of what each
+            member fronted, which the balances already carry */}
+        <div className="net-total">
+          <p className="net-label">Total spent</p>
+          <strong>{money(groupTotal)}</strong>
+          <small>
+            {expenses.length} expense{expenses.length === 1 ? '' : 's'}
+            {group.memberCount > 0 && <> · {money(groupTotal / group.memberCount)} a head</>}
+          </small>
         </div>
       </div>
 
@@ -151,7 +168,7 @@ export function GroupDetailPage() {
               {expenses.map((expense) => {
                 // author or owner may edit and delete — mirror the server rule
                 const canEdit = expense.createdById === me || isOwner
-                const look = CATEGORY_LOOK[expense.category?.toLowerCase() ?? ''] ?? DEFAULT_LOOK
+                const look = categoryLook(expense.category)
                 const CategoryIcon = look.icon
                 return (
                   <div className={`expense-row ${busyId === expense.id ? 'is-busy' : ''}`} key={expense.id}>
@@ -169,7 +186,7 @@ export function GroupDetailPage() {
                         {expense.iPaid ? 'You' : expense.paidBy?.name?.split(' ')[0] ?? 'Someone'} paid {money(expense.totalAmount)}
                       </span>
                       {expense.category && <span className="expense-cat-text">{expense.category}</span>}
-                      <span>{format(parseISO(expense.date), 'd MMM')}</span>
+                      <span>{whenLabel(expense.date)}</span>
                     </div>
 
                     <div className="expense-share">

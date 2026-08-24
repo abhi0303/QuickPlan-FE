@@ -1257,3 +1257,20 @@ select {
     color: var(--primary-strong);
     transform: translateY(-1px);
 }
+
+/* Back link — used by the group detail page and its analysis page, so it
+   belongs to neither. */
+
+.back-link {
+    align-items: center;
+    color: var(--muted);
+    display: inline-flex;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 6px;
+    margin-bottom: 14px;
+    text-decoration: none;
+    transition: color .18s ease;
+}
+
+.back-link:hover { color: var(--primary-strong); }
