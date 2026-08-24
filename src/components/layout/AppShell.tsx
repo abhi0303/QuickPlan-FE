@@ -18,6 +18,7 @@ import { LevelUpOverlay } from '../gamification/LevelUpOverlay'
 import { RankCard } from '../gamification/RankCard'
 import { RankChip } from '../gamification/RankChip'
 import { NotificationBell } from '../notifications/NotificationBell'
+import { Tour } from '../onboarding/Tour'
 import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
@@ -174,6 +175,8 @@ export function AppShell() {
           onClose={acknowledgeLevelUp}
         />
       )}
+
+      <Tour />
 
       <QuickAddModal />
       <EditTaskModal />

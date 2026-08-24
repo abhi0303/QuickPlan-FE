@@ -1,0 +1,208 @@
+/* Tour — styles owned by this component.
+   Shared tokens live in src/styles/global.scss. */
+
+.tour {
+    inset: 0;
+    position: fixed;
+    /* above the app, below nothing — the tour is the only thing to attend to */
+    z-index: 80;
+}
+
+/* the dimmed screen when nothing in particular is being pointed at */
+.tour-dim {
+    animation: fadeIn .25s ease;
+    background: rgba(8, 28, 23, .62);
+    inset: 0;
+    position: absolute;
+}
+
+/*
+ * The hole. One element with an enormous spread shadow dims everything around
+ * it, so the cut-out follows the target as it moves instead of four panels
+ * chasing it.
+ */
+.tour-hole {
+    border-radius: 14px;
+    box-shadow: 0 0 0 9999px rgba(8, 28, 23, .62), 0 0 0 3px var(--primary) inset;
+    pointer-events: none;
+    position: absolute;
+    transition: top .3s cubic-bezier(.2, .8, .3, 1), left .3s cubic-bezier(.2, .8, .3, 1),
+        width .3s cubic-bezier(.2, .8, .3, 1), height .3s cubic-bezier(.2, .8, .3, 1);
+}
+
+/* a slow pulse so the eye lands on it without the ring shouting */
+.tour-hole::after {
+    animation: tourPulse 2.4s ease-out infinite;
+    border: 2px solid var(--primary);
+    border-radius: 14px;
+    content: '';
+    inset: -3px;
+    position: absolute;
+}
+
+@keyframes tourPulse {
+    0% { opacity: .8; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.07); }
+}
+
+.tour-card {
+    animation: tourIn .3s cubic-bezier(.2, .8, .3, 1);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    max-width: calc(100vw - 24px);
+    padding: 20px;
+    position: absolute;
+    width: 330px;
+}
+
+.tour-card.is-centred {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 380px;
+}
+
+@keyframes tourIn {
+    from { opacity: 0; transform: translateY(10px) scale(.98); }
+    to { opacity: 1; transform: none; }
+}
+
+.tour-card.is-centred {
+    animation-name: tourInCentre;
+}
+
+@keyframes tourInCentre {
+    from { opacity: 0; transform: translate(-50%, -46%) scale(.97); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.tour-top {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.tour-badge {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 800;
+    gap: 6px;
+    letter-spacing: .3px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+}
+
+.tour-skip {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 700;
+    gap: 4px;
+    padding: 5px 9px;
+}
+
+.tour-skip:hover { background: var(--surface-alt); color: var(--text); }
+
+.tour-card h2 {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+}
+
+.tour-card p {
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.55;
+    margin-top: 6px;
+}
+
+.tour-dots {
+    display: flex;
+    gap: 5px;
+    margin-top: 16px;
+}
+
+.tour-dots i {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    height: 5px;
+    transition: background .2s ease, width .3s ease;
+    width: 5px;
+}
+
+.tour-dots i.done { background: var(--primary-soft); }
+.tour-dots i.on { background: var(--primary); width: 18px; }
+
+.tour-actions {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin-top: 16px;
+}
+
+.tour-back {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: inline-flex;
+    font-size: 13.5px;
+    font-weight: 700;
+    gap: 6px;
+    padding: 9px 12px;
+}
+
+.tour-back:hover:not(:disabled) { background: var(--surface-alt); color: var(--text); }
+.tour-back:disabled { opacity: .35; }
+
+.tour-next {
+    align-items: center;
+    background: var(--gradient);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-primary);
+    color: #fff;
+    display: inline-flex;
+    font-size: 14px;
+    font-weight: 700;
+    gap: 7px;
+    padding: 11px 18px;
+    transition: transform .16s ease;
+}
+
+.tour-next:active { transform: scale(.97); }
+
+@media (max-width: 560px) {
+
+    /* one width for both placements: there is no room to be clever */
+    .tour-card,
+    .tour-card.is-centred {
+        left: 12px !important;
+        right: 12px;
+        width: auto;
+    }
+
+    .tour-card.is-centred {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    @keyframes tourInCentre {
+        from { opacity: 0; transform: translateY(-46%); }
+        to { opacity: 1; transform: translateY(-50%); }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .tour-hole::after { animation: none; }
+    .tour-hole { transition: none; }
+}

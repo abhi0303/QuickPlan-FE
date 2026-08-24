@@ -1,4 +1,4 @@
-import { BellRing, Globe, LogOut, Moon, Palette, Repeat, Sun } from 'lucide-react'
+import { BellRing, Compass, Globe, LogOut, Moon, Palette, Play, Repeat, Sun } from 'lucide-react'
 import { PushToggle } from '../components/common/PushToggle'
 import { useAppStore } from '../store/useAppStore'
 import './SettingsPage.scss'
@@ -7,6 +7,7 @@ export function SettingsPage() {
   const theme = useAppStore((state) => state.theme)
   const setTheme = useAppStore((state) => state.setTheme)
   const signOut = useAppStore((state) => state.signOut)
+  const requestTour = useAppStore((state) => state.requestTour)
 
   return (
     <section className="settings-page">
@@ -77,6 +78,19 @@ export function SettingsPage() {
             <option value="mon">Monday</option>
             <option value="sun">Sunday</option>
           </select>
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-label">
+            <span className="setting-icon"><Compass size={20} /></span>
+            <div>
+              <strong>Guide</strong>
+              <small>Take the tour of tasks, reminders, money and missions again</small>
+            </div>
+          </div>
+          <button className="setting-action" onClick={requestTour}>
+            <Play size={14} /> Start
+          </button>
         </div>
       </div>
 

@@ -36,3 +36,21 @@
     background: var(--rose-soft);
     border-color: var(--rose);
 }
+
+/* the one row that starts something rather than setting it */
+.setting-action {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: inline-flex;
+    flex: none;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 6px;
+    padding: 9px 16px;
+    transition: background .18s ease, border-color .18s ease;
+}
+
+.setting-action:hover { background: var(--primary-soft); border-color: var(--primary); }

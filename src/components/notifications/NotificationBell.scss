@@ -1,18 +1,19 @@
 /* NotificationBell — styles owned by this component.
    Shared tokens and .icon-button live in src/styles/global.scss. */
 
-.notif { position: relative; }
+.notif {
+    position: relative;
+}
 
 .notif-count {
     background: var(--rose);
-    border: 2px solid var(--surface);
     border-radius: var(--r-pill);
     color: #fff;
     font-size: 10px;
     font-weight: 800;
     line-height: 1;
     min-width: 18px;
-    padding: 3px 4px;
+    padding: 4px;
     position: absolute;
     right: -2px;
     text-align: center;
@@ -36,8 +37,15 @@
 }
 
 @keyframes notifIn {
-    from { opacity: 0; transform: translateY(-8px) scale(.98); }
-    to { opacity: 1; transform: none; }
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 /* ----------------------------------------------------------------- head -- */
@@ -85,7 +93,9 @@
     transition: background .18s ease;
 }
 
-.notif-readall:hover { background: var(--primary-soft); }
+.notif-readall:hover {
+    background: var(--primary-soft);
+}
 
 /* ---------------------------------------------------------------- state -- */
 
@@ -101,7 +111,11 @@
     text-align: center;
 }
 
-.notif-state small { color: var(--muted); font-size: 12px; font-weight: 500; }
+.notif-state small {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+}
 
 .notif-empty-icon {
     align-items: center;
@@ -132,8 +146,13 @@
     scrollbar-width: thin;
 }
 
-.notif-list::-webkit-scrollbar { width: 8px; }
-.notif-list::-webkit-scrollbar-track { background: transparent; }
+.notif-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.notif-list::-webkit-scrollbar-track {
+    background: transparent;
+}
 
 .notif-list::-webkit-scrollbar-thumb {
     background: var(--border-strong);
@@ -159,12 +178,19 @@
     transition: background .16s ease;
 }
 
-.notif-row:hover { background: var(--surface-soft); }
+.notif-row:hover {
+    background: var(--surface-soft);
+}
 
 /* Unread is a dot and a whisper of tint, not a filled block — a list where
    every row is a coloured slab is harder to read, not easier. */
-.notif-row.is-unread { background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
-.notif-row.is-unread:hover { background: color-mix(in srgb, var(--primary) 11%, var(--surface)); }
+.notif-row.is-unread {
+    background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+}
+
+.notif-row.is-unread:hover {
+    background: color-mix(in srgb, var(--primary) 11%, var(--surface));
+}
 
 .notif-row.is-unread::after {
     background: var(--primary);
@@ -208,7 +234,10 @@
     width: 38px;
 }
 
-.notif-avatar.plain { background: var(--surface-alt); color: var(--muted); }
+.notif-avatar.plain {
+    background: var(--surface-alt);
+    color: var(--muted);
+}
 
 .notif-badge {
     align-items: center;
@@ -225,16 +254,33 @@
     width: 19px;
 }
 
-.notif-badge.tone-money { --tone: var(--primary-strong); }
-.notif-badge.tone-group { --tone: var(--periwinkle); }
-.notif-badge.tone-friend { --tone: #a855f7; }
-.notif-badge.tone-time { --tone: var(--tangerine); }
+.notif-badge.tone-money {
+    --tone: var(--primary-strong);
+}
+
+.notif-badge.tone-group {
+    --tone: var(--periwinkle);
+}
+
+.notif-badge.tone-friend {
+    --tone: #a855f7;
+}
+
+.notif-badge.tone-time {
+    --tone: var(--tangerine);
+}
+
 /* missions and levels get their own accent — they are not money or people */
-.notif-badge.tone-xp { --tone: #eab308; }
+.notif-badge.tone-xp {
+    --tone: #eab308;
+}
 
 /* ------------------------------------------------------------------ copy -- */
 
-.notif-copy { min-width: 0; padding-right: 12px; }
+.notif-copy {
+    min-width: 0;
+    padding-right: 12px;
+}
 
 .notif-line {
     align-items: baseline;
@@ -288,9 +334,18 @@
     width: 26px;
 }
 
-.notif-row:hover .notif-dismiss { opacity: 1; }
-.notif-row:hover.is-unread::after { opacity: 0; }
-.notif-dismiss:hover { background: var(--rose-soft); color: var(--rose); }
+.notif-row:hover .notif-dismiss {
+    opacity: 1;
+}
+
+.notif-row:hover.is-unread::after {
+    opacity: 0;
+}
+
+.notif-dismiss:hover {
+    background: var(--rose-soft);
+    color: var(--rose);
+}
 
 .notif-more {
     border-radius: var(--r-md);
@@ -301,18 +356,30 @@
     width: 100%;
 }
 
-.notif-more:hover { background: var(--surface-soft); }
-.notif-more:disabled { color: var(--muted); }
+.notif-more:hover {
+    background: var(--surface-soft);
+}
+
+.notif-more:disabled {
+    color: var(--muted);
+}
 
 .notif-more .spin,
-.notif-state .spin { vertical-align: -2px; }
+.notif-state .spin {
+    vertical-align: -2px;
+}
 
 /* No hover on a touch screen: the dismiss control would never appear, and the
    unread dot would never clear the space for it. */
 @media (hover: none) {
 
-    .notif-dismiss { opacity: 1; }
-    .notif-row.is-unread::after { right: 40px; }
+    .notif-dismiss {
+        opacity: 1;
+    }
+
+    .notif-row.is-unread::after {
+        right: 40px;
+    }
 }
 
 /* A dropdown wider than the phone is no dropdown, so it becomes a sheet under
@@ -328,7 +395,15 @@
         width: auto;
     }
 
-    .notif-list { max-height: 62vh; }
-    .notif-readall span { display: none; }
-    .notif-readall { padding: 7px; }
+    .notif-list {
+        max-height: 62vh;
+    }
+
+    .notif-readall span {
+        display: none;
+    }
+
+    .notif-readall {
+        padding: 7px;
+    }
 }
