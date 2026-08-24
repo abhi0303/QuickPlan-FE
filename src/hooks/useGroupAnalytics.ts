@@ -297,6 +297,9 @@ export function useGroupAnalytics(groupId: string, memberCount: number) {
 
   return {
     analytics,
+    /** The window's own expenses, for the printable report. */
+    expenses: inRange,
+    window: { from, to },
     loading,
     error,
     retry,

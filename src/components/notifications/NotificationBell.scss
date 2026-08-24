@@ -229,6 +229,8 @@
 .notif-badge.tone-group { --tone: var(--periwinkle); }
 .notif-badge.tone-friend { --tone: #a855f7; }
 .notif-badge.tone-time { --tone: var(--tangerine); }
+/* missions and levels get their own accent — they are not money or people */
+.notif-badge.tone-xp { --tone: #eab308; }
 
 /* ------------------------------------------------------------------ copy -- */
 

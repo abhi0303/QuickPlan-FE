@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getApiErrorMessage } from '../services/api'
 import {
   dismissNotification,
@@ -10,16 +10,20 @@ import type { AppNotification } from '../services/notifications'
 import { useAppStore } from '../store/useAppStore'
 
 const PAGE_SIZE = 20
-/** The count endpoint is cheap; the feed itself is only fetched when opened. */
-const POLL_MS = 60_000
+/**
+ * A tab switch fires both `focus` and `visibilitychange`, and a quick flick
+ * between windows should not cost two requests either — so a refresh inside
+ * this window is skipped.
+ */
+const MIN_GAP_MS = 20_000
 
 /**
  * The notification feed behind the bell.
  *
- * The badge is kept fresh with the count endpoint alone — on a timer, when the
- * window regains focus, and the moment the service worker reports a push. The
- * list itself is only fetched when the panel is opened, so a user who never
- * opens it costs one small request a minute.
+ * Nothing polls. The badge refreshes when the app opens, when the window comes
+ * back to the foreground, when the service worker reports a push, and when the
+ * panel itself is opened — a tab left sitting there costs nothing. Push is what
+ * makes this immediate; without it the count catches up on the next focus.
  */
 export function useNotifications() {
   const session = useAppStore((state) => state.session)
@@ -33,8 +37,14 @@ export function useNotifications() {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
 
-  const refreshCount = useCallback(() => {
+  /** When the count was last asked for, so repeat triggers can be ignored. */
+  const lastCountAt = useRef(0)
+
+  const refreshCount = useCallback((force = false) => {
     if (!signedIn) return
+    const now = performance.now()
+    if (!force && now - lastCountAt.current < MIN_GAP_MS) return
+    lastCountAt.current = now
     getUnreadCount().then(setUnreadCount).catch(() => { /* the badge is not worth a toast */ })
   }, [signedIn])
 
@@ -43,6 +53,8 @@ export function useNotifications() {
     setLoading(true)
     try {
       const page = await listNotifications({ limit: PAGE_SIZE })
+      // the list carries the total, so opening the panel is also a count refresh
+      lastCountAt.current = performance.now()
       setItems(page.items)
       setCursor(page.nextCursor)
       setUnreadCount(page.unreadCount)
@@ -107,18 +119,18 @@ export function useNotifications() {
     }
   }
 
-  // badge upkeep: on sign-in, on a timer, on focus, and when a push lands
+  // badge upkeep: on sign-in, on returning to the app, and when a push lands
   useEffect(() => {
     if (!signedIn) return
 
-    refreshCount()
-    const timer = window.setInterval(refreshCount, POLL_MS)
+    refreshCount(true)
 
     function onFocus() {
       if (document.visibilityState === 'visible') refreshCount()
     }
     function onServiceWorkerMessage(event: MessageEvent) {
-      if (event.data?.type === 'PUSH_RECEIVED') refreshCount()
+      // a push means something definitely changed, so this one is not throttled
+      if (event.data?.type === 'PUSH_RECEIVED') refreshCount(true)
     }
 
     window.addEventListener('focus', onFocus)
@@ -126,7 +138,6 @@ export function useNotifications() {
     navigator.serviceWorker?.addEventListener('message', onServiceWorkerMessage)
 
     return () => {
-      window.clearInterval(timer)
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onFocus)
       navigator.serviceWorker?.removeEventListener('message', onServiceWorkerMessage)

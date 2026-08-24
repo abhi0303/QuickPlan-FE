@@ -1274,3 +1274,34 @@ select {
 }
 
 .back-link:hover { color: var(--primary-strong); }
+
+/* Header actions — the group page and its analysis page both use these,
+   so they belong to neither. */
+
+.head-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 10px;
+}
+
+.head-link {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: inline-flex;
+    font-size: 13.5px;
+    font-weight: 700;
+    gap: 7px;
+    padding: 12px 17px;
+    text-decoration: none;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.head-link:hover {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Reminder } from '../services/reminders'
+import type { GamificationState, MissionCatalogue } from '../services/gamification'
 import type { Task } from '../services/tasks'
 import { persist } from 'zustand/middleware'
 
@@ -14,13 +15,6 @@ export type Session = {
   token: string
 }
 
-/** Completion history behind the sidebar's streak card. */
-export type Activity = {
-  streak: number
-  /** One flag per day for the last week, oldest first. */
-  days: boolean[]
-}
-
 type AppStore = {
   theme: Theme
   /** Which ringtone reminder alerts use. */
@@ -31,6 +25,12 @@ type AppStore = {
   /** Transcript captured before the modal opened; consumed as its initial text. */
   quickAddSeed: string
   /**
+   * Whether Quick Add was opened by speaking. The server cannot tell a spoken
+   * task from a typed one — parsing happens on this device — so the origin has
+   * to be carried to the create call for voice missions to count.
+   */
+  quickAddViaVoice: boolean
+  /**
    * The money area's primary create dialog — a new group on the list, a new
    * expense inside one. Only one of those pages is ever mounted, so a single
    * flag lets the app shell's FAB open whichever is in front of the user.
@@ -39,12 +39,23 @@ type AppStore = {
   /** Bumped after any task mutation so views know to refetch. */
   tasksVersion: number
   /**
-   * Figures the shell shows but does not fetch. The dashboard publishes them;
-   * until it has, they are null and the shell shows nothing rather than a
-   * number it made up.
+   * Open tasks today, published by the dashboard for the shell's nav badge.
+   * Null until the dashboard has loaded once — the shell shows nothing rather
+   * than a number it made up.
    */
-  activity: Activity | null
   openToday: number | null
+  /** Missions and XP, fetched once by the shell and read by every consumer. */
+  gamification: GamificationState | null
+  missionCatalogue: MissionCatalogue | null
+  gamificationLoading: boolean
+  gamificationError: string
+  /** Bumped by anything asking for a fresh read; the shell's hook watches it. */
+  gamificationTick: number
+  /**
+   * The last level the user has actually been shown. Persisted, so a level-up
+   * is celebrated once rather than on every reload.
+   */
+  seenLevel: number | null
   /** Bumped only when finishing the last open task, to fire the celebration. */
   celebrationId: number
   /** The task currently open in the edit dialog, if any. */
@@ -59,7 +70,11 @@ type AppStore = {
   setMoneyComposerOpen: (open: boolean) => void
   openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
-  publishActivity: (activity: Activity | null, openToday: number | null) => void
+  publishOpenToday: (openToday: number | null) => void
+  setGamification: (state: GamificationState | null, catalogue: MissionCatalogue | null) => void
+  setGamificationStatus: (loading: boolean, error: string) => void
+  refreshGamification: () => void
+  setSeenLevel: (level: number | null) => void
   celebrate: () => void
   setEditingTask: (task: Task | null) => void
   setEditingReminder: (reminder: Reminder | null) => void
@@ -77,10 +92,16 @@ export const useAppStore = create<AppStore>()(
       session: null,
       quickAddOpen: false,
       quickAddSeed: '',
+      quickAddViaVoice: false,
       moneyComposerOpen: false,
       tasksVersion: 0,
-      activity: null,
       openToday: null,
+      gamification: null,
+      missionCatalogue: null,
+      gamificationLoading: true,
+      gamificationError: '',
+      gamificationTick: 0,
+      seenLevel: null,
       celebrationId: 0,
       editingTask: null,
       editingReminder: null,
@@ -90,11 +111,21 @@ export const useAppStore = create<AppStore>()(
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
       // closing always clears the seed so a stale transcript can never be
       // re-applied the next time Quick Add opens
-      setQuickAddOpen: (quickAddOpen) => set(quickAddOpen ? { quickAddOpen } : { quickAddOpen, quickAddSeed: '' }),
-      openQuickAddWithText: (quickAddSeed) => set({ quickAddSeed, quickAddOpen: true }),
+      // opening it any other way starts from typed, and closing forgets both
+      setQuickAddOpen: (quickAddOpen) => set(quickAddOpen
+        ? { quickAddOpen, quickAddViaVoice: false }
+        : { quickAddOpen, quickAddSeed: '', quickAddViaVoice: false }),
+      openQuickAddWithText: (quickAddSeed) =>
+        set({ quickAddSeed, quickAddOpen: true, quickAddViaVoice: true }),
       setMoneyComposerOpen: (moneyComposerOpen) => set({ moneyComposerOpen }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
-      publishActivity: (activity, openToday) => set({ activity, openToday }),
+      publishOpenToday: (openToday) => set({ openToday }),
+      setGamification: (gamification, missionCatalogue) =>
+        set((state) => ({ gamification, missionCatalogue: missionCatalogue ?? state.missionCatalogue })),
+      setGamificationStatus: (gamificationLoading, gamificationError) =>
+        set({ gamificationLoading, gamificationError }),
+      refreshGamification: () => set((state) => ({ gamificationTick: state.gamificationTick + 1 })),
+      setSeenLevel: (seenLevel) => set({ seenLevel }),
       celebrate: () => set((state) => ({ celebrationId: state.celebrationId + 1 })),
       setEditingTask: (editingTask) => set({ editingTask }),
       setEditingReminder: (editingReminder) => set({ editingReminder }),
@@ -102,20 +133,29 @@ export const useAppStore = create<AppStore>()(
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
       signOut: () =>
         set({
-          session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '',
+          session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '', quickAddViaVoice: false,
           moneyComposerOpen: false, editingTask: null, editingReminder: null,
-          activity: null, openToday: null,
+          openToday: null, gamification: null, seenLevel: null,
         }),
     }),
     {
       name: 'quickplan-preferences',
       version: 1,
-      partialize: (state) => ({ theme: state.theme, ringtone: state.ringtone, session: state.session }),
+      partialize: (state) => ({
+        theme: state.theme, ringtone: state.ringtone, session: state.session, seenLevel: state.seenLevel,
+      }),
       // v0 stored a session without a token; those can no longer authenticate.
       migrate: (persisted) => {
-        const state = persisted as { theme?: Theme; ringtone?: string; session?: Session | null } | undefined
+        const state = persisted as {
+          theme?: Theme; ringtone?: string; session?: Session | null; seenLevel?: number | null
+        } | undefined
         const session = state?.session?.token ? state.session : null
-        return { theme: state?.theme ?? 'light', ringtone: state?.ringtone ?? DEFAULT_RINGTONE_ID, session }
+        return {
+          theme: state?.theme ?? 'light',
+          ringtone: state?.ringtone ?? DEFAULT_RINGTONE_ID,
+          session,
+          seenLevel: state?.seenLevel ?? null,
+        }
       },
     },
   ),

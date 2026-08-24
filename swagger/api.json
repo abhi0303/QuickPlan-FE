@@ -1304,6 +1304,37 @@
                 ]
             }
         },
+        "/api/gamification": {
+            "get": {
+                "operationId": "GamificationController_getState",
+                "summary": "XP, level, rank and the three current missions",
+                "description": "Also retires an expired cycle and deals a new one, so the response is always current.",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Gamification"
+                ]
+            }
+        },
+        "/api/gamification/catalogue": {
+            "get": {
+                "operationId": "GamificationController_getCatalogue",
+                "summary": "Static mission definitions, for resolving titles and icons by type",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                },
+                "tags": [
+                    "Gamification"
+                ]
+            }
+        },
         "/api/v1/smart-input": {
             "post": {
                 "operationId": "SmartInputController_processInput",
@@ -1640,6 +1671,17 @@
                         "type": "boolean",
                         "description": "Completion status flag",
                         "example": false
+                    },
+                    "createdVia": {
+                        "type": "string",
+                        "enum": [
+                            "MANUAL",
+                            "VOICE",
+                            "IMPORT",
+                            "SYSTEM"
+                        ],
+                        "default": "MANUAL",
+                        "description": "How this task was created. The client parses speech on-device and posts here, so VOICE has to come from the caller."
                     }
                 },
                 "required": [
@@ -1694,6 +1736,17 @@
                         "type": "boolean",
                         "description": "Completion status flag",
                         "example": false
+                    },
+                    "createdVia": {
+                        "type": "string",
+                        "enum": [
+                            "MANUAL",
+                            "VOICE",
+                            "IMPORT",
+                            "SYSTEM"
+                        ],
+                        "default": "MANUAL",
+                        "description": "How this task was created. The client parses speech on-device and posts here, so VOICE has to come from the caller."
                     }
                 }
             },
@@ -1725,6 +1778,17 @@
                         "type": "string",
                         "description": "Recurrence rule: DAILY, WEEKLY, WEEKDAYS, MONTHLY",
                         "example": "DAILY"
+                    },
+                    "createdVia": {
+                        "type": "string",
+                        "enum": [
+                            "MANUAL",
+                            "VOICE",
+                            "IMPORT",
+                            "SYSTEM"
+                        ],
+                        "default": "MANUAL",
+                        "description": "How this reminder was created. The client parses speech on-device and posts here, so VOICE has to come from the caller."
                     }
                 },
                 "required": [
@@ -1760,6 +1824,17 @@
                         "type": "string",
                         "description": "DAILY, WEEKDAYS, WEEKLY or MONTHLY",
                         "example": "DAILY"
+                    },
+                    "createdVia": {
+                        "type": "string",
+                        "enum": [
+                            "MANUAL",
+                            "VOICE",
+                            "IMPORT",
+                            "SYSTEM"
+                        ],
+                        "default": "MANUAL",
+                        "description": "How this reminder was created. The client parses speech on-device and posts here, so VOICE has to come from the caller."
                     }
                 }
             },
@@ -1998,7 +2073,9 @@
                             "SETTLEMENT_RECORDED",
                             "REMINDER_LEAD",
                             "REMINDER_DUE",
-                            "TASK_DUE"
+                            "TASK_DUE",
+                            "MISSION_COMPLETED",
+                            "LEVEL_UP"
                         ]
                     },
                     "title": {
