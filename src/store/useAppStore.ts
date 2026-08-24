@@ -51,6 +51,8 @@ type AppStore = {
   gamificationError: string
   /** Bumped by anything asking for a fresh read; the shell's hook watches it. */
   gamificationTick: number
+  /** Bumped by Settings → Guide; the tour watches it and replays. */
+  tourRequest: number
   /**
    * The last level the user has actually been shown. Persisted, so a level-up
    * is celebrated once rather than on every reload.
@@ -74,6 +76,7 @@ type AppStore = {
   setGamification: (state: GamificationState | null, catalogue: MissionCatalogue | null) => void
   setGamificationStatus: (loading: boolean, error: string) => void
   refreshGamification: () => void
+  requestTour: () => void
   setSeenLevel: (level: number | null) => void
   celebrate: () => void
   setEditingTask: (task: Task | null) => void
@@ -101,6 +104,7 @@ export const useAppStore = create<AppStore>()(
       gamificationLoading: true,
       gamificationError: '',
       gamificationTick: 0,
+      tourRequest: 0,
       seenLevel: null,
       celebrationId: 0,
       editingTask: null,
@@ -125,6 +129,7 @@ export const useAppStore = create<AppStore>()(
       setGamificationStatus: (gamificationLoading, gamificationError) =>
         set({ gamificationLoading, gamificationError }),
       refreshGamification: () => set((state) => ({ gamificationTick: state.gamificationTick + 1 })),
+      requestTour: () => set((state) => ({ tourRequest: state.tourRequest + 1 })),
       setSeenLevel: (seenLevel) => set({ seenLevel }),
       celebrate: () => set((state) => ({ celebrationId: state.celebrationId + 1 })),
       setEditingTask: (editingTask) => set({ editingTask }),

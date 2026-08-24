@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { unlocksAt } from '../../data/unlocks'
@@ -20,18 +20,30 @@ export function LevelUpOverlay({
   rankName: string
   onClose: () => void
 }) {
+  /*
+   * `onClose` is a new function on every render of the shell, and the shell
+   * re-renders often. Holding it in a ref keeps the dismiss timer running from
+   * when the celebration appeared instead of restarting under it.
+   */
+  const close = useRef(onClose)
+
+  // assigned in an effect, never during render
+  useEffect(() => {
+    close.current = onClose
+  }, [onClose])
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') close.current()
     }
     document.addEventListener('keydown', onKeyDown)
     // it is a celebration, not a decision — it clears itself
-    const timer = window.setTimeout(onClose, 9000)
+    const timer = window.setTimeout(() => close.current(), 9000)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       window.clearTimeout(timer)
     }
-  }, [onClose])
+  }, [])
 
   return createPortal(
     <div className="levelup-backdrop" onMouseDown={onClose} role="dialog" aria-modal="true" aria-label={`Level ${to}`}>

@@ -34,7 +34,6 @@ export function useGamification() {
   const session = useAppStore((state) => state.session)
   const signedIn = Boolean(session)
   const tasksVersion = useAppStore((state) => state.tasksVersion)
-  const seenLevel = useAppStore((state) => state.seenLevel)
   const setSeenLevel = useAppStore((state) => state.setSeenLevel)
   const tick = useAppStore((state) => state.gamificationTick)
   const setGamification = useAppStore((state) => state.setGamification)
@@ -57,12 +56,22 @@ export function useGamification() {
           setGamification(next, definitions)
           setGamificationStatus(false, '')
 
-          // the backend decides levels; this only notices that one was crossed
-          // since the last time the user was shown it
-          if (seenLevel !== null && next.level > seenLevel) {
-            setLevelUp({ from: seenLevel, to: next.level, rankName: next.rankName })
-          } else if (seenLevel === null) {
+          /*
+           * Read at the moment of comparison rather than captured with the
+           * effect: the listeners below outlive many renders, and a stale
+           * "last level seen" made every later refetch re-announce a level-up
+           * that had already been shown and acknowledged.
+           */
+          const seen = useAppStore.getState().seenLevel
+
+          if (seen === null) {
             setSeenLevel(next.level)
+            return
+          }
+
+          // and never stack a second celebration on top of one still showing
+          if (next.level > seen) {
+            setLevelUp((current) => current ?? { from: seen, to: next.level, rankName: next.rankName })
           }
         })
         .catch((fetchError) => {
@@ -107,7 +116,6 @@ export function useGamification() {
       window.removeEventListener('focus', onFocus)
       navigator.serviceWorker?.removeEventListener('message', onServiceWorkerMessage)
     }
-    // seenLevel is read, not tracked: a level-up should not refetch
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signedIn, tasksVersion, tick])
 
