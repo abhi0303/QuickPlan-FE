@@ -84,8 +84,9 @@ function applyParsed(current: FormState, text: string): FormState {
     personName: parsed.personName ?? current.personName,
     dueDay,
     dueTime,
-    // "Expense" is the parser's generic fallback; leave the field empty so the
-    // placeholder shows instead of a meaningless pre-filled value
+    // "Expense" is the parser's generic fallback, and money is created inside a
+    // group now — so that one word is the only title worth discarding.
+    title: parsed.intent === 'expense' && parsed.title === 'Expense' ? current.title : parsed.title,
   }
 }
 
@@ -105,6 +106,7 @@ function QuickAddDialog() {
   const setOpen = useAppStore((state) => state.setQuickAddOpen)
   const bumpTasksVersion = useAppStore((state) => state.bumpTasksVersion)
   const seed = useAppStore((state) => state.quickAddSeed)
+  const openedByVoice = useAppStore((state) => state.quickAddViaVoice)
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
@@ -115,6 +117,12 @@ function QuickAddDialog() {
     return seed ? applyParsed(base, seed) : base
   })
   const [smartText, setSmartText] = useState(seed)
+  /**
+   * Spoken here, or spoken before the dialog opened. Editing the draft
+   * afterwards does not make it typed — the thing was still created by voice,
+   * which is what the mission counts.
+   */
+  const [spoken, setSpoken] = useState(openedByVoice)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -126,6 +134,7 @@ function QuickAddDialog() {
         toast('Okay, cancelled', { icon: '\u{1F44C}' })
         return
       }
+      setSpoken(true)
       setSmartText(transcript)
       applySmart(transcript)
     },
@@ -193,6 +202,7 @@ function QuickAddDialog() {
           dueAt: dueAt as string,
           offsetMinutes: Number(form.offsetMinutes) || 0,
           recurrenceRule: form.recurrenceRule || undefined,
+          createdVia: spoken ? 'VOICE' : 'MANUAL',
         })
         toast.success('Reminder set')
       } else {
@@ -202,6 +212,7 @@ function QuickAddDialog() {
           category: form.category || undefined,
           priority: form.priority,
           dueDate: dueAt,
+          createdVia: spoken ? 'VOICE' : 'MANUAL',
           status: 'PENDING',
           isCompleted: false,
         })

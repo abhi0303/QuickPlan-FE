@@ -1,4 +1,5 @@
 import { api } from './api'
+import type { CreatedVia } from './createdVia'
 
 export const RECURRENCE_RULES = ['DAILY', 'WEEKDAYS', 'WEEKLY', 'MONTHLY'] as const
 export type RecurrenceRule = (typeof RECURRENCE_RULES)[number]
@@ -6,6 +7,8 @@ export type RecurrenceRule = (typeof RECURRENCE_RULES)[number]
 /** Mirrors CreateReminderDto in swagger/api.json. */
 export type CreateReminderPayload = {
   title: string
+  /** Omitted means MANUAL on the server. */
+  createdVia?: CreatedVia
   dueAt: string
   taskId?: string
   offsetMinutes?: number

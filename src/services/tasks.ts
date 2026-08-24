@@ -1,4 +1,5 @@
 import { api } from './api'
+import type { CreatedVia } from './createdVia'
 
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const
 export const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED'] as const
@@ -10,6 +11,8 @@ export type TaskView = 'today' | 'upcoming' | 'overdue' | 'completed'
 /** Mirrors CreateTaskDto in the API spec. */
 export type CreateTaskPayload = {
   title: string
+  /** Omitted means MANUAL on the server. */
+  createdVia?: CreatedVia
   notes?: string
   status?: TaskStatus
   priority?: TaskPriority
