@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { formatDistanceToNowStrict, isToday, isYesterday, parseISO } from 'date-fns'
+import { differenceInSeconds, format, isToday, isYesterday, parseISO } from 'date-fns'
 import {
   AlarmClock,
   Bell,
@@ -21,7 +21,7 @@ import type { AppNotification, NotificationType } from '../../services/notificat
 import { avatarStyle, initials } from '../../utils/avatar'
 import './NotificationBell.scss'
 
-/** Fallback glyph when a notification has no actor to show an avatar for. */
+/** The glyph badged onto the avatar, and the tint that goes with it. */
 const TYPE_ICON: Record<NotificationType, typeof Bell> = {
   FRIEND_ADDED: UserPlus,
   GROUP_MEMBER_ADDED: Users,
@@ -37,10 +37,32 @@ const TYPE_ICON: Record<NotificationType, typeof Bell> = {
   TASK_DUE: CircleCheckBig,
 }
 
+/** A tone per family of event, so the badge says what kind at a glance. */
+const TYPE_TONE: Record<NotificationType, string> = {
+  FRIEND_ADDED: 'tone-friend',
+  GROUP_MEMBER_ADDED: 'tone-group',
+  GROUP_MEMBER_REMOVED: 'tone-group',
+  GROUP_ROLE_CHANGED: 'tone-group',
+  GROUP_DELETED: 'tone-group',
+  EXPENSE_ADDED: 'tone-money',
+  EXPENSE_UPDATED: 'tone-money',
+  EXPENSE_DELETED: 'tone-money',
+  SETTLEMENT_RECORDED: 'tone-money',
+  REMINDER_LEAD: 'tone-time',
+  REMINDER_DUE: 'tone-time',
+  TASK_DUE: 'tone-time',
+}
+
+/** Compact: "3m", "5h", "2d", then the date. A list of these has to stay narrow. */
 function when(iso: string) {
   const date = parseISO(iso)
   if (Number.isNaN(date.getTime())) return ''
-  return formatDistanceToNowStrict(date, { addSuffix: true })
+  const seconds = Math.max(0, differenceInSeconds(new Date(), date))
+  if (seconds < 60) return 'now'
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
+  if (seconds < 86_400) return `${Math.floor(seconds / 3600)}h`
+  if (seconds < 604_800) return `${Math.floor(seconds / 86_400)}d`
+  return format(date, 'd MMM')
 }
 
 function dayGroup(iso: string) {
@@ -129,10 +151,10 @@ export function NotificationBell() {
       {open && (
         <div className="notif-panel" role="dialog" aria-label="Notifications">
           <header className="notif-head">
-            <h2>Notifications</h2>
+            <h2>Notifications {unreadCount > 0 && <span className="notif-pill">{unreadCount}</span>}</h2>
             {unreadCount > 0 && (
-              <button className="notif-readall" onClick={markAllRead}>
-                <CheckCheck size={14} /> Mark all read
+              <button className="notif-readall" onClick={markAllRead} title="Mark all read">
+                <CheckCheck size={14} /> <span>Mark all read</span>
               </button>
             )}
           </header>
@@ -161,6 +183,7 @@ export function NotificationBell() {
             <div className="notif-list">
               {rows.map(({ notification, heading }) => {
                 const Icon = TYPE_ICON[notification.type] ?? Bell
+                const tone = TYPE_TONE[notification.type] ?? 'tone-group'
                 const name = notification.actor?.name ?? ''
 
                 return (
@@ -169,14 +192,20 @@ export function NotificationBell() {
 
                     <div className={`notif-row ${notification.readAt ? '' : 'is-unread'}`}>
                       <button className="notif-main" onClick={() => follow(notification)}>
-                        {name
-                          ? <span className="notif-avatar" style={avatarStyle(name)}>{initials(name)}</span>
-                          : <span className="notif-avatar plain"><Icon size={16} /></span>}
+                        <span className="notif-figure">
+                          {name
+                            ? <span className="notif-avatar" style={avatarStyle(name)}>{initials(name)}</span>
+                            : <span className="notif-avatar plain">{name.slice(0, 1) || '·'}</span>}
+                          {/* the badge carries the kind, so the avatar can stay the person */}
+                          <i className={`notif-badge ${tone}`}><Icon size={11} strokeWidth={2.6} /></i>
+                        </span>
 
                         <span className="notif-copy">
-                          <strong>{notification.title}</strong>
+                          <span className="notif-line">
+                            <strong>{notification.title}</strong>
+                            <time>{when(notification.createdAt)}</time>
+                          </span>
                           <small>{notification.body}</small>
-                          <time>{when(notification.createdAt)}</time>
                         </span>
                       </button>
 
@@ -185,7 +214,7 @@ export function NotificationBell() {
                         onClick={() => dismiss(notification.id)}
                         aria-label={`Dismiss ${notification.title}`}
                       >
-                        <X size={14} />
+                        <X size={13} />
                       </button>
                     </div>
                   </div>
