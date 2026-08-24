@@ -1,0 +1,678 @@
+/* Gamification — styles owned by the rank card, missions panel and level-up.
+   Shared tokens live in src/styles/global.scss. */
+
+/* Tier accents, matching the five tiers the rank badges are drawn in. */
+.tier-beginner { --tier: #14b8a6; }
+.tier-saving { --tier: #10b981; }
+.tier-growth { --tier: #2563eb; }
+.tier-mastery { --tier: #8b5cf6; }
+.tier-legendary { --tier: #f59e0b; }
+.tier-ultimate { --tier: #ea8f0b; }
+
+/* ------------------------------------------------------------ rank chip -- */
+
+/* Header chip. Hidden on desktop, where the sidebar card says the same thing
+   with room to spare. */
+/* The rank medallion. Round like everything else in that row — a wide pill
+   fought the icon buttons beside it — and the badge art is the whole thing,
+   with the level in the corner the way a count would sit. */
+.rank-chip {
+    align-items: center;
+    /* the insignia needs a disc to sit on — loose on the header it read as a
+       stray mark rather than a medal */
+    background: var(--surface);
+    border: 1.5px solid color-mix(in srgb, var(--tier) 34%, var(--border));
+    border-radius: var(--r-pill);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--tier) 26%, transparent);
+    display: none;
+    flex: none;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    transition: transform .16s ease, box-shadow .16s ease;
+    width: 42px;
+}
+
+.rank-chip:hover { box-shadow: 0 4px 14px color-mix(in srgb, var(--tier) 34%, transparent); }
+
+.rank-chip:active { transform: scale(.92); }
+
+.rank-chip img { display: block; }
+
+.chip-level {
+    background: var(--tier);
+    border: 2px solid var(--bg);
+    border-radius: var(--r-pill);
+    bottom: -3px;
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 18px;
+    padding: 2.5px 4px;
+    position: absolute;
+    right: -5px;
+    text-align: center;
+}
+
+@media (max-width: 860px) {
+
+    .rank-chip { display: flex; }
+}
+
+/* ------------------------------------------------------------ rank card -- */
+
+.rank-card {
+    align-items: center;
+    background: linear-gradient(135deg, var(--tier), color-mix(in srgb, var(--tier) 52%, #0b3b34));
+    border: 0;
+    border-radius: var(--r-lg);
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--tier) 28%, transparent);
+    color: #fff;
+    display: flex;
+    gap: 14px;
+    overflow: hidden;
+    padding: 16px;
+    position: relative;
+}
+
+/* a soft orb, the same trick the hero card uses */
+.rank-card::after {
+    background: rgba(255, 255, 255, .13);
+    border-radius: var(--r-pill);
+    content: '';
+    height: 190px;
+    position: absolute;
+    right: -60px;
+    top: -80px;
+    width: 190px;
+}
+
+.rank-card > * { position: relative; z-index: 1; }
+
+.rank-badge {
+    background: rgba(255, 255, 255, .96);
+    border-radius: var(--r-pill);
+    padding: 6px;
+}
+
+.rank-badge { flex: none; }
+
+.rank-copy { flex: 1; min-width: 0; }
+
+.rank-level {
+    color: rgba(255, 255, 255, .82);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .8px;
+    text-transform: uppercase;
+}
+
+.rank-name {
+    color: #fff;
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+    margin-top: 1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.xp-bar {
+    background: rgba(255, 255, 255, .26);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 7px;
+    margin-top: 9px;
+    overflow: hidden;
+}
+
+.xp-bar i {
+    background: #fff;
+    border-radius: var(--r-pill);
+    display: block;
+    height: 100%;
+    transition: width .6s cubic-bezier(.2, .8, .3, 1);
+}
+
+.xp-line {
+    color: rgba(255, 255, 255, .82);
+    font-size: 11.5px;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* the sidebar's version: same information, less of it */
+.rank-card.is-compact {
+    gap: 11px;
+    padding: 12px 13px;
+}
+
+.rank-card.is-compact .rank-name { font-size: 14px; }
+.rank-card.is-compact .xp-line { font-size: 11px; }
+
+/* --------------------------------------------------------- missions ----- */
+
+/* the sticky topbar would otherwise sit on top of the heading it scrolled to */
+.missions-panel { scroll-margin-top: calc(84px + env(safe-area-inset-top, 0px)); }
+
+.missions-panel .panel-heading h2 {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.missions-panel .rank-card { margin-top: 4px; }
+
+.mission-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.mission {
+    align-items: flex-start;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    display: flex;
+    gap: 12px;
+    padding: 13px 14px;
+    transition: border-color .18s ease, background .18s ease;
+}
+
+.mission.is-done {
+    background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+    border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+}
+
+.mission.is-expired { opacity: .62; }
+
+.mission-icon {
+    align-items: center;
+    background: var(--surface-alt);
+    border-radius: 12px;
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 38px;
+    justify-content: center;
+    width: 38px;
+}
+
+.mission-icon.area-expense { background: var(--primary-soft); color: var(--primary-strong); }
+.mission-icon.area-task { background: var(--periwinkle-soft); color: var(--periwinkle); }
+.mission-icon.area-reminder { background: var(--tangerine-soft); color: var(--tangerine); }
+
+.mission.is-done .mission-icon { background: var(--primary); color: var(--on-primary); }
+
+.mission-copy { flex: 1; min-width: 0; }
+
+.mission-line {
+    align-items: baseline;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.mission-line strong {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mission-xp {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    flex: none;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    padding: 3px 8px;
+}
+
+.mission.is-done .mission-xp { background: var(--primary); color: var(--on-primary); }
+
+.mission-copy p {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.mission-track {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 6px;
+    margin-top: 9px;
+    overflow: hidden;
+}
+
+.mission-track i {
+    background: var(--gradient);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 100%;
+    transition: width .5s ease;
+}
+
+.mission.is-done .mission-track i { background: var(--primary); }
+
+.mission-foot {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.mission-progress {
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.mission-time {
+    align-items: center;
+    color: var(--muted);
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 600;
+    gap: 4px;
+}
+
+.mission-time.done { color: var(--primary-strong); font-weight: 700; }
+
+.mission-skeleton {
+    animation: shimmer 1.5s linear infinite;
+    background-color: var(--surface-alt);
+    background-image: linear-gradient(100deg, transparent 20%, var(--sheen) 44%, transparent 68%);
+    background-repeat: no-repeat;
+    background-size: 260% 100%;
+    border-radius: var(--r-lg);
+    height: 92px;
+}
+
+/* --------------------------------------------------------- level up ----- */
+
+.levelup-backdrop {
+    align-items: center;
+    animation: fadeIn .2s ease;
+    backdrop-filter: blur(8px);
+    background: rgba(8, 28, 23, .55);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    padding: 20px;
+    position: fixed;
+    z-index: 70;
+}
+
+.levelup {
+    animation: levelPop .5s cubic-bezier(.2, .9, .3, 1.2);
+    background: var(--surface);
+    border: 1px solid color-mix(in srgb, var(--tier) 34%, var(--border));
+    border-radius: var(--r-xl);
+    box-shadow: var(--shadow-lg);
+    max-width: 340px;
+    overflow: hidden;
+    padding: 34px 26px 28px;
+    position: relative;
+    text-align: center;
+    width: 100%;
+}
+
+@keyframes levelPop {
+    from { opacity: 0; transform: scale(.86) translateY(14px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* a slow sweep behind the badge, so the moment has some motion to it */
+.levelup-rays {
+    background: conic-gradient(from 0deg, transparent 0 12%, color-mix(in srgb, var(--tier) 30%, transparent) 18%, transparent 26%, transparent 50%, color-mix(in srgb, var(--tier) 22%, transparent) 58%, transparent 68%);
+    border-radius: var(--r-pill);
+    height: 260px;
+    left: 50%;
+    position: absolute;
+    top: 8px;
+    transform: translateX(-50%);
+    width: 260px;
+}
+
+.levelup-rays {
+    animation: raySpin 14s linear infinite;
+}
+
+@keyframes raySpin {
+    to { transform: translateX(-50%) rotate(360deg); }
+}
+
+.levelup-badge {
+    animation: badgeRise .6s cubic-bezier(.2, .9, .3, 1.2);
+    position: relative;
+}
+
+@keyframes badgeRise {
+    from { opacity: 0; transform: scale(.5) rotate(-18deg); }
+    to { opacity: 1; transform: none; }
+}
+
+.levelup-kicker {
+    color: var(--tier);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2.4px;
+    margin-top: 10px;
+    position: relative;
+    text-transform: uppercase;
+}
+
+.levelup-level {
+    display: block;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -1.2px;
+    margin-top: 2px;
+    position: relative;
+}
+
+.levelup-rank {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+    margin-top: 2px;
+    position: relative;
+}
+
+.levelup-from {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    margin-top: 12px;
+    position: relative;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .levelup-rays { animation: none; }
+    .levelup, .levelup-badge { animation-duration: .01ms; }
+}
+
+@media (max-width: 560px) {
+
+    .rank-card { gap: 12px; padding: 13px; }
+    .rank-name { font-size: 15px; }
+    .mission { padding: 12px; }
+    .mission-line strong { font-size: 13.5px; }
+}
+
+/* ------------------------------------------------------------- rewards -- */
+
+.panel-head-side {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+/* the line that says what the XP is actually for */
+.next-unlock {
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r-md);
+    color: var(--text-soft);
+    display: flex;
+    font-size: 12.5px;
+    gap: 9px;
+    margin-top: 12px;
+    padding: 11px 13px;
+    text-align: left;
+    transition: background .16s ease, border-color .16s ease;
+    width: 100%;
+}
+
+.next-unlock:hover { background: var(--primary-soft); border-color: var(--primary); }
+.next-unlock svg { color: var(--primary-strong); flex: none; }
+.next-unlock span { flex: 1; min-width: 0; }
+.next-unlock strong { font-weight: 700; }
+
+.next-unlock em {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    flex: none;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    padding: 3px 9px;
+}
+
+.unlocks-modal { max-width: 540px; }
+
+/* how far along the ladder, before any of the detail */
+.unlock-summary {
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 13px 16px;
+}
+
+.unlock-count {
+    align-items: baseline;
+    display: flex;
+    flex: none;
+    gap: 7px;
+}
+
+.unlock-count strong {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1;
+}
+
+.unlock-count span {
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    line-height: 1.25;
+    text-transform: uppercase;
+}
+
+.unlock-meter {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    flex: 1;
+    height: 8px;
+    overflow: hidden;
+}
+
+.unlock-meter i {
+    background: var(--gradient);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 100%;
+    transition: width .6s cubic-bezier(.2, .8, .3, 1);
+}
+
+.unlock-here {
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    color: var(--on-primary);
+    flex: none;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 5px 11px;
+}
+
+/* --- the ladder itself --- */
+
+.unlock-list {
+    display: grid;
+    list-style: none;
+}
+
+.unlock {
+    display: grid;
+    /* badge column, then everything else — every row aligns on the same axis */
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: 14px;
+    padding-bottom: 20px;
+    position: relative;
+}
+
+.unlock:last-child { padding-bottom: 0; }
+
+/* the line joining one rung to the next */
+.unlock-rail {
+    background: var(--border);
+    bottom: 6px;
+    left: 21px;
+    position: absolute;
+    top: 44px;
+    width: 2px;
+}
+
+.unlock:last-child .unlock-rail { display: none; }
+.unlock.is-open .unlock-rail { background: color-mix(in srgb, var(--tier) 45%, var(--border)); }
+
+.unlock-mark {
+    align-items: center;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-pill);
+    display: flex;
+    height: 44px;
+    justify-content: center;
+    position: relative;
+    width: 44px;
+}
+
+.unlock.is-open .unlock-mark {
+    background: color-mix(in srgb, var(--tier) 10%, var(--surface));
+    border-color: color-mix(in srgb, var(--tier) 40%, var(--border));
+}
+
+/* the one being worked towards gets the halo */
+.unlock.is-next .unlock-mark {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.unlock-mark img { display: block; filter: grayscale(1); opacity: .45; }
+.unlock.is-open .unlock-mark img { filter: none; opacity: 1; }
+.unlock.is-next .unlock-mark img { filter: grayscale(.35); opacity: .8; }
+
+.unlock-mark i {
+    align-items: center;
+    background: var(--border-strong);
+    border: 2px solid var(--surface);
+    border-radius: var(--r-pill);
+    bottom: -3px;
+    color: var(--surface);
+    display: flex;
+    height: 18px;
+    justify-content: center;
+    position: absolute;
+    right: -4px;
+    width: 18px;
+}
+
+.unlock.is-open .unlock-mark i { background: var(--tier); color: #fff; }
+
+.unlock-copy { min-width: 0; padding-top: 2px; }
+
+.unlock-level {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 10.5px;
+    font-weight: 800;
+    gap: 7px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.unlock-level em {
+    border-radius: var(--r-pill);
+    font-size: 9.5px;
+    font-style: normal;
+    letter-spacing: .4px;
+    padding: 2.5px 8px;
+}
+
+.unlock.is-open .unlock-level em { background: var(--tier); color: #fff; }
+.unlock-level em.soon { background: var(--primary-soft); color: var(--primary-strong); }
+
+.unlock-title {
+    align-items: center;
+    display: flex;
+    font-size: 14.5px;
+    font-weight: 700;
+    gap: 8px;
+    letter-spacing: -.2px;
+    margin-top: 3px;
+}
+
+.unlock-title svg { color: var(--tier); flex: none; }
+.unlock:not(.is-open) .unlock-title { color: var(--text-soft); }
+.unlock:not(.is-open) .unlock-title svg { color: var(--muted); }
+
+.unlock-desc {
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.5;
+    margin-top: 3px;
+}
+
+/* where to find it, once it is yours to find */
+.unlock-where {
+    background: var(--surface-alt);
+    border-radius: var(--r-sm);
+    color: var(--text-soft);
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 7px;
+    padding: 3px 8px;
+}
+
+.unlock:not(.is-open) .unlock-where { opacity: .55; }
+
+@media (max-width: 560px) {
+
+    .unlock { column-gap: 11px; grid-template-columns: 40px minmax(0, 1fr); }
+    .unlock-mark { height: 40px; width: 40px; }
+    .unlock-rail { left: 19px; top: 40px; }
+    .unlock-summary { gap: 11px; padding: 12px 13px; }
+    .unlock-count strong { font-size: 22px; }
+}
+
+/* what the level-up says when the level also opened something */
+.levelup-unlock {
+    align-items: center;
+    background: color-mix(in srgb, var(--tier) 12%, var(--surface));
+    border-radius: var(--r-md);
+    color: var(--text-soft);
+    display: flex;
+    font-size: 12.5px;
+    gap: 7px;
+    justify-content: center;
+    margin-top: 14px;
+    padding: 9px 12px;
+    position: relative;
+}
+
+.levelup-unlock svg { color: var(--tier); flex: none; }

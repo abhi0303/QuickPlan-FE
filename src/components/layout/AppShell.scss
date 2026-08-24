@@ -88,56 +88,6 @@
     color: var(--muted);
 }
 
-/* streak card — the friendly bit that replaces the admin "workspace" label */
-.streak-card {
-    background: var(--gradient-soft);
-    border-radius: var(--r-lg);
-    margin-top: auto;
-    padding: 18px;
-    text-align: center;
-}
-
-.streak-card .streak-icon {
-    align-items: center;
-    color: var(--tangerine);
-    display: inline-flex;
-    height: 40px;
-    justify-content: center;
-    margin-bottom: 10px;
-    width: 40px;
-}
-
-.streak-card strong {
-    display: block;
-    font-size: 15px;
-    font-weight: 800;
-}
-
-.streak-card small {
-    color: var(--muted);
-    display: block;
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.streak-dots {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    margin-top: 12px;
-}
-
-.streak-dots i {
-    background: var(--surface);
-    border-radius: var(--r-pill);
-    height: 7px;
-    width: 7px;
-}
-
-.streak-dots i.on {
-    background: var(--primary);
-}
-
 .user-card {
     align-items: center;
     background: var(--surface-soft);
@@ -338,6 +288,12 @@
 
 .fab {
         display: flex;
+    }
+
+    /* the rank chip needs the room, and the avatar beside it goes to the same
+       place the gear did */
+.settings-button {
+        display: none;
     }
 
     /* pages without the voice button leave its slot free, and it is the

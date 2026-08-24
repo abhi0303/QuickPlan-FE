@@ -3,7 +3,6 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   AlarmClock,
   CircleCheckBig,
-  Flame,
   House,
   LogOut,
   Moon,
@@ -15,12 +14,16 @@ import {
   Wallet,
 } from 'lucide-react'
 import { Celebration } from '../common/Celebration'
+import { LevelUpOverlay } from '../gamification/LevelUpOverlay'
+import { RankCard } from '../gamification/RankCard'
+import { RankChip } from '../gamification/RankChip'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
 import { EditTaskModal } from '../tasks/EditTaskModal'
 import { SpeakButton } from '../common/SpeakButton'
+import { useGamification } from '../../hooks/useGamification'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
 import './AppShell.scss'
@@ -53,9 +56,12 @@ export function AppShell() {
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
   const setMoneyComposerOpen = useAppStore((state) => state.setMoneyComposerOpen)
-  // both are published by the dashboard; null until it has loaded once
-  const activity = useAppStore((state) => state.activity)
+  // published by the dashboard; null until it has loaded once
   const openToday = useAppStore((state) => state.openToday)
+  // fetched once here and published to the store, so the sidebar card and the
+  // dashboard panel cost one request between them
+  const { levelUp, acknowledgeLevelUp } = useGamification()
+  const game = useAppStore((state) => state.gamification)
   const { pathname } = useLocation()
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
   const moneyLabel = moneyAction(pathname)
@@ -72,7 +78,6 @@ export function AppShell() {
   }, [setQuickAddOpen])
 
   const initial = session?.name.charAt(0).toUpperCase() ?? 'Q'
-  const firstName = session?.name.split(' ')[0] ?? 'there'
 
   return (
     <div className="app-shell">
@@ -94,23 +99,9 @@ export function AppShell() {
           ))}
         </nav>
 
-        {/* hidden until the dashboard has real completion history: the API
-            sends no completion timestamps for some accounts, and a streak is
-            not worth inventing */}
-        {activity && (
-          <div className="streak-card">
-            <span className="streak-icon"><Flame size={20} strokeWidth={2.2} /></span>
-            <strong>{activity.streak > 0 ? `${activity.streak} day streak` : 'No streak yet'}</strong>
-            <small>
-              {activity.streak > 0 ? `Keep it going, ${firstName}!` : `Finish one task today, ${firstName}.`}
-            </small>
-            <div className="streak-dots">
-              {activity.days.map((done, index) => (
-                <i key={index} className={done ? 'on' : ''} />
-              ))}
-            </div>
-          </div>
-        )}
+        {/* the rank card replaces the old streak: it is the same glance, but
+            the number behind it is real */}
+        {game && <RankCard state={game} compact />}
 
         <div className="user-card">
           <span className="avatar">{initial}</span>
@@ -137,6 +128,8 @@ export function AppShell() {
               GET /api/search lands. */}
 
           <div className="topbar-actions">
+            {/* mobile only: the sidebar's rank card is not there to show it */}
+            {game && <RankChip state={game} />}
             <button
               className="icon-button"
               onClick={toggleTheme}
@@ -146,10 +139,12 @@ export function AppShell() {
               {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
             </button>
             <NotificationBell />
-            <NavLink to="/settings" className="icon-button" aria-label="Settings">
+            <NavLink to="/settings" className="icon-button settings-button" aria-label="Settings">
               <Settings size={19} />
             </NavLink>
-            <span className="avatar sm" aria-hidden="true">{initial}</span>
+            {/* the avatar carries settings on a phone, where the gear is hidden
+                to make room for the rank chip */}
+            <NavLink to="/settings" className="avatar sm" aria-label="Settings">{initial}</NavLink>
           </div>
         </header>
 
@@ -170,6 +165,15 @@ export function AppShell() {
       </button>
 
       {showVoiceButton && <SpeakButton floating />}
+
+      {levelUp && (
+        <LevelUpOverlay
+          from={levelUp.from}
+          to={levelUp.to}
+          rankName={levelUp.rankName}
+          onClose={acknowledgeLevelUp}
+        />
+      )}
 
       <QuickAddModal />
       <EditTaskModal />

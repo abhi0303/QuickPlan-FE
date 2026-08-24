@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { differenceInCalendarDays, isWithinInterval, parseISO, startOfDay, startOfWeek, subDays, subWeeks } from 'date-fns'
+import { differenceInCalendarDays, isWithinInterval, parseISO, startOfWeek, subWeeks } from 'date-fns'
 import { getApiErrorMessage } from '../services/api'
 import { listTasks } from '../services/tasks'
 import type { Task } from '../services/tasks'
 import { useAppStore } from '../store/useAppStore'
-import type { Activity } from '../store/useAppStore'
 
 export type DashboardData = {
   completed: Task[]
@@ -70,7 +69,6 @@ export function useDashboard() {
         dated: false,
         doneThisWeek: data.completed.length,
         trend: null as number | null,
-        activity: null as Activity | null,
       }
     }
 
@@ -83,24 +81,10 @@ export function useDashboard() {
     const doneThisWeek = stamped.filter((date) => inRange(date, weekStart, now)).length
     const donePrevWeek = stamped.filter((date) => inRange(date, prevStart, weekStart)).length
 
-    const dayKeys = new Set(stamped.map((date) => startOfDay(date).getTime()))
-    const days = Array.from({ length: 7 }, (_, index) =>
-      dayKeys.has(subDays(startOfDay(now), 6 - index).getTime()))
-
-    // A streak survives a day still in progress: it counts back from today when
-    // something is already done, and from yesterday otherwise.
-    let streak = 0
-    const startOffset = dayKeys.has(startOfDay(now).getTime()) ? 0 : 1
-    for (let offset = startOffset; ; offset += 1) {
-      if (!dayKeys.has(subDays(startOfDay(now), offset).getTime())) break
-      streak += 1
-    }
-
     return {
       dated: true,
       doneThisWeek,
       trend: donePrevWeek > 0 ? Math.round(((doneThisWeek - donePrevWeek) / donePrevWeek) * 100) : null,
-      activity: { streak, days } as Activity,
     }
   }, [data.completed])
 

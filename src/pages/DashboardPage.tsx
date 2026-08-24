@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { format, isSameDay, isToday, isTomorrow, parseISO } from 'date-fns'
 import {
   AlarmClock,
@@ -9,6 +10,7 @@ import {
   CircleCheckBig,
   ListChecks,
   IndianRupee,
+  Table2,
   Plus,
   Sparkles,
   TrendingDown,
@@ -16,9 +18,13 @@ import {
   X,
 } from 'lucide-react'
 import { QuickAdd } from '../components/common/QuickAdd'
+import { downloadFile, toCsv } from '../services/exportFile'
+import { MissionsPanel } from '../components/gamification/MissionsPanel'
 import { TaskPreview } from '../components/dashboard/TaskPreview'
 import { nextOccurrence } from '../components/reminders/reminderTime'
 import { useDashboard } from '../hooks/useDashboard'
+import { useGamificationView } from '../hooks/useGamification'
+import { useUnlocked } from '../hooks/useUnlocked'
 import { useGroups } from '../hooks/useGroups'
 import { useReminders } from '../hooks/useReminders'
 import { useTasks } from '../hooks/useTasks'
@@ -54,7 +60,7 @@ export function DashboardPage() {
   const session = useAppStore((state) => state.session)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
   const setEditingTask = useAppStore((state) => state.setEditingTask)
-  const publishActivity = useAppStore((state) => state.publishActivity)
+  const publishOpenToday = useAppStore((state) => state.publishOpenToday)
 
   const { tasks, loading, error: loadError, busyId, retry, toggle } = useTasks('today')
   const { upcoming, overdue, loading: weekLoading, error: weekError, retry: retryWeek, stats, oldestOverdueDays } = useDashboard()
@@ -62,16 +68,31 @@ export function DashboardPage() {
   const { groups, loading: groupsLoading } = useGroups()
 
   const [insightHidden, setInsightHidden] = useState(false)
+  const location = useLocation()
+  // the shell owns the fetch; this reads what it published
+  const game = useGamificationView()
+  const canExport = useUnlocked('TASK_CSV')
 
   const now = new Date()
   const firstName = session?.name.split(' ')[0] ?? 'there'
   const openCount = tasks.filter((task) => !task.isCompleted).length
 
-  // The shell shows a streak and a task count it does not fetch itself.
+  // the header chip can ask for the missions panel from another tab; the scroll
+  // has to wait until this page has actually rendered it
+  const scrollTo = (location.state as { scrollTo?: string } | null)?.scrollTo
   useEffect(() => {
-    if (loading || weekLoading) return
-    publishActivity(stats.activity, openCount)
-  }, [loading, weekLoading, stats.activity, openCount, publishActivity])
+    if (!scrollTo) return
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(scrollTo)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [scrollTo])
+
+  // the shell's nav badge is a count this page already has
+  useEffect(() => {
+    if (loading) return
+    publishOpenToday(openCount)
+  }, [loading, openCount, publishOpenToday])
 
   // These are a few array passes over at most a page of items, and every one of
   // them reads the clock — memoising on `now` would either never update or
@@ -121,6 +142,37 @@ export function DashboardPage() {
     if (openCount > 0) return `${openCount} thing${openCount === 1 ? '' : 's'} left today and nothing overdue. Good place to be.`
     return 'Nothing overdue and nothing scheduled. Say or type something and it will show up here.'
   })()
+
+  /**
+   * Today's list as a spreadsheet, with the day's progress in the file rather
+   * than only on screen — the point of exporting is to have the figures
+   * somewhere else.
+   */
+  function exportToday() {
+    const done = tasks.filter((task) => task.isCompleted).length
+    const rows: (string | number | null | undefined)[][] = [
+      ['QuickPlan — tasks for', format(now, 'EEEE d MMMM yyyy')],
+      ['Total', tasks.length],
+      ['Completed', done],
+      ['Remaining', tasks.length - done],
+      ['Progress', `${tasks.length ? Math.round((done / tasks.length) * 100) : 0}%`],
+      [],
+      // a wide datetime shows as ##### at a spreadsheet's default column width,
+      // so the day and the clock get a column each
+      ['Title', 'Status', 'Priority', 'Category', 'Due date', 'Due time', 'Notes'],
+      ...tasks.map((task) => [
+        task.title,
+        task.isCompleted ? 'Completed' : 'Open',
+        task.priority,
+        task.category ?? '',
+        task.dueDate ? format(parseISO(task.dueDate), 'd MMM yyyy') : '',
+        task.dueDate ? format(parseISO(task.dueDate), 'h:mm a') : '',
+        task.notes ?? '',
+      ]),
+    ]
+    downloadFile(`quickplan-tasks-${format(now, 'yyyy-MM-dd')}.csv`, toCsv(rows))
+    toast.success(`Exported ${tasks.length} task${tasks.length === 1 ? '' : 's'}`)
+  }
 
   return (
     <div className="dashboard">
@@ -192,9 +244,21 @@ export function DashboardPage() {
         <section className="panel">
           <div className="panel-heading">
             <h2>Today {!loading && <span className="count-pill">{openCount}</span>}</h2>
-            <Link to="/tasks" className="text-button">View all <ArrowUpRight size={15} /></Link>
+            <div className="panel-head-side">
+              {canExport && tasks.length > 0 && (
+                <button className="text-button" onClick={exportToday} title="Download today as CSV">
+                  <Table2 size={15} /> Export
+                </button>
+              )}
+              <Link to="/tasks" className="text-button">View all <ArrowUpRight size={15} /></Link>
+            </div>
           </div>
-          <p className="muted">{format(now, 'EEEE, d MMMM')}</p>
+          <p className="muted">
+            {format(now, 'EEEE, d MMMM')}
+            {!loading && tasks.length > 0 && (
+              <> · {tasks.length - openCount} of {tasks.length} done</>
+            )}
+          </p>
 
           {loading && (
             <div className="task-list">
@@ -276,6 +340,15 @@ export function DashboardPage() {
           )}
         </section>
       </div>
+
+      <MissionsPanel
+        state={game.state}
+        catalogue={game.catalogue}
+        loading={game.loading}
+        error={game.error}
+        onRetry={game.refresh}
+        onExpire={game.refresh}
+      />
 
       {!insightHidden && (
         <section className="insight-card">

@@ -1,12 +1,15 @@
 import { Link, useParams } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import {
-  ArrowLeft, ChartPie, ChevronLeft, ChevronRight, CircleAlert, Info, Receipt, TrendingUp, Users, Wallet,
+  ArrowLeft, ChartPie, ChevronLeft, ChevronRight, CircleAlert, FileText, Info, Receipt, TrendingUp,
+  Users, Wallet,
 } from 'lucide-react'
 import { BarList, ChartLegend, ColumnChart, DonutChart } from '../components/charts/Charts'
+import { SpendReport } from '../components/reports/SpendReport'
 import { Loader } from '../components/common/Loader'
 import { LEVELS, LEVEL_LABEL, useGroupAnalytics } from '../hooks/useGroupAnalytics'
 import { useGroupDetail } from '../hooks/useGroupDetail'
+import { useUnlocked } from '../hooks/useUnlocked'
 import { avatarStyle } from '../utils/avatar'
 import './GroupAnalyticsPage.scss'
 
@@ -18,8 +21,9 @@ export function GroupAnalyticsPage() {
   const { id = '' } = useParams()
   const { group } = useGroupDetail(id)
   const memberCount = group?.memberCount ?? group?.members.length ?? 0
+  const canPrint = useUnlocked('SPEND_REPORT')
   const {
-    analytics, loading, error, retry, truncated,
+    analytics, expenses, loading, error, retry, truncated,
     level, heading, trail, goTo, shift, jumpToNow, drillInto, canDrill, isNow,
   } = useGroupAnalytics(id, memberCount)
 
@@ -54,6 +58,13 @@ export function GroupAnalyticsPage() {
             Every expense in {group?.name ?? 'this group'}, split by category, by person and over time.
           </p>
         </div>
+
+        {/* the browser's print dialog is the PDF export — "Save as PDF" there */}
+        {canPrint && analytics.count > 0 && (
+          <button className="head-link" onClick={() => window.print()}>
+            <FileText size={16} /> Save as PDF
+          </button>
+        )}
       </div>
 
       <div className="range-row">
@@ -105,6 +116,16 @@ export function GroupAnalyticsPage() {
           <Info size={14} /> This group has more expenses than the app charts at once — the
           figures below cover the most recent 2,000.
         </p>
+      )}
+
+      {/* no point rendering a document nobody can print yet */}
+      {canPrint && (
+        <SpendReport
+          groupName={group?.name ?? 'Group'}
+          heading={heading}
+          analytics={analytics}
+          expenses={expenses}
+        />
       )}
 
       <section className="panel">

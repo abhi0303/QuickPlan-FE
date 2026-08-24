@@ -1,0 +1,159 @@
+/* SpendReport — styles owned by this component.
+   It is a paper document: hidden on screen, laid out for print. */
+
+.spend-report { display: none; }
+
+/* --------------------------------------------------------------- print -- */
+
+@media print {
+
+    /* the app is not the document — only the report is */
+    .app-shell > .sidebar,
+    .topbar,
+    .bottom-nav,
+    .fab,
+    .speak-fab,
+    .modal-backdrop,
+    .api-progress,
+    .analytics-page > *:not(.spend-report) {
+        display: none !important;
+    }
+
+    /* the shell still reserves room for the sidebar it just hid, and the app
+       background wastes ink */
+    body,
+    .app-shell,
+    .main-content,
+    .page-container {
+        background: #fff !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
+    .page-container {
+        margin: 0;
+        max-width: none;
+        padding: 0;
+    }
+
+    .spend-report {
+        color: #10241d;
+        display: block;
+        font-size: 11pt;
+    }
+
+    .report-head {
+        align-items: flex-start;
+        border-bottom: 2px solid #10241d;
+        display: flex;
+        justify-content: space-between;
+        padding-bottom: 10pt;
+    }
+
+    .report-kicker {
+        color: #0a9a75;
+        font-size: 8pt;
+        font-weight: 800;
+        letter-spacing: 1.4pt;
+        text-transform: uppercase;
+    }
+
+    .report-head h1 { font-size: 22pt; font-weight: 800; letter-spacing: -.5pt; margin-top: 2pt; }
+    .report-window { color: #4a635b; font-size: 10pt; margin-top: 1pt; }
+    .report-printed { color: #6e8a80; font-size: 8.5pt; }
+
+    .report-totals {
+        display: grid;
+        gap: 10pt;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 14pt 0 4pt;
+    }
+
+    .report-totals div {
+        border: 1px solid #cfe0d8;
+        border-radius: 6pt;
+        padding: 8pt 10pt;
+    }
+
+    .report-totals small {
+        color: #6e8a80;
+        display: block;
+        font-size: 7.5pt;
+        font-weight: 700;
+        letter-spacing: .6pt;
+        text-transform: uppercase;
+    }
+
+    .report-totals strong { font-size: 14pt; font-weight: 800; }
+
+    /* keep a section and its table on one sheet wherever the paper allows */
+    .report-block {
+        break-inside: avoid;
+        margin-top: 16pt;
+    }
+
+    .report-block h2 {
+        border-bottom: 1px solid #cfe0d8;
+        font-size: 12pt;
+        font-weight: 800;
+        padding-bottom: 4pt;
+    }
+
+    .report-split {
+        align-items: center;
+        display: flex;
+        gap: 18pt;
+        margin-top: 10pt;
+    }
+
+    .report-split .chart-donut { flex: none; height: 150pt; width: 150pt; }
+    .report-split .donut-center strong { font-size: 13pt; }
+    .report-split .report-table { flex: 1; }
+
+    .report-table {
+        border-collapse: collapse;
+        margin-top: 8pt;
+        width: 100%;
+    }
+
+    .report-table th {
+        border-bottom: 1px solid #cfe0d8;
+        color: #4a635b;
+        font-size: 8pt;
+        font-weight: 800;
+        letter-spacing: .5pt;
+        padding: 5pt 6pt;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .report-table td {
+        border-bottom: 1px solid #eaf2ee;
+        font-size: 10pt;
+        padding: 5pt 6pt;
+    }
+
+    .report-table td.up { color: #0a7d5e; font-weight: 700; }
+    .report-table td.down { color: #b3364c; font-weight: 700; }
+
+    .report-swatch {
+        border-radius: 2pt;
+        display: inline-block;
+        height: 8pt;
+        margin-right: 5pt;
+        width: 8pt;
+    }
+
+    .report-foot {
+        border-top: 1px solid #cfe0d8;
+        color: #6e8a80;
+        font-size: 8.5pt;
+        margin-top: 18pt;
+        padding-top: 8pt;
+    }
+
+    @page { margin: 14mm; }
+}

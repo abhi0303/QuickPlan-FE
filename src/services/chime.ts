@@ -129,7 +129,34 @@ export const RINGTONES: Ringtone[] = [
       { freq: A5, at: 0.94, dur: 0.08, gain: 0.13 }, { freq: C6, at: 1.02, dur: 0.14, gain: 0.13 },
     ],
   },
+  {
+    id: 'sunrise',
+    label: 'Sunrise',
+    hint: 'Soft and unhurried',
+    wave: 'sine',
+    gap: 1.6,
+    notes: [
+      { freq: C6, at: 0, dur: 0.5, gain: 0.08 }, { freq: E6, at: 0.24, dur: 0.5, gain: 0.08 },
+      { freq: G5, at: 0.24, dur: 0.7, gain: 0.05 }, { freq: A6, at: 0.5, dur: 0.7, gain: 0.09 },
+      { freq: E6, at: 0.86, dur: 0.9, gain: 0.06 }, { freq: C6, at: 0.86, dur: 1.1, gain: 0.05 },
+    ],
+  },
+  {
+    id: 'beacon',
+    label: 'Beacon',
+    hint: 'Two tones, hard to miss',
+    wave: 'square',
+    gap: 0.9,
+    notes: [
+      { freq: F6s, at: 0, dur: 0.16, gain: 0.09 }, { freq: Cs6, at: 0.2, dur: 0.16, gain: 0.09 },
+      { freq: F6s, at: 0.4, dur: 0.16, gain: 0.09 }, { freq: Cs6, at: 0.6, dur: 0.16, gain: 0.09 },
+      { freq: F6s, at: 0.86, dur: 0.3, gain: 0.1 }, { freq: F5s, at: 0.86, dur: 0.34, gain: 0.06 },
+    ],
+  },
 ]
+
+/** Sounds that arrive with a level; the rest are available from the start. */
+export const UNLOCKABLE_RINGTONES = ['sunrise', 'beacon']
 
 export const DEFAULT_RINGTONE = 'chime'
 

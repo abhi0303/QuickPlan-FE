@@ -13,6 +13,8 @@ export const NOTIFICATION_TYPES = [
   'REMINDER_LEAD',
   'REMINDER_DUE',
   'TASK_DUE',
+  'MISSION_COMPLETED',
+  'LEVEL_UP',
 ] as const
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number]

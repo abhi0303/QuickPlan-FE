@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { format, isToday, parseISO } from 'date-fns'
+import toast from 'react-hot-toast'
 import {
-  ArrowLeft, ChartPie, CircleAlert, Crown, HandCoins, LoaderCircle, Pencil, Plus,
+  ArrowLeft, ChartPie, CircleAlert, Crown, FileDown, HandCoins, LoaderCircle, Pencil, Plus,
   Receipt, Trash2, UserPlus, Users,
 } from 'lucide-react'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ExpenseModal } from '../components/groups/ExpenseModal'
 import { ManageMembersModal } from '../components/groups/ManageMembersModal'
 import { useGroupDetail } from '../hooks/useGroupDetail'
+import { useUnlocked } from '../hooks/useUnlocked'
 import type { Expense } from '../services/expenses'
 import { useAppStore } from '../store/useAppStore'
 import { categoryLook } from '../data/expenseCategories'
+import { downloadFile, slug, toCsv } from '../services/exportFile'
+import { listAllGroupExpenses } from '../services/expenses'
 import { avatarStyle } from '../utils/avatar'
 import './GroupDetailPage.scss'
 
@@ -45,6 +49,58 @@ export function GroupDetailPage() {
 
   // leaving the page with the dialog open would otherwise reopen it on return
   useEffect(() => () => setAdding(false), [setAdding])
+
+  const [exporting, setExporting] = useState(false)
+  const canExport = useUnlocked('GROUP_EXPORT')
+
+  /**
+   * Every expense in the group as one file, with a column per member holding
+   * that person's share — so the split survives the export instead of only the
+   * total.
+   */
+  async function exportGroup() {
+    if (!group) return
+    setExporting(true)
+    try {
+      const all = await listAllGroupExpenses(group.id)
+      const people = group.members
+      const rows: (string | number | null | undefined)[][] = [
+        [group.name, group.description ?? ''],
+        ['Exported', format(new Date(), 'd MMM yyyy'), format(new Date(), 'h:mm a')],
+        ['Expenses', all.items.length],
+        ['Total spent', all.items.reduce((sum, expense) => sum + expense.totalAmount, 0).toFixed(2)],
+        [],
+        // date and time apart, and the date short: a spreadsheet renders a wide
+        // datetime as ##### at its default column width, which reads as missing
+        ['Date', 'Time', 'Title', 'Category', 'Paid by', 'Total', ...people.map((member) => `${member.name} owes`)],
+        ...all.items.map((expense) => [
+          format(parseISO(expense.date), 'd MMM yyyy'),
+          format(parseISO(expense.date), 'h:mm a'),
+          expense.title,
+          expense.category ?? '',
+          expense.paidBy?.name ?? '',
+          expense.totalAmount.toFixed(2),
+          ...people.map((member) => {
+            const share = expense.shares.find((row) => row.userId === member.id)
+            return share ? share.amount.toFixed(2) : ''
+          }),
+        ]),
+        [],
+        ['Balances', ...people.map((member) => member.name)],
+        ['Net', ...people.map((member) => {
+          const balance = balances?.members.find((row) => row.userId === member.id)
+          return balance ? balance.net.toFixed(2) : ''
+        })],
+      ]
+      downloadFile(`${slug(group.name)}-expenses.csv`, toCsv(rows))
+      toast.success(`Exported ${all.items.length} expense${all.items.length === 1 ? '' : 's'}`)
+      if (all.truncated) toast('Only the most recent 2,000 are included', { icon: 'ℹ️' })
+    } catch {
+      toast.error('Could not build the export.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -86,6 +142,12 @@ export function GroupDetailPage() {
           {group.description && <p className="muted">{group.description}</p>}
         </div>
         <div className="head-actions">
+          {canExport && expenses.length > 0 && (
+            <button className="head-link" onClick={exportGroup} disabled={exporting}>
+              {exporting ? <LoaderCircle size={16} className="spin" /> : <FileDown size={16} />} Export
+            </button>
+          )}
+
           {/* worth offering as soon as there is anything to analyse */}
           {expenses.length > 0 && (
             <Link to={`/groups/${id}/analysis`} className="head-link">

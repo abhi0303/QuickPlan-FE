@@ -70,7 +70,7 @@ export function SettingsPage() {
             <span className="setting-icon"><Repeat size={20} /></span>
             <div>
               <strong>Week starts on</strong>
-              <small>Used across your calendar and streaks</small>
+              <small>Used across your calendar and missions</small>
             </div>
           </div>
           <select defaultValue="mon">

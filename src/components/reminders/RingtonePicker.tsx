@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown, Music, Play } from 'lucide-react'
-import { getRingtone, playRingtone, primeAudio, RINGTONES, stopAlert } from '../../services/chime'
+import {
+  getRingtone, playRingtone, primeAudio, RINGTONES, stopAlert, UNLOCKABLE_RINGTONES,
+} from '../../services/chime'
+import { useUnlocked } from '../../hooks/useUnlocked'
 import { useAppStore } from '../../store/useAppStore'
 import './RingtonePicker.scss'
 
@@ -17,6 +20,12 @@ export function RingtonePicker() {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const current = getRingtone(ringtone)
+
+  // Sunrise and Beacon arrive at level 10; the rest have always been here.
+  const hasExtras = useUnlocked('EXTRA_RINGTONES')
+  const tones = hasExtras
+    ? RINGTONES
+    : RINGTONES.filter((tone) => !UNLOCKABLE_RINGTONES.includes(tone.id))
 
   useEffect(() => {
     if (!open) return
@@ -59,7 +68,7 @@ export function RingtonePicker() {
         <div className="ringtone-menu" role="listbox" aria-label="Reminder ringtone">
           <p className="ringtone-menu-title">Reminder sound</p>
 
-          {RINGTONES.map((tone) => (
+          {tones.map((tone) => (
             <button
               key={tone.id}
               type="button"

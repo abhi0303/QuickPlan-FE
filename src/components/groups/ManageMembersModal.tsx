@@ -57,6 +57,8 @@ export function ManageMembersModal({
     setInviting(true)
     try {
       await onInvite(selected)
+      // the server decides each new member's role — someone who has reached
+      // level 15 joins as an owner, and that is not this client's call to make
       toast.success(`Added ${selected.length} ${selected.length === 1 ? 'person' : 'people'}`)
       setSelected([])
     } catch (e) {

@@ -11,6 +11,8 @@ import {
   HandCoins,
   LoaderCircle,
   Receipt,
+  Sparkles,
+  Target,
   UserMinus,
   UserPlus,
   Users,
@@ -35,6 +37,8 @@ const TYPE_ICON: Record<NotificationType, typeof Bell> = {
   REMINDER_LEAD: AlarmClock,
   REMINDER_DUE: AlarmClock,
   TASK_DUE: CircleCheckBig,
+  MISSION_COMPLETED: Target,
+  LEVEL_UP: Sparkles,
 }
 
 /** A tone per family of event, so the badge says what kind at a glance. */
@@ -51,6 +55,8 @@ const TYPE_TONE: Record<NotificationType, string> = {
   REMINDER_LEAD: 'tone-time',
   REMINDER_DUE: 'tone-time',
   TASK_DUE: 'tone-time',
+  MISSION_COMPLETED: 'tone-xp',
+  LEVEL_UP: 'tone-xp',
 }
 
 /** Compact: "3m", "5h", "2d", then the date. A list of these has to stay narrow. */

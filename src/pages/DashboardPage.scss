@@ -168,16 +168,43 @@
    panels
    ========================================================================== */
 .dashboard-grid {
-    align-items: start;
+    /* both panels take the row's height, so an empty Today does not leave the
+       pair looking ragged next to a full Upcoming */
+    align-items: stretch;
     display: grid;
     gap: 20px;
     grid-template-columns: 1.25fr 1fr;
+    /* the sections on this page space themselves; this one had nothing below
+       it until the missions panel arrived */
+    margin-bottom: 20px;
 }
 
 /* `1fr` still refuses to go below its content, so the columns are told they
    may shrink — otherwise one long title widens the panel past the page. */
 .dashboard-grid > * {
     min-width: 0;
+}
+
+/* a column so the panel's own content can push the add line to the bottom */
+.dashboard-grid > .panel {
+    display: flex;
+    flex-direction: column;
+}
+
+/* the empty state takes the slack instead of leaving it under the button */
+.dashboard-grid > .panel > .panel-state {
+    flex: 1;
+    justify-content: center;
+}
+
+.dashboard-grid > .panel > .add-task-line {
+    margin-top: auto;
+}
+
+/* margin-top on the button resolves to zero once the panel is full, so the
+   gap above it lives on the list */
+.dashboard-grid > .panel > .task-list {
+    margin-bottom: 14px;
 }
 
 .add-task-line {
