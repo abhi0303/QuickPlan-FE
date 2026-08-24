@@ -14,49 +14,70 @@
     min-width: 18px;
     padding: 3px 4px;
     position: absolute;
-    right: -3px;
+    right: -2px;
     text-align: center;
-    top: -3px;
+    top: -2px;
 }
 
 .notif-panel {
-    animation: notifIn .16s ease;
+    animation: notifIn .18s cubic-bezier(.2, .8, .3, 1);
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--r-lg);
+    border-radius: var(--r-xl);
     box-shadow: var(--shadow-lg);
     display: flex;
     flex-direction: column;
-    max-height: min(560px, 70vh);
     overflow: hidden;
     position: absolute;
     right: 0;
     top: calc(100% + 10px);
-    width: 380px;
+    width: 372px;
     z-index: 40;
 }
 
 @keyframes notifIn {
-    from { opacity: 0; transform: translateY(-6px); }
+    from { opacity: 0; transform: translateY(-8px) scale(.98); }
     to { opacity: 1; transform: none; }
 }
 
+/* ----------------------------------------------------------------- head -- */
+
 .notif-head {
     align-items: center;
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
     display: flex;
     gap: 12px;
     justify-content: space-between;
-    padding: 14px 16px;
+    padding: 13px 14px;
 }
 
-.notif-head h2 { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.notif-head h2 {
+    align-items: center;
+    display: flex;
+    font-size: 14.5px;
+    font-weight: 700;
+    gap: 7px;
+    letter-spacing: -.2px;
+}
+
+.notif-pill {
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    color: var(--on-primary);
+    font-size: 10.5px;
+    font-weight: 800;
+    min-width: 19px;
+    padding: 2px 6px;
+    text-align: center;
+}
 
 .notif-readall {
     align-items: center;
     border-radius: var(--r-pill);
     color: var(--primary);
     display: inline-flex;
+    flex: none;
     font-size: 12px;
     font-weight: 700;
     gap: 5px;
@@ -66,6 +87,8 @@
 
 .notif-readall:hover { background: var(--primary-soft); }
 
+/* ---------------------------------------------------------------- state -- */
+
 .notif-state {
     align-items: center;
     color: var(--muted);
@@ -74,7 +97,7 @@
     font-size: 13px;
     font-weight: 600;
     gap: 8px;
-    padding: 30px 20px;
+    padding: 34px 22px;
     text-align: center;
 }
 
@@ -82,44 +105,76 @@
 
 .notif-empty-icon {
     align-items: center;
-    background: var(--surface-alt);
+    background: var(--gradient-soft);
     border-radius: var(--r-pill);
-    color: var(--muted);
+    color: var(--primary-strong);
     display: flex;
-    height: 46px;
+    height: 52px;
     justify-content: center;
     margin-bottom: 2px;
-    width: 46px;
+    width: 52px;
 }
 
+/* ----------------------------------------------------------------- list -- */
+
+/* Five rows and then it scrolls: the panel never grows past what a glance can
+   take in, however many notifications are waiting. */
 .notif-list {
+    /* each notification is its own card, so they need air between them */
+    align-content: start;
+    display: grid;
+    gap: 6px;
+    max-height: min(370px, 54vh);
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 6px;
+    scrollbar-color: var(--border-strong) transparent;
+    scrollbar-width: thin;
+}
+
+.notif-list::-webkit-scrollbar { width: 8px; }
+.notif-list::-webkit-scrollbar-track { background: transparent; }
+
+.notif-list::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border: 2px solid var(--surface);
+    border-radius: var(--r-pill);
 }
 
 .notif-day {
     color: var(--muted);
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: .8px;
-    padding: 10px 10px 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .9px;
+    padding: 6px 8px 2px;
     text-transform: uppercase;
 }
 
 .notif-row {
-    align-items: flex-start;
+    align-items: center;
     border-radius: var(--r-md);
     display: flex;
     gap: 2px;
+    position: relative;
     transition: background .16s ease;
 }
 
 .notif-row:hover { background: var(--surface-soft); }
 
-/* the unread marker is a tinted rail rather than another dot to hunt for */
-.notif-row.is-unread {
-    background: var(--primary-soft);
-    box-shadow: inset 3px 0 0 var(--primary);
+/* Unread is a dot and a whisper of tint, not a filled block — a list where
+   every row is a coloured slab is harder to read, not easier. */
+.notif-row.is-unread { background: color-mix(in srgb, var(--primary) 7%, var(--surface)); }
+.notif-row.is-unread:hover { background: color-mix(in srgb, var(--primary) 11%, var(--surface)); }
+
+.notif-row.is-unread::after {
+    background: var(--primary);
+    border-radius: var(--r-pill);
+    content: '';
+    height: 7px;
+    position: absolute;
+    right: 10px;
+    top: 14px;
+    width: 7px;
 }
 
 .notif-main {
@@ -128,8 +183,17 @@
     flex: 1;
     gap: 11px;
     min-width: 0;
-    padding: 11px 4px 11px 11px;
+    padding: 10px 8px 11px 10px;
     text-align: left;
+}
+
+/* ---------------------------------------------------------------- avatar -- */
+
+.notif-figure {
+    flex: none;
+    height: 38px;
+    position: relative;
+    width: 38px;
 }
 
 .notif-avatar {
@@ -137,39 +201,74 @@
     border-radius: var(--r-pill);
     color: #fff;
     display: flex;
-    flex: none;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 700;
-    height: 36px;
+    height: 38px;
     justify-content: center;
-    width: 36px;
+    width: 38px;
 }
 
-.notif-avatar.plain { background: var(--surface-alt); color: var(--primary-strong); }
+.notif-avatar.plain { background: var(--surface-alt); color: var(--muted); }
 
-.notif-copy { min-width: 0; }
+.notif-badge {
+    align-items: center;
+    background: var(--tone, var(--primary));
+    border: 2px solid var(--surface);
+    border-radius: var(--r-pill);
+    bottom: -3px;
+    color: #fff;
+    display: flex;
+    height: 19px;
+    justify-content: center;
+    position: absolute;
+    right: -4px;
+    width: 19px;
+}
 
-.notif-copy strong {
-    display: block;
-    font-size: 13.5px;
+.notif-badge.tone-money { --tone: var(--primary-strong); }
+.notif-badge.tone-group { --tone: var(--periwinkle); }
+.notif-badge.tone-friend { --tone: #a855f7; }
+.notif-badge.tone-time { --tone: var(--tangerine); }
+
+/* ------------------------------------------------------------------ copy -- */
+
+.notif-copy { min-width: 0; padding-right: 12px; }
+
+.notif-line {
+    align-items: baseline;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.notif-line strong {
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: -.1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.notif-copy small {
-    color: var(--text-soft);
-    display: block;
-    font-size: 12.5px;
-    font-weight: 500;
-    margin-top: 2px;
-}
-
-.notif-copy time {
+.notif-line time {
     color: var(--muted);
-    display: block;
+    flex: none;
     font-size: 11px;
     font-weight: 600;
-    margin-top: 5px;
+}
+
+/* two lines is enough for any of the server's sentences; a third would push the
+   next notification off the fold */
+.notif-copy small {
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: var(--text-soft);
+    display: -webkit-box;
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.42;
+    margin-top: 2px;
+    overflow: hidden;
 }
 
 .notif-dismiss {
@@ -179,15 +278,16 @@
     color: var(--muted);
     display: flex;
     flex: none;
-    height: 28px;
+    height: 26px;
     justify-content: center;
     margin-right: 6px;
     opacity: 0;
     transition: opacity .16s ease, background .16s ease, color .16s ease;
-    width: 28px;
+    width: 26px;
 }
 
 .notif-row:hover .notif-dismiss { opacity: 1; }
+.notif-row:hover.is-unread::after { opacity: 0; }
 .notif-dismiss:hover { background: var(--rose-soft); color: var(--rose); }
 
 .notif-more {
@@ -205,24 +305,28 @@
 .notif-more .spin,
 .notif-state .spin { vertical-align: -2px; }
 
-/* No hover on a touch screen: the dismiss control would never appear. */
+/* No hover on a touch screen: the dismiss control would never appear, and the
+   unread dot would never clear the space for it. */
 @media (hover: none) {
 
-    .notif-dismiss {
-        opacity: 1;
-    }
+    .notif-dismiss { opacity: 1; }
+    .notif-row.is-unread::after { right: 40px; }
 }
 
-/* A dropdown wider than the phone is no dropdown, so it becomes a sheet
-   anchored under the header. */
+/* A dropdown wider than the phone is no dropdown, so it becomes a sheet under
+   the header. */
 @media (max-width: 560px) {
 
     .notif-panel {
+        border-radius: var(--r-xl);
         left: calc(10px + env(safe-area-inset-left, 0px));
-        max-height: 72vh;
         position: fixed;
         right: calc(10px + env(safe-area-inset-right, 0px));
         top: calc(58px + env(safe-area-inset-top, 0px));
         width: auto;
     }
+
+    .notif-list { max-height: 62vh; }
+    .notif-readall span { display: none; }
+    .notif-readall { padding: 7px; }
 }
