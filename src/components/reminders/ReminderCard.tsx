@@ -3,6 +3,7 @@ import { BellOff, BellRing, Infinity as InfinityIcon, Moon, Pencil, Repeat, Sun,
 import type { Reminder } from '../../services/reminders'
 import { useNow } from '../../hooks/useNow'
 import { describePast, formatCountdown, nextOccurrence, parseDue, SLOT_LABEL, slotOf } from './reminderTime'
+import { AddToCalendar } from './AddToCalendar'
 import './ReminderCard.scss'
 
 const SLOT_ICON = { dawn: Sunrise, day: Sun, dusk: Sunset, night: Moon }
@@ -45,6 +46,7 @@ export function ReminderCard({ reminder, busy, onEdit, onDelete }: Props) {
         <i className="orb-b" />
 
         <div className="reminder-actions">
+          <AddToCalendar reminder={reminder} compact />
           <button onClick={() => onEdit(reminder)} disabled={busy} aria-label={`Edit "${reminder.title}"`}>
             <Pencil size={15} />
           </button>
