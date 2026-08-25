@@ -174,9 +174,20 @@ export async function flushQueue(): Promise<{ sent: number, left: number }> {
       } catch (error) {
         const status = (error as { response?: { status?: number } }).response?.status
 
+        // The thing this edits or deletes is already gone — from another
+        // device, usually. The intent is satisfied either way, so drop the row
+        // rather than showing the user a failure they cannot act on.
+        if (status === 404 && row.method !== 'POST') {
+          await idbDelete(QUEUE_STORE, row.id)
+          continue
+        }
+
         // 4xx that is not a conflict will never succeed on a retry; keep the
-        // row so the user can see it, but stop hammering the endpoint
-        const terminal = status !== undefined && status >= 400 && status < 500 && status !== 409 && status !== 408
+        // row so the user can see it, but stop hammering the endpoint.
+        // 408, 409 and 429 are the exceptions: a timeout, a conflict and a rate
+        // limit all say "later", not "never".
+        const retryable = status === 408 || status === 409 || status === 429
+        const terminal = status !== undefined && status >= 400 && status < 500 && !retryable
         await idbPut(QUEUE_STORE, {
           ...row,
           attempts: row.attempts + 1,

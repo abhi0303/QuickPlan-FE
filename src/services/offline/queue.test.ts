@@ -150,3 +150,34 @@ describe('what the UI shows', () => {
     expect(queueSnapshot().find((item) => item.id === row.id)?.failed).toBeFalsy()
   })
 })
+
+describe('what the server says, and what the queue does about it', () => {
+  it('drops a delete for something already gone rather than failing it', async () => {
+    await enqueue({ entity: 'task', method: 'DELETE', url: '/api/tasks/a' })
+    request.mockRejectedValueOnce({ response: { status: 404 } })
+
+    await flushQueue()
+
+    expect(queueSnapshot()).toHaveLength(0)
+  })
+
+  it('keeps retrying a rate limit instead of treating it as refused', async () => {
+    await enqueue({ entity: 'task', method: 'POST', url: '/api/tasks', body: { title: 'a' } })
+    request.mockRejectedValueOnce({ response: { status: 429 } })
+
+    await flushQueue()
+
+    expect(queueSnapshot()[0].failed).toBeFalsy()
+    expect(queueSnapshot()[0].attempts).toBe(1)
+  })
+
+  it('still refuses to retry a validation error', async () => {
+    await enqueue({ entity: 'task', method: 'POST', url: '/api/tasks', body: {} })
+    request.mockRejectedValueOnce({ response: { status: 400, data: { message: 'title should not be empty' } } })
+
+    await flushQueue()
+
+    expect(queueSnapshot()[0].failed).toBe(true)
+    expect(queueSnapshot()[0].lastError).toBe('title should not be empty')
+  })
+})
