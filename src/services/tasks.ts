@@ -1,4 +1,5 @@
 import { api } from './api'
+import { sendOrQueue } from './offline/mutate'
 import type { CreatedVia } from './createdVia'
 
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const
@@ -94,9 +95,30 @@ export async function listTasks(params: { view?: TaskView; category?: string; pr
   return normalizeTaskList(data)
 }
 
+/**
+ * Creates a task, or queues it when there is no connection and hands back a
+ * placeholder so the list can show it straight away. The placeholder's id is
+ * replaced with the server's once the queue drains.
+ */
 export async function createTask(payload: CreateTaskPayload): Promise<Task | null> {
-  const { data } = await api.post('/api/tasks', payload)
-  return normalizeSingle(data)
+  const sent = await sendOrQueue<Task | null>({
+    entity: 'task',
+    method: 'POST',
+    url: '/api/tasks',
+    body: payload,
+    optimistic: (tempId) => ({
+      id: tempId,
+      title: payload.title,
+      notes: payload.notes,
+      status: payload.status ?? 'PENDING',
+      priority: payload.priority ?? 'MEDIUM',
+      category: payload.category,
+      dueDate: payload.dueDate,
+      isCompleted: payload.isCompleted ?? false,
+    }),
+    send: async () => normalizeSingle((await api.post('/api/tasks', payload)).data),
+  })
+  return sent.data
 }
 
 /**
@@ -109,13 +131,22 @@ export async function updateTask(id: string, patch: Partial<CreateTaskPayload>):
 }
 
 export async function setTaskCompleted(id: string, isCompleted: boolean): Promise<Task | null> {
-  const { data } = await api.patch(`/api/tasks/${id}`, {
-    isCompleted,
-    status: isCompleted ? 'COMPLETED' : 'PENDING',
+  const body = { isCompleted, status: isCompleted ? 'COMPLETED' : 'PENDING' }
+  const sent = await sendOrQueue<Task | null>({
+    entity: 'task',
+    method: 'PATCH',
+    url: `/api/tasks/${id}`,
+    body,
+    send: async () => normalizeSingle((await api.patch(`/api/tasks/${id}`, body)).data),
   })
-  return normalizeSingle(data)
+  return sent.data
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  await api.delete(`/api/tasks/${id}`)
+  await sendOrQueue<void>({
+    entity: 'task',
+    method: 'DELETE',
+    url: `/api/tasks/${id}`,
+    send: async () => { await api.delete(`/api/tasks/${id}`) },
+  })
 }

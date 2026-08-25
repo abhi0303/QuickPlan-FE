@@ -1,4 +1,5 @@
 import { api } from './api'
+import { sendOrQueue } from './offline/mutate'
 import type { CreatedVia } from './createdVia'
 
 export const RECURRENCE_RULES = ['DAILY', 'WEEKDAYS', 'WEEKLY', 'MONTHLY'] as const
@@ -54,12 +55,33 @@ export async function listReminders(): Promise<Reminder[]> {
 }
 
 export async function createReminder(payload: CreateReminderPayload): Promise<Reminder | null> {
-  const { data } = await api.post('/api/reminders', payload)
-  return normalizeReminder(data) ?? normalizeReminder((data as { data?: unknown })?.data)
+  const sent = await sendOrQueue<Reminder | null>({
+    entity: 'reminder',
+    method: 'POST',
+    url: '/api/reminders',
+    body: payload,
+    optimistic: (tempId) => ({
+      id: tempId,
+      title: payload.title,
+      dueAt: payload.dueAt,
+      offsetMinutes: payload.offsetMinutes,
+      recurrenceRule: payload.recurrenceRule,
+    }),
+    send: async () => {
+      const { data } = await api.post('/api/reminders', payload)
+      return normalizeReminder(data) ?? normalizeReminder((data as { data?: unknown })?.data)
+    },
+  })
+  return sent.data
 }
 
 export async function deleteReminder(id: string): Promise<void> {
-  await api.delete(`/api/reminders/${id}`)
+  await sendOrQueue<void>({
+    entity: 'reminder',
+    method: 'DELETE',
+    url: `/api/reminders/${id}`,
+    send: async () => { await api.delete(`/api/reminders/${id}`) },
+  })
 }
 
 /** Mirrors UpdateReminderDto — a partial of the create payload. */

@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns'
 import { Check, Clock3, Pencil } from 'lucide-react'
 import type { Task } from '../../services/tasks'
+import { isTempId } from '../../services/offline/queue'
 import './TaskPreview.scss'
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -33,7 +34,7 @@ export function TaskPreview({ task, onToggle, onEdit, busy }: Props) {
   const color = task.category ? CATEGORY_COLORS[task.category.toLowerCase()] ?? DEFAULT_COLOR : DEFAULT_COLOR
 
   return (
-    <div className={`task-preview ${task.isCompleted ? 'completed' : ''}`}>
+    <div className={`task-preview ${task.isCompleted ? 'completed' : ''} ${isTempId(task.id) ? 'is-queued' : ''}`}>
       <button
         className="check-circle"
         onClick={() => onToggle(task)}

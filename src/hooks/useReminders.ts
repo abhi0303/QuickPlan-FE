@@ -4,6 +4,8 @@ import { getApiErrorMessage } from '../services/api'
 import { deleteReminder, listReminders } from '../services/reminders'
 import type { Reminder } from '../services/reminders'
 import { useAppStore } from '../store/useAppStore'
+import { useCachedList } from './useCachedList'
+import { pendingCreates } from '../services/offline/queue'
 
 /**
  * GET /api/reminders takes no query parameters, so the whole list is fetched
@@ -14,6 +16,7 @@ export function useReminders() {
   const bumpTasksVersion = useAppStore((state) => state.bumpTasksVersion)
 
   const [reminders, setReminders] = useState<Reminder[]>([])
+  const cache = useCachedList<Reminder[]>('reminders')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
@@ -21,10 +24,18 @@ export function useReminders() {
 
   useEffect(() => {
     let cancelled = false
+    cache.hydrate((cached) => {
+      if (!cancelled) {
+        setReminders(cached)
+        setLoading(false)
+      }
+    })
+
     listReminders()
       .then((data) => {
         if (cancelled) return
         setReminders(data)
+        cache.store(data)
         setError('')
       })
       .catch((fetchError) => {
@@ -34,6 +45,7 @@ export function useReminders() {
         if (!cancelled) setLoading(false)
       })
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasksVersion, retryToken])
 
   function retry() {
@@ -55,5 +67,19 @@ export function useReminders() {
     }
   }
 
-  return { reminders, loading, error, busyId, retry, remove }
+  // a reminder set without a connection still belongs on the list
+  const queued = pendingCreates('reminder')
+    .map((row) => row.preview as unknown as Reminder | undefined)
+    .filter((reminder): reminder is Reminder => Boolean(reminder?.id))
+    .filter((reminder) => !reminders.some((existing) => existing.id === reminder.id))
+
+  return {
+    reminders: queued.length ? [...queued, ...reminders] : reminders,
+    loading,
+    error,
+    busyId,
+    retry,
+    remove,
+    staleAt: cache.staleAt,
+  }
 }

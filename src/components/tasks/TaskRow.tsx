@@ -1,6 +1,7 @@
 import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns'
 import { Check, Clock3, Pencil, Trash2 } from 'lucide-react'
 import type { Task, TaskPriority } from '../../services/tasks'
+import { isTempId } from '../../services/offline/queue'
 import './TaskRow.scss'
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -49,7 +50,7 @@ export function TaskRow({ task, busy, onToggle, onDelete, onEdit }: Props) {
   const color = task.category ? CATEGORY_COLORS[task.category.toLowerCase()] ?? DEFAULT_COLOR : DEFAULT_COLOR
 
   return (
-    <div className={`task-row ${task.isCompleted ? 'completed' : ''} ${busy ? 'is-busy' : ''}`}>
+    <div className={`task-row ${task.isCompleted ? 'completed' : ''} ${busy ? 'is-busy' : ''} ${isTempId(task.id) ? 'is-queued' : ''}`}>
       <button
         className="check-circle"
         onClick={() => onToggle(task)}

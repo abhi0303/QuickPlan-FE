@@ -8,7 +8,7 @@
  * registered before any subscription can be created.
  */
 
-const VERSION = 'quickplan-v2'
+const VERSION = 'quickplan-v3'
 
 self.addEventListener('install', () => {
   // take over straight away rather than waiting for every tab to close
@@ -111,6 +111,22 @@ self.addEventListener('pushsubscriptionchange', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting()
+})
+
+/**
+ * Background Sync: the browser calls this when a connection returns, even if
+ * the app was closed. Chromium only — Safari and iOS never fire it, which is
+ * why the page also flushes on open and on the `online` event. The queue lives
+ * in IndexedDB and belongs to the page, so this asks the page to drain it and
+ * falls back to nothing if no tab is open.
+ */
+self.addEventListener('sync', (event) => {
+  if (event.tag !== 'quickplan-mutations') return
+  event.waitUntil(
+    self.clients.matchAll({ includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) client.postMessage({ type: 'FLUSH_QUEUE' })
+    }),
+  )
 })
 
 // referenced so the version string survives minification and is visible in devtools
