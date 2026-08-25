@@ -1305,3 +1305,7 @@ select {
     border-color: var(--primary);
     transform: translateY(-1px);
 }
+
+/* pushes the confirm/cancel pair right when a dialog also has a left-hand
+   action of its own */
+.modal-actions-gap { flex: 1; }

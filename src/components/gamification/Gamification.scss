@@ -453,7 +453,17 @@
     padding: 3px 9px;
 }
 
-.unlocks-modal { max-width: 540px; }
+/* The ladder grows with every reward, so the list scrolls inside the dialog
+   rather than the dialog growing past the screen. Header and progress stay put. */
+.unlocks-modal {
+    display: flex;
+    flex-direction: column;
+    max-height: min(660px, 82vh);
+    max-width: 540px;
+}
+
+.unlocks-modal .modal-head,
+.unlocks-modal .unlock-summary { flex: none; }
 
 /* how far along the ladder, before any of the detail */
 .unlock-summary {
@@ -520,7 +530,26 @@
 
 .unlock-list {
     display: grid;
+    flex: 1;
     list-style: none;
+    /* a grid child will not shrink below its content without this */
+    min-height: 0;
+    /* bleed so the bar sits at the dialog edge, not inset from the text */
+    margin: 0 -6px -4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 6px 4px;
+    scrollbar-color: var(--border-strong) transparent;
+    scrollbar-width: thin;
+}
+
+.unlock-list::-webkit-scrollbar { width: 8px; }
+.unlock-list::-webkit-scrollbar-track { background: transparent; }
+
+.unlock-list::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border: 2px solid var(--surface);
+    border-radius: var(--r-pill);
 }
 
 .unlock {
@@ -653,6 +682,7 @@
 
 @media (max-width: 560px) {
 
+    .unlocks-modal { max-height: 84vh; }
     .unlock { column-gap: 11px; grid-template-columns: 40px minmax(0, 1fr); }
     .unlock-mark { height: 40px; width: 40px; }
     .unlock-rail { left: 19px; top: 40px; }

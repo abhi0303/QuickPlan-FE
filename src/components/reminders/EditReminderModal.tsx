@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '../../services/api'
 import { updateReminder } from '../../services/reminders'
 import type { Reminder, UpdateReminderPayload } from '../../services/reminders'
 import { useAppStore } from '../../store/useAppStore'
+import { AddToCalendar } from './AddToCalendar'
 import './EditReminderModal.scss'
 
 const OFFSETS = [
@@ -171,6 +172,10 @@ function EditReminderDialog({ reminder }: { reminder: Reminder }) {
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
 
           <footer className="modal-actions">
+            {/* the calendar copy is of what is saved, so it sits beside Cancel
+                rather than pretending to be part of this form */}
+            <AddToCalendar reminder={reminder} />
+            <span className="modal-actions-gap" />
             <button type="button" className="voice-ghost" onClick={() => close(null)} disabled={saving}>Cancel</button>
             <button className="modal-submit" disabled={saving}>
               {saving ? <><LoaderCircle size={18} className="spin" /> Saving...</> : 'Save changes'}

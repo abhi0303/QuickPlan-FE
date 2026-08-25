@@ -1,4 +1,5 @@
 import {
+  CalendarPlus,
   Crown,
   FileDown,
   FileText,
@@ -18,6 +19,7 @@ import {
  * the server, so that one is listed here for the roadmap and enforced there.
  */
 export type UnlockId =
+  | 'CALENDAR_ADD'
   | 'TASK_CSV'
   | 'EXTRA_RINGTONES'
   | 'AUTO_OWNER'
@@ -36,6 +38,14 @@ export type Unlock = {
 }
 
 export const UNLOCKS: Unlock[] = [
+  {
+    id: 'CALENDAR_ADD',
+    level: 3,
+    title: 'Add reminders to your calendar',
+    description: 'Hand a reminder to your phone’s calendar so it alerts you with QuickPlan closed.',
+    where: 'A reminder → Add to calendar',
+    icon: CalendarPlus,
+  },
   {
     id: 'TASK_CSV',
     level: 5,

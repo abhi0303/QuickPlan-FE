@@ -11,7 +11,7 @@ import { ExpenseModal } from '../components/groups/ExpenseModal'
 import { ManageMembersModal } from '../components/groups/ManageMembersModal'
 import { useGroupDetail } from '../hooks/useGroupDetail'
 import { useUnlocked } from '../hooks/useUnlocked'
-import type { Expense } from '../services/expenses'
+import type { Expense, MemberBalance } from '../services/expenses'
 import { useAppStore } from '../store/useAppStore'
 import { categoryLook } from '../data/expenseCategories'
 import { downloadFile, slug, toCsv } from '../services/exportFile'
@@ -20,6 +20,21 @@ import { avatarStyle } from '../utils/avatar'
 import './GroupDetailPage.scss'
 
 const money = (value: number) => `₹${Math.abs(value).toFixed(2)}`
+
+/**
+ * What a member's zero balance actually means.
+ *
+ * A bare dash reads as "nothing here" whether the person cleared a debt or was
+ * never in one. The right column stays short — the word — and the detail goes
+ * on the line beneath, which is what makes sense of the row weeks later.
+ */
+function settledLabel(member: MemberBalance): string {
+  const moved = Math.max(member.settlementsSent, member.settlementsReceived)
+  if (moved > 0.005) return 'Settled'
+  // owed their share and paid exactly it, so nothing ever moved between people
+  if (member.owed > 0.005 || member.paid > 0.005) return 'All square'
+  return '—'
+}
 
 /** Today's expenses show the clock, older ones the date — same width either way. */
 function whenLabel(iso: string) {
@@ -291,10 +306,19 @@ export function GroupDetailPage() {
                   {member.userId === me ? 'You' : member.name}
                   {member.role === 'OWNER' && <i className="owner-dot" title="Owner"><Crown size={11} /></i>}
                 </strong>
-                <small>paid {money(member.paid)} · share {money(member.owed)}</small>
+                <small>
+                  paid {money(member.paid)} · share {money(member.owed)}
+                  {member.settlementsSent > 0.005 && <> · paid back {money(member.settlementsSent)}</>}
+                  {member.settlementsReceived > 0.005 && <> · received {money(member.settlementsReceived)}</>}
+                </small>
               </div>
-              <span className={`balance-net ${member.net > 0.005 ? 'up' : member.net < -0.005 ? 'down' : 'level'}`}>
-                {member.net > 0.005 ? `+${money(member.net)}` : member.net < -0.005 ? `−${money(member.net)}` : '—'}
+              <span
+                className={`balance-net ${member.net > 0.005 ? 'up' : member.net < -0.005 ? 'down' : 'level'}`}
+                title={`paid ${money(member.paid)}, share ${money(member.owed)}`}
+              >
+                {member.net > 0.005
+                  ? `+${money(member.net)}`
+                  : member.net < -0.005 ? `−${money(member.net)}` : settledLabel(member)}
               </span>
             </div>
           ))}
