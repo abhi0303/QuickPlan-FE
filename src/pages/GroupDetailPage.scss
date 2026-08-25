@@ -304,7 +304,13 @@
 
 .balance-net.up { color: var(--primary-strong); }
 .balance-net.down { color: var(--rose); }
-.balance-net.level { color: var(--muted); }
+.balance-net.level {
+    color: var(--muted);
+    /* a word rather than an amount, so it should not shout like one */
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+}
 
 .member-list {
     border-top: 1px solid var(--border);
