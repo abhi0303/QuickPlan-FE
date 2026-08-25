@@ -1,5 +1,6 @@
-import { BellRing, Compass, Globe, LogOut, Moon, Palette, Play, Repeat, Sun } from 'lucide-react'
+import { BellRing, Compass, Globe, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun } from 'lucide-react'
 import { PushToggle } from '../components/common/PushToggle'
+import { SyncPanel } from '../components/offline/SyncPanel'
 import { useAppStore } from '../store/useAppStore'
 import './SettingsPage.scss'
 
@@ -92,6 +93,19 @@ export function SettingsPage() {
             <Play size={14} /> Start
           </button>
         </div>
+      </div>
+
+      <div className="settings-card">
+        <div className="setting-row">
+          <div className="setting-label">
+            <span className="setting-icon"><RefreshCw size={20} /></span>
+            <div>
+              <strong>Offline changes</strong>
+              <small>Anything made without a connection waits here until it syncs</small>
+            </div>
+          </div>
+        </div>
+        <SyncPanel />
       </div>
 
       <button className="danger-row" onClick={signOut}>

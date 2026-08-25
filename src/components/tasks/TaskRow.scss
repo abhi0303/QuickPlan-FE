@@ -148,3 +148,29 @@
         opacity: 1;
     }
 }
+
+/* Queued: created without a connection and waiting in the outbox. Marked so it
+   does not look identical to something the server has actually accepted. */
+.task-row.is-queued {
+    position: relative;
+}
+
+.task-row.is-queued::after {
+    animation: queuedPulse 1.8s ease-in-out infinite;
+    background: var(--tangerine);
+    border-radius: var(--r-pill);
+    content: '';
+    height: 6px;
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 6px;
+}
+
+@keyframes queuedPulse {
+
+    0%,
+    100% { opacity: .45; }
+
+    50% { opacity: 1; }
+}

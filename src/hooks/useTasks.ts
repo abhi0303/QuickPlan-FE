@@ -4,6 +4,8 @@ import { getApiErrorMessage } from '../services/api'
 import { deleteTask, listTasks, setTaskCompleted } from '../services/tasks'
 import type { Task, TaskView } from '../services/tasks'
 import { useAppStore } from '../store/useAppStore'
+import { useCachedList } from './useCachedList'
+import { pendingCreates } from '../services/offline/queue'
 
 /**
  * Shared task loading + mutation logic.
@@ -27,6 +29,7 @@ export function useTasks(initialView?: TaskView) {
   // server-side rather than on the page.
   const [filters, setFiltersState] = useState<TaskFilters>({ view: initialView })
   const [tasks, setTasks] = useState<Task[]>([])
+  const cache = useCachedList<Task[]>(`tasks:${initialView ?? 'all'}`)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
@@ -34,10 +37,20 @@ export function useTasks(initialView?: TaskView) {
 
   useEffect(() => {
     let cancelled = false
+
+    // show what was here last time while the network is asked again
+    cache.hydrate((cached) => {
+      if (!cancelled) {
+        setTasks(cached)
+        setLoading(false)
+      }
+    })
+
     listTasks(filters)
       .then((data) => {
         if (cancelled) return
         setTasks(data)
+        cache.store(data)
         setError('')
       })
       .catch((fetchError) => {
@@ -47,6 +60,8 @@ export function useTasks(initialView?: TaskView) {
         if (!cancelled) setLoading(false)
       })
     return () => { cancelled = true }
+    // `cache` is keyed by view and user; re-running on its identity would loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, tasksVersion, retryToken])
 
   /** Loading is flipped here, in the event handler, not inside the fetch effect. */
@@ -100,5 +115,31 @@ export function useTasks(initialView?: TaskView) {
     }
   }
 
-  return { filters, view: filters.view, setView, setFilter, tasks, loading, error, busyId, retry, toggle, remove }
+  /*
+   * A task created without a connection exists only in the outbox until it
+   * syncs. Merging it in means it does not vanish from the list the moment it
+   * is typed — which is the whole point of queueing it.
+   */
+  const queued = pendingCreates('task')
+    .map((row) => row.preview as unknown as Task | undefined)
+    .filter((task): task is Task => Boolean(task?.id))
+    .filter((task) => !tasks.some((existing) => existing.id === task.id))
+
+  const merged = queued.length ? [...queued, ...tasks] : tasks
+
+  return {
+    filters,
+    view: filters.view,
+    setView,
+    setFilter,
+    tasks: merged,
+    loading,
+    error,
+    busyId,
+    retry,
+    toggle,
+    remove,
+    /** When the shown list was read, if it came from the cache. */
+    staleAt: cache.staleAt,
+  }
 }

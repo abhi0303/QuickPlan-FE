@@ -18,6 +18,7 @@ import { LevelUpOverlay } from '../gamification/LevelUpOverlay'
 import { RankCard } from '../gamification/RankCard'
 import { RankChip } from '../gamification/RankChip'
 import { NotificationBell } from '../notifications/NotificationBell'
+import { OfflineBar } from '../offline/OfflineBar'
 import { Tour } from '../onboarding/Tour'
 import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
@@ -25,6 +26,7 @@ import { ReminderAlerts } from '../reminders/ReminderAlerts'
 import { EditTaskModal } from '../tasks/EditTaskModal'
 import { SpeakButton } from '../common/SpeakButton'
 import { useGamification } from '../../hooks/useGamification'
+import { useOffline } from '../../hooks/useOffline'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
 import './AppShell.scss'
@@ -62,6 +64,8 @@ export function AppShell() {
   // fetched once here and published to the store, so the sidebar card and the
   // dashboard panel cost one request between them
   const { levelUp, acknowledgeLevelUp } = useGamification()
+  // starts the outbox: it flushes on open, on reconnect, and on Background Sync
+  useOffline()
   const game = useAppStore((state) => state.gamification)
   const { pathname } = useLocation()
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
@@ -175,6 +179,8 @@ export function AppShell() {
           onClose={acknowledgeLevelUp}
         />
       )}
+
+      <OfflineBar />
 
       <Tour />
 

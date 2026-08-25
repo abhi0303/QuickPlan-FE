@@ -1,4 +1,5 @@
 import { api } from './api'
+import { sendOrQueue } from './offline/mutate'
 
 /**
  * Group expenses, balances and settlements.
@@ -126,8 +127,30 @@ export async function listAllGroupExpenses(
 }
 
 export async function createExpense(groupId: string, payload: CreateExpensePayload): Promise<Expense> {
-  const { data } = await api.post(`/api/groups/${groupId}/expenses`, payload)
-  return data as Expense
+  const sent = await sendOrQueue<Expense>({
+    entity: 'expense',
+    method: 'POST',
+    url: `/api/groups/${groupId}/expenses`,
+    body: payload,
+    optimistic: (tempId) => ({
+      id: tempId,
+      groupId,
+      title: payload.title,
+      totalAmount: payload.totalAmount,
+      currency: 'INR',
+      paidById: payload.paidById ?? '',
+      createdById: payload.paidById ?? '',
+      splitType: payload.splitType ?? 'EQUAL',
+      category: payload.category ?? null,
+      date: payload.date ?? new Date().toISOString(),
+      // the server assigns the rounding remainder, so no shares are invented
+      shares: [],
+      myShare: payload.totalAmount,
+      iPaid: true,
+    }),
+    send: async () => (await api.post(`/api/groups/${groupId}/expenses`, payload)).data as Expense,
+  })
+  return sent.data
 }
 
 /** Detail is not nested under the group. */

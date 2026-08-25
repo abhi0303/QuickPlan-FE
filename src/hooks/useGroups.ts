@@ -3,9 +3,11 @@ import toast from 'react-hot-toast'
 import { getApiErrorMessage } from '../services/api'
 import { createGroup, deleteGroup, listGroups } from '../services/groups'
 import type { CreateGroupPayload, Group } from '../services/groups'
+import { useCachedList } from './useCachedList'
 
 export function useGroups() {
   const [groups, setGroups] = useState<Group[]>([])
+  const cache = useCachedList<Group[]>('groups')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
@@ -13,11 +15,16 @@ export function useGroups() {
 
   useEffect(() => {
     let cancelled = false
+
+    // last known groups render at once; the request corrects them
+    cache.hydrate((cached) => { if (!cancelled) { setGroups(cached); setLoading(false) } })
+
     listGroups()
-      .then((data) => { if (!cancelled) { setGroups(data); setError('') } })
+      .then((data) => { if (!cancelled) { setGroups(data); cache.store(data); setError('') } })
       .catch((e) => { if (!cancelled) setError(getApiErrorMessage(e, 'Could not load your groups.')) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version])
 
   function refresh() { setVersion((v) => v + 1) }
@@ -49,5 +56,5 @@ export function useGroups() {
     }
   }
 
-  return { groups, loading, error, busyId, retry, refresh, create, remove }
+  return { groups, loading, error, busyId, retry, refresh, create, remove, staleAt: cache.staleAt }
 }
