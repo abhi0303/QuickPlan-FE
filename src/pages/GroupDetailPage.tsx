@@ -9,6 +9,8 @@ import {
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ExpenseModal } from '../components/groups/ExpenseModal'
 import { ManageMembersModal } from '../components/groups/ManageMembersModal'
+import { SettleModal } from '../components/groups/SettleModal'
+import type { SettleSeed } from '../components/groups/SettleModal'
 import { useGroupDetail } from '../hooks/useGroupDetail'
 import { useUnlocked } from '../hooks/useUnlocked'
 import type { Expense, MemberBalance } from '../services/expenses'
@@ -52,6 +54,7 @@ export function GroupDetailPage() {
   const [editing, setEditing] = useState<Expense | null>(null)
   const [managing, setManaging] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null)
+  const [settleSeed, setSettleSeed] = useState<SettleSeed | null>(null)
 
   const isOwner = group?.myRole === 'OWNER'
 
@@ -139,6 +142,34 @@ export function GroupDetailPage() {
   const groupTotal = (balances?.members ?? []).reduce((sum, member) => sum + member.paid, 0)
   const mySettlements = (balances?.suggestedSettlements ?? []).filter((s) => s.fromUserId === me)
 
+  const canSettleAny = expenses.some(
+    (expense) => !expense.iPaid && expense.paidById && (expense.myShare ?? 0) > 0.005,
+  )
+
+  /** What this group's balances say I still owe one person. */
+  function owedTo(userId: string) {
+    return mySettlements.find((suggestion) => suggestion.toUserId === userId)?.amount ?? 0
+  }
+
+  /*
+   * Settling one expense at a time.
+   *
+   * A settlement is a payment between two people — the API has no concept of an
+   * expense being paid off — so this prefills "pay them what my share of this
+   * was" and names it in the note. The amount stays editable, because paying
+   * part of what you owe is the normal case and was impossible before.
+   */
+  function settleExpense(expense: Expense) {
+    if (!expense.paidById || expense.iPaid) return
+    setSettleSeed({
+      toUserId: expense.paidById,
+      toName: expense.paidBy?.name ?? 'them',
+      amount: expense.myShare ?? 0,
+      owed: owedTo(expense.paidById),
+      note: expense.title,
+    })
+  }
+
   return (
     <section className="group-detail">
       <Link to="/expenses" className="back-link"><ArrowLeft size={16} /> Money</Link>
@@ -212,7 +243,12 @@ export function GroupDetailPage() {
               <button
                 className="friend-add"
                 disabled={busyId === suggestion.toUserId}
-                onClick={() => settle({ toUserId: suggestion.toUserId, amount: suggestion.amount })}
+                onClick={() => setSettleSeed({
+                  toUserId: suggestion.toUserId,
+                  toName: suggestion.toName,
+                  amount: suggestion.amount,
+                  owed: suggestion.amount,
+                })}
               >
                 {busyId === suggestion.toUserId
                   ? <LoaderCircle size={14} className="spin" />
@@ -234,7 +270,7 @@ export function GroupDetailPage() {
               <button className="text-button" onClick={() => setAdding(true)}>Add the first expense</button>
             </div>
           ) : (
-            <div className="expense-list">
+            <div className={`expense-list ${canSettleAny ? 'with-settle' : ''}`}>
               {expenses.map((expense) => (
                 <ExpenseRow
                   key={expense.id}
@@ -244,6 +280,10 @@ export function GroupDetailPage() {
                   busy={busyId === expense.id}
                   onEdit={setEditing}
                   onDelete={setPendingDelete}
+                  // only where somebody else fronted it and you owe your share
+                  onSettle={!expense.iPaid && expense.paidById && (expense.myShare ?? 0) > 0.005
+                    ? settleExpense
+                    : undefined}
                 />
               ))}
             </div>
@@ -318,6 +358,16 @@ export function GroupDetailPage() {
           return ok
         }}
         onRole={changeRole}
+      />
+
+      <SettleModal
+        seed={settleSeed}
+        busy={busyId === settleSeed?.toUserId}
+        onClose={() => setSettleSeed(null)}
+        onConfirm={async (payload) => {
+          // left open on failure, so the amount that was typed is not lost
+          if (await settle(payload)) setSettleSeed(null)
+        }}
       />
 
       <ConfirmDialog

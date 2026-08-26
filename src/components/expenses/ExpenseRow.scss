@@ -110,6 +110,11 @@
     justify-content: flex-end;
 }
 
+/* A third control only appears on rows you owe on, so the list opts into the
+   wider column rather than every row carrying the space for it. */
+.expense-list.with-settle { --expense-actions-w: 104px; }
+
+.expense-settle,
 .expense-edit,
 .expense-delete {
     align-items: center;
@@ -123,8 +128,13 @@
     width: 32px;
 }
 
+.expense-row:hover .expense-settle,
 .expense-row:hover .expense-edit,
 .expense-row:hover .expense-delete { opacity: 1; }
+
+/* The one control here that is worth finding without hunting for it. */
+.expense-settle { color: var(--primary); opacity: .75; }
+.expense-settle:hover { background: var(--primary-soft); color: var(--primary-strong); }
 .expense-edit:hover { background: var(--primary-soft); color: var(--primary-strong); }
 .expense-delete:hover { background: var(--rose-soft); color: var(--rose); }
 
@@ -132,6 +142,7 @@
    for good. */
 @media (hover: none) {
 
+    .expense-settle,
     .expense-edit,
     .expense-delete {
         opacity: 1;
@@ -161,6 +172,7 @@
 
     .expense-meta { font-size: 12px; }
 
+    .expense-settle,
     .expense-edit,
     .expense-delete {
         height: 28px;

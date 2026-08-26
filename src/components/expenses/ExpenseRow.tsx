@@ -1,5 +1,5 @@
 import { format, isToday, parseISO } from 'date-fns'
-import { Pencil, Trash2 } from 'lucide-react'
+import { HandCoins, Pencil, Trash2 } from 'lucide-react'
 import { categoryLook } from '../../data/expenseCategories'
 import { isPersonal } from '../../services/expenses'
 import { isTempId } from '../../services/offline/queue'
@@ -30,11 +30,16 @@ type Props = {
   busy?: boolean
   /** For a list already grouped by day: repeating the date would say nothing. */
   timeOnly?: boolean
+  /**
+   * Offered when somebody else fronted this one and you still owe your share of
+   * it. Absent on a personal expense and on anything you paid for yourself.
+   */
+  onSettle?: (expense: Expense) => void
   onEdit: (expense: Expense) => void
   onDelete: (expense: Expense) => void
 }
 
-export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, onDelete }: Props) {
+export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, onDelete, onSettle }: Props) {
   const look = categoryLook(expense.category)
   const CategoryIcon = look.icon
   const personal = isPersonal(expense)
@@ -70,6 +75,13 @@ export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, o
       {/* the slot is always rendered, empty when this member may not touch the
           expense, so the columns stay aligned down the list */}
       <div className="expense-actions">
+        {onSettle && (
+          <button className="expense-settle" onClick={() => onSettle(expense)}
+            aria-label={`Record a payment for ${expense.title}`}
+            title={`Pay your share of ${expense.title}`}>
+            <HandCoins size={15} />
+          </button>
+        )}
         {canEdit && (
           <>
             <button className="expense-edit" onClick={() => onEdit(expense)}
