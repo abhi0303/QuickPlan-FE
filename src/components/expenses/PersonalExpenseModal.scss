@@ -1,0 +1,14 @@
+.personal-expense-modal { max-width: 480px; }
+.personal-expense-modal form { display: grid; gap: 20px; }
+
+/* Two fields to a row on anything with the width for it: amount and category
+   belong together, and so do the date and the time. */
+.pex-pair {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 460px) {
+    .pex-pair { grid-template-columns: 1fr; }
+}

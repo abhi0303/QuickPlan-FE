@@ -1,0 +1,63 @@
+/* Spending reads as a sequence of days, so the list is broken by day with the
+   day's total on the right — the number people actually look for. */
+.ledger {
+    display: grid;
+    gap: 18px;
+}
+
+.ledger-day header {
+    align-items: baseline;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 6px;
+}
+
+.ledger-day header h3 {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+}
+
+.ledger-day header strong {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+}
+
+.ledger-foot {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12.5px;
+    font-weight: 600;
+    gap: 6px;
+    justify-content: center;
+    padding-top: 4px;
+}
+
+.ledger-skeletons {
+    display: grid;
+    gap: 10px;
+}
+
+.ledger-skeleton {
+    animation: ledgerPulse 1.4s ease-in-out infinite;
+    background: var(--surface-soft);
+    border-radius: var(--r-md);
+    height: 62px;
+}
+
+.ledger-skeleton:nth-child(2) { animation-delay: .1s; }
+.ledger-skeleton:nth-child(3) { animation-delay: .2s; }
+.ledger-skeleton:nth-child(4) { animation-delay: .3s; }
+
+@keyframes ledgerPulse {
+
+    0%,
+    100% { opacity: 1; }
+
+    50% { opacity: .5; }
+}

@@ -11,6 +11,7 @@ import { useSpeechRecognition } from '../../hooks/useSpeechRecognition'
 import { getApiErrorMessage } from '../../services/api'
 import { isQuickAddCancel, parseQuickAdd } from '../../services/smartInput'
 import type { ParsedIntent } from '../../services/smartParser'
+import { createPersonalExpense } from '../../services/expenses'
 import { createReminder } from '../../services/reminders'
 import { createTask, TASK_PRIORITIES } from '../../services/tasks'
 import type { TaskPriority } from '../../services/tasks'
@@ -26,6 +27,7 @@ const DAY_PRESETS = [{ label: 'Today', days: 0 }, { label: 'Tomorrow', days: 1 }
 const INTENT_TABS: { value: ParsedIntent; label: string; icon: typeof CircleCheckBig }[] = [
   { value: 'task', label: 'Task', icon: CircleCheckBig },
   { value: 'reminder', label: 'Reminder', icon: AlarmClock },
+  { value: 'expense', label: 'Money', icon: IndianRupee },
 ]
 
 const DEFAULT_TIME = '09:00'
@@ -73,9 +75,10 @@ function applyParsed(current: FormState, text: string): FormState {
 
   return {
     ...current,
-    // Expenses are created inside a group, so an expense-sounding phrase keeps
-    // the current tab; the hint below points at Money.
-    intent: parsed.intent === 'expense' ? current.intent : parsed.intent,
+    // Money that names another person is an IOU, and an IOU needs a group and
+    // a split that a sentence cannot supply — so that one keeps the current tab
+    // and the hint below points at Money. Everything else is your own spending.
+    intent: parsed.intent === 'expense' && parsed.personName ? current.intent : parsed.intent,
     priority: parsed.priority,
     category: parsed.category ?? current.category,
     recurrenceRule: parsed.recurrenceRule ?? current.recurrenceRule,
@@ -84,8 +87,8 @@ function applyParsed(current: FormState, text: string): FormState {
     personName: parsed.personName ?? current.personName,
     dueDay,
     dueTime,
-    // "Expense" is the parser's generic fallback, and money is created inside a
-    // group now — so that one word is the only title worth discarding.
+    // "Expense" is the parser's generic fallback — a title that says nothing,
+    // so it is the one word worth discarding rather than prefilling.
     title: parsed.intent === 'expense' && parsed.title === 'Expense' ? current.title : parsed.title,
   }
 }
@@ -105,6 +108,7 @@ export function QuickAddModal() {
 function QuickAddDialog() {
   const setOpen = useAppStore((state) => state.setQuickAddOpen)
   const bumpTasksVersion = useAppStore((state) => state.bumpTasksVersion)
+  const bumpExpensesVersion = useAppStore((state) => state.bumpExpensesVersion)
   const seed = useAppStore((state) => state.quickAddSeed)
   const openedByVoice = useAppStore((state) => state.quickAddViaVoice)
   const { pathname } = useLocation()
@@ -141,9 +145,11 @@ function QuickAddDialog() {
   })
 
   const preview = smartText.trim() ? parseQuickAdd(smartText) : null
-  // the parser still recognises money, but expenses are created inside a group
-  const looksLikeMoney = preview?.intent === 'expense'
+  // Money owed between people still belongs in a group — a sentence cannot say
+  // who is in the split, so that case points at Money instead of guessing.
+  const looksLikeIou = preview?.intent === 'expense' && Boolean(preview.personName)
   const isReminder = form.intent === 'reminder'
+  const isExpense = form.intent === 'expense'
 
   function applySmart(text: string) {
     setForm((current) => applyParsed(current, text))
@@ -193,10 +199,23 @@ function QuickAddDialog() {
 
     // A reminder with no time cannot fire, so the API requires dueAt.
     if (isReminder && !dueAt) return setError('A reminder needs a date and time.')
+    if (isExpense && !(Number(form.amount) > 0)) return setError('How much was it?')
 
     setSaving(true)
     try {
-      if (isReminder) {
+      if (isExpense) {
+        await createPersonalExpense({
+          title,
+          totalAmount: Number(form.amount),
+          category: form.category || undefined,
+          // undated means "just now", which is what the API assumes too
+          date: dueAt,
+          notes: form.notes.trim() || undefined,
+          createdVia: spoken ? 'VOICE' : 'MANUAL',
+        })
+        toast.success('Expense recorded')
+        bumpExpensesVersion()
+      } else if (isReminder) {
         await createReminder({
           title,
           dueAt: dueAt as string,
@@ -260,10 +279,10 @@ function QuickAddDialog() {
 
         {speech.error && <p className="smart-note warn"><CircleAlert size={13} /> {speech.error}</p>}
 
-        {looksLikeMoney && (
+        {looksLikeIou && (
           <p className="smart-note money">
             <IndianRupee size={13} />
-            That sounds like an expense — those live in a group.
+            Money between you and someone else lives in a group, where it can be split.
             <button type="button" onClick={() => { setOpen(false); navigate('/expenses') }}>Open Money</button>
           </p>
         )}
@@ -295,11 +314,26 @@ function QuickAddDialog() {
 
         <form onSubmit={handleSubmit}>
           <div className="field">
-                <label className="field-label" htmlFor="task-title">{isReminder ? 'Remind me to' : 'What needs doing?'}</label>
+                <label className="field-label" htmlFor="task-title">
+                  {isReminder ? 'Remind me to' : isExpense ? 'What was it for?' : 'What needs doing?'}
+                </label>
                 <input id="task-title" className="control" ref={titleRef} value={form.title}
                   onChange={(e) => update('title', e.target.value)}
-                  placeholder={isReminder ? 'Take medicine' : 'Call Rahul about the project'} disabled={saving} autoComplete="off" />
+                  placeholder={isReminder ? 'Take medicine' : isExpense ? 'Petrol' : 'Call Rahul about the project'}
+                  disabled={saving} autoComplete="off" />
               </div>
+
+              {isExpense && (
+                <div className="field">
+                  <label className="field-label" htmlFor="quick-amount">How much?</label>
+                  <span className="control adorned">
+                    <IndianRupee size={17} />
+                    <input id="quick-amount" type="number" min="0" step="any" inputMode="decimal"
+                      value={form.amount} onChange={(e) => update('amount', e.target.value)}
+                      placeholder="400" disabled={saving} />
+                  </span>
+                </div>
+              )}
 
               <div className="field">
                 <span className="field-label">When {isReminder && <span className="field-optional">required</span>}</span>
@@ -359,6 +393,7 @@ function QuickAddDialog() {
                       ))}
                     </div>
                   </div>
+                  {!isExpense && (
                   <div className="field">
                     <span className="field-label"><Flag size={14} /> Priority</span>
                     <div className="segmented">
@@ -368,6 +403,7 @@ function QuickAddDialog() {
                       ))}
                     </div>
                   </div>
+                  )}
                   <div className="field">
                     <label className="field-label" htmlFor="task-notes">Notes <span className="field-optional">optional</span></label>
                     <textarea id="task-notes" className="control" value={form.notes} onChange={(e) => update('notes', e.target.value)}
@@ -382,7 +418,7 @@ function QuickAddDialog() {
             <button type="button" className="voice-ghost" onClick={() => setOpen(false)} disabled={saving}>Cancel</button>
             <button className="modal-submit" disabled={saving}>
               {saving ? <><LoaderCircle size={18} className="spin" /> Saving...</>
-                : <><Plus size={18} /> {isReminder ? 'Set reminder' : 'Add task'}</>}
+                : <><Plus size={18} /> {isReminder ? 'Set reminder' : isExpense ? 'Add expense' : 'Add task'}</>}
             </button>
           </footer>
         </form>

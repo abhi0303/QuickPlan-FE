@@ -159,8 +159,11 @@ export function useGroupAnalytics(groupId: string, memberCount: number) {
   const shareOf = new Map<string, number>()
   const names = new Map<string, string>()
   for (const expense of inRange) {
-    paidBy.set(expense.paidById, (paidBy.get(expense.paidById) ?? 0) + expense.totalAmount)
-    if (expense.paidBy) names.set(expense.paidBy.id, expense.paidBy.name)
+    // a personal expense names no payer, and has nobody to break down by
+    if (expense.paidById) {
+      paidBy.set(expense.paidById, (paidBy.get(expense.paidById) ?? 0) + expense.totalAmount)
+      if (expense.paidBy) names.set(expense.paidBy.id, expense.paidBy.name)
+    }
     for (const share of expense.shares) {
       shareOf.set(share.userId, (shareOf.get(share.userId) ?? 0) + share.amount)
       if (share.name) names.set(share.userId, share.name)

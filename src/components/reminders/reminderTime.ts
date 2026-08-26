@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, format, isPast, parseISO } from 'date-fns'
+import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import type { Reminder } from '../../services/reminders'
 
 /** The four moods a reminder card can wear, chosen by the hour it fires. */
@@ -160,15 +160,19 @@ export type ReminderFilter = 'all' | 'today' | 'upcoming' | 'repeating' | 'past'
 export function matchesFilter(reminder: Reminder, filter: ReminderFilter, now: Date): boolean {
   // a repeating reminder is judged by when it next fires, not by its first run
   const when = nextOccurrence(reminder, now)
+  // Compared against the `now` that was passed in, not the wall clock: with
+  // date-fns' isPast the two could disagree, and a reminder would then be
+  // neither today nor past.
+  const gone = Boolean(when) && (when as Date).getTime() < now.getTime()
   switch (filter) {
     case 'today':
-      return Boolean(when) && differenceInCalendarDays(when as Date, now) === 0 && !isPast(when as Date)
+      return Boolean(when) && differenceInCalendarDays(when as Date, now) === 0 && !gone
     case 'upcoming':
-      return Boolean(when) && !isPast(when as Date)
+      return Boolean(when) && !gone
     case 'repeating':
       return Boolean(reminder.recurrenceRule)
     case 'past':
-      return Boolean(when) && isPast(when as Date) && !reminder.recurrenceRule
+      return gone && !reminder.recurrenceRule
     default:
       return true
   }

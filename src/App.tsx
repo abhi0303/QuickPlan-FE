@@ -11,7 +11,7 @@ const AppShell = lazy(() => import('./components/layout/AppShell').then((module)
 const DashboardPage = lazy(() => import('./pages/DashboardPage').then((module) => ({ default: module.DashboardPage })))
 const RemindersPage = lazy(() => import('./pages/RemindersPage').then((module) => ({ default: module.RemindersPage })))
 const FriendsPage = lazy(() => import('./pages/FriendsPage').then((module) => ({ default: module.FriendsPage })))
-const GroupsPage = lazy(() => import('./pages/GroupsPage').then((module) => ({ default: module.GroupsPage })))
+const MoneyPage = lazy(() => import('./pages/MoneyPage').then((module) => ({ default: module.MoneyPage })))
 const GroupDetailPage = lazy(() => import('./pages/GroupDetailPage').then((module) => ({ default: module.GroupDetailPage })))
 const GroupAnalyticsPage = lazy(() => import('./pages/GroupAnalyticsPage').then((module) => ({ default: module.GroupAnalyticsPage })))
 const TasksPage = lazy(() => import('./pages/TasksPage').then((module) => ({ default: module.TasksPage })))
@@ -62,7 +62,7 @@ function App() {
             <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/reminders" element={<RemindersPage />} />
-            <Route path="/expenses" element={<GroupsPage />} />
+            <Route path="/expenses" element={<MoneyPage />} />
             <Route path="/groups/:id" element={<GroupDetailPage />} />
             <Route path="/groups/:id/analysis" element={<GroupAnalyticsPage />} />
             <Route path="/people" element={<FriendsPage />} />
