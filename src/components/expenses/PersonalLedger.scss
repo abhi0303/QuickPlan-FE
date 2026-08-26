@@ -87,8 +87,19 @@
     .ledger-day { padding: 0 12px 2px; }
 }
 
-/* The way into the analysis, placed where the totals are — that is where the
-   question "is that a lot?" gets asked. */
+/* The ways out of the ledger, placed where the totals are — that is where the
+   questions "is that a lot?" and "what is coming next?" get asked. */
+.ledger-links {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 18px;
+}
+
+@media (max-width: 640px) {
+    .ledger-links { grid-template-columns: 1fr; }
+}
+
 .ledger-analysis {
     align-items: center;
     background: var(--surface);
@@ -97,7 +108,6 @@
     color: inherit;
     display: flex;
     gap: 13px;
-    margin-bottom: 18px;
     padding: 13px 16px;
     /* there is no global anchor reset, so a link that is not meant to look like
        one has to say so */
@@ -109,6 +119,8 @@
     border-color: var(--border-strong);
     box-shadow: var(--shadow-sm);
 }
+
+.analysis-icon.alt { background: var(--periwinkle-soft); color: var(--periwinkle); }
 
 .analysis-icon {
     align-items: center;

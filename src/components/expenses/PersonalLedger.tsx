@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChartPie, ChevronRight, CircleAlert, TrendingUp, Wallet } from 'lucide-react'
+import { ChartPie, ChevronRight, CircleAlert, Repeat, TrendingUp, Wallet } from 'lucide-react'
 import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ExpenseRow } from './ExpenseRow'
 import { PersonalExpenseModal } from './PersonalExpenseModal'
+import { BudgetStrip } from '../budgets/BudgetStrip'
 import { usePersonalExpenses } from '../../hooks/usePersonalExpenses'
+import { useBudgets } from '../../hooks/useBudgets'
 import { useAppStore } from '../../store/useAppStore'
 import type { Expense } from '../../services/expenses'
 import './PersonalLedger.scss'
@@ -42,6 +44,7 @@ function dayLabel(key: string) {
 
 export function PersonalLedger() {
   const { expenses, spent, loading, error, busyId, retry, reload, remove } = usePersonalExpenses()
+  const { status: budgetStatus } = useBudgets()
 
   // the dialog lives in the store so the app shell's mobile FAB can open it
   const adding = useAppStore((state) => state.moneyComposerOpen)
@@ -93,15 +96,28 @@ export function PersonalLedger() {
         </div>
       )}
 
+      <BudgetStrip status={budgetStatus} />
+
       {!loading && !error && expenses.length > 0 && (
-        <Link to="/expenses/analysis" className="ledger-analysis">
-          <span className="analysis-icon"><ChartPie size={18} /></span>
-          <div>
-            <strong>See the analysis</strong>
-            <small>By year, month, week or day — and against what you spent before.</small>
-          </div>
-          <ChevronRight size={18} />
-        </Link>
+        <div className="ledger-links">
+          <Link to="/expenses/analysis" className="ledger-analysis">
+            <span className="analysis-icon"><ChartPie size={18} /></span>
+            <div>
+              <strong>See the analysis</strong>
+              <small>By year, month, week or day — and against what you spent before.</small>
+            </div>
+            <ChevronRight size={18} />
+          </Link>
+
+          <Link to="/expenses/recurring" className="ledger-analysis">
+            <span className="analysis-icon alt"><Repeat size={18} /></span>
+            <div>
+              <strong>Recurring</strong>
+              <small>Rent, EMIs and subscriptions record themselves.</small>
+            </div>
+            <ChevronRight size={18} />
+          </Link>
+        </div>
       )}
 
       {loading && (

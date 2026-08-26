@@ -1,0 +1,173 @@
+/* RecurringPage — styles owned by this page.
+   Shared tokens and primitives live in src/styles/global.scss. */
+
+.recurring-page { padding-top: 10px; }
+
+.recurring-list {
+    display: grid;
+    gap: 12px;
+}
+
+.recurring-card {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 14px;
+    padding: 15px 18px;
+    transition: opacity .18s ease, border-color .18s ease;
+}
+
+.recurring-card.is-busy { opacity: .5; pointer-events: none; }
+
+/* Paused is a state, not a deletion — dimmed, still legible, still counted. */
+.recurring-card.is-paused {
+    background: var(--surface-soft);
+    box-shadow: none;
+}
+
+.recurring-card.is-paused .rec-icon,
+.recurring-card.is-paused .rec-copy { opacity: .6; }
+
+.rec-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--tone) 15%, var(--surface));
+    border-radius: 13px;
+    color: var(--tone);
+    display: flex;
+    flex: none;
+    height: 42px;
+    justify-content: center;
+    width: 42px;
+}
+
+.rec-copy { min-width: 0; }
+
+.rec-copy strong {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rec-copy small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.rec-figures {
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.rec-figures strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+}
+
+.rec-figures small {
+    color: var(--primary-strong);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.rec-figures small.is-paused { color: var(--muted); }
+
+/* Every control is named. Five bare glyphs asked the reader to guess what
+   "skip" and "now" meant, and there is no hover on a phone to fall back on. */
+.rec-actions {
+    display: flex;
+    flex: none;
+    gap: 2px;
+}
+
+.rec-actions button {
+    align-items: center;
+    border-radius: var(--r-md);
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    justify-content: center;
+    min-width: 52px;
+    padding: 7px 6px;
+    transition: background .18s ease, color .18s ease;
+}
+
+.rec-actions button span {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .2px;
+}
+
+.rec-actions button:hover { background: var(--primary-soft); color: var(--primary-strong); }
+.rec-actions button.danger:hover { background: var(--rose-soft); color: var(--rose); }
+
+.recurring-loading {
+    animation: recurringPulse 1.4s ease-in-out infinite;
+    background: var(--surface-soft);
+    border-radius: var(--r-lg);
+    height: 160px;
+}
+
+@keyframes recurringPulse {
+
+    0%,
+    100% { opacity: 1; }
+
+    50% { opacity: .5; }
+}
+
+/* On a phone the controls take their own line rather than squeezing the
+   amount out of the row. */
+@media (max-width: 640px) {
+
+    .recurring-card {
+        display: grid;
+        grid-template-areas:
+            "icon copy figures"
+            "actions actions actions";
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        padding: 14px;
+    }
+
+    .rec-icon { grid-area: icon; }
+    .rec-copy { grid-area: copy; }
+    .rec-figures { grid-area: figures; }
+
+    .rec-actions {
+        border-top: 1px solid var(--border);
+        grid-area: actions;
+        justify-content: space-around;
+        margin-top: 12px;
+        padding-top: 8px;
+    }
+
+    .rec-actions button { min-width: 56px; padding: 8px 4px; }
+}
+
+.head-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 8px;
+}
+
+@media (max-width: 560px) {
+
+    .head-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .head-actions .quick-add { flex: 1; justify-content: center; }
+}

@@ -1,0 +1,54 @@
+.budget-strip { margin-bottom: 18px; }
+
+.budget-strip header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.budget-strip h2 {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12.5px;
+    font-weight: 700;
+    gap: 6px;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+}
+
+.budget-manage {
+    align-items: center;
+    color: var(--primary);
+    display: inline-flex;
+    font-size: 12.5px;
+    font-weight: 700;
+    gap: 2px;
+    text-decoration: none;
+}
+
+.budget-warn {
+    align-items: center;
+    background: var(--rose-soft);
+    border-radius: var(--r-md);
+    color: var(--rose);
+    display: flex;
+    font-size: 12.5px;
+    font-weight: 600;
+    gap: 7px;
+    margin-bottom: 10px;
+    padding: 9px 12px;
+}
+
+/* As many as fit, never fewer than two — a single wide ring would read as a
+   progress bar that lost its way. */
+.budget-rings {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+@media (max-width: 460px) {
+    .budget-rings { grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); }
+}

@@ -1,10 +1,13 @@
 import {
   BedDouble,
   Bus,
+  CalendarClock,
   Cigarette,
   Fuel,
   Gift,
   HeartPulse,
+  Landmark,
+  PiggyBank,
   Plane,
   ReceiptText,
   ShoppingBag,
@@ -50,6 +53,15 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   { label: 'Activities', icon: Ticket, tone: 'tone-activities', color: '#14b8a6' },
   { label: 'Shopping', icon: ShoppingBag, tone: 'tone-shopping', color: 'var(--rose)' },
   { label: 'Bills', icon: ReceiptText, tone: 'tone-bills', color: '#6366f1' },
+  // the two obligations sit next to Bills: they are the same kind of thing —
+  // money that leaves on a date somebody else chose
+  { label: 'EMI', icon: CalendarClock, tone: 'tone-emi', color: '#7c3aed' },
+  { label: 'Loan', icon: Landmark, tone: 'tone-loan', color: '#0e7490' },
+  // SIPs, FDs and RDs: money that leaves the account on a schedule like the two
+  // above it, but comes back. "Investments" rather than "Savings" because a SIP
+  // is not saving, and because savings also means "what I did not spend" —
+  // which is the opposite of a row in a list of outgoings.
+  { label: 'Investments', icon: PiggyBank, tone: 'tone-investments', color: '#65a30d' },
   { label: 'Health', icon: HeartPulse, tone: 'tone-health', color: '#e11d48' },
   { label: 'Gifts', icon: Gift, tone: 'tone-gifts', color: '#d946ef' },
   { label: 'Other', icon: Wallet, tone: 'tone-other', color: '#64748b' },

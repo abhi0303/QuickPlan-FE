@@ -1,0 +1,23 @@
+.recurring-modal { max-width: 460px; }
+.recurring-modal form { display: grid; gap: 20px; }
+
+.rec-pair {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* Stated rather than offered: the cadence of a running schedule is fixed. */
+.rec-fixed {
+    align-items: center;
+    background: var(--surface-soft);
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 7px;
+    margin: 0;
+    padding: 10px 13px;
+}
+
+@media (max-width: 460px) {
+    .rec-pair { grid-template-columns: 1fr; }
+}
