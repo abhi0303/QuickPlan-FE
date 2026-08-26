@@ -1,0 +1,138 @@
+/* Spending reads as a sequence of days, so each day is its own card. Grouping
+   them by a heading alone was ambiguous — with two days on screen there was
+   nothing to say where one stopped and the next began. */
+.ledger {
+    display: grid;
+    gap: 14px;
+}
+
+.ledger-day {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 0 16px 4px;
+}
+
+.ledger-day header {
+    align-items: baseline;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    /* the same inset the row's amount column sits at, so the two agree */
+    padding: 13px var(--expense-amount-inset) 11px var(--expense-row-pad);
+}
+
+.ledger-day header h3 {
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+}
+
+/* Quieter than the amounts below it on purpose: a day's total is context for
+   the rows, not another row. */
+.ledger-total {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+    white-space: nowrap;
+}
+
+.ledger-total small {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .3px;
+    margin-right: 3px;
+    text-transform: uppercase;
+}
+
+.ledger-foot {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12.5px;
+    font-weight: 600;
+    gap: 6px;
+    justify-content: center;
+    padding-top: 4px;
+}
+
+.ledger-skeletons {
+    display: grid;
+    gap: 10px;
+}
+
+.ledger-skeleton {
+    animation: ledgerPulse 1.4s ease-in-out infinite;
+    background: var(--surface-soft);
+    border-radius: var(--r-lg);
+    height: 96px;
+}
+
+.ledger-skeleton:nth-child(2) { animation-delay: .1s; }
+.ledger-skeleton:nth-child(3) { animation-delay: .2s; }
+.ledger-skeleton:nth-child(4) { animation-delay: .3s; }
+
+@keyframes ledgerPulse {
+
+    0%,
+    100% { opacity: 1; }
+
+    50% { opacity: .5; }
+}
+
+@media (max-width: 560px) {
+    .ledger-day { padding: 0 12px 2px; }
+}
+
+/* The way into the analysis, placed where the totals are — that is where the
+   question "is that a lot?" gets asked. */
+.ledger-analysis {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    color: inherit;
+    display: flex;
+    gap: 13px;
+    margin-bottom: 18px;
+    padding: 13px 16px;
+    /* there is no global anchor reset, so a link that is not meant to look like
+       one has to say so */
+    text-decoration: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.ledger-analysis:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+
+.analysis-icon {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-md);
+    color: var(--primary-strong);
+    display: flex;
+    flex: none;
+    height: 36px;
+    justify-content: center;
+    width: 36px;
+}
+
+.ledger-analysis strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.ledger-analysis small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.ledger-analysis > svg { color: var(--muted); flex: none; margin-left: auto; }

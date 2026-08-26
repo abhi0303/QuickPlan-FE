@@ -235,6 +235,9 @@ h2 {
     font-weight: 700;
     gap: 5px;
     padding: 7px 12px;
+    /* it is sometimes a <button> and sometimes a <Link>, and it should look the
+       same either way — there is no global anchor reset to do this */
+    text-decoration: none;
     transition: background .18s ease;
 }
 
@@ -1328,3 +1331,94 @@ select {
 }
 
 .setting-action:hover { background: var(--primary-soft); border-color: var(--primary); }
+
+/* Two headline numbers above a money list — spent this month against all
+   time on the personal side, owed against owing on the group side. Both
+   halves of the Money page use them. */
+
+.balance-summary {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 20px;
+}
+
+.balance-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 18px 20px;
+}
+
+.balance-card span {
+    color: var(--muted);
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.balance-card strong {
+    display: block;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -.8px;
+    margin-top: 4px;
+}
+
+.balance-card.up strong { color: var(--primary-strong); }
+.balance-card.down strong { color: var(--rose); }
+
+/* Nothing here yet — used by both money lists. */
+.groups-empty {
+    align-items: center;
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--r-xl);
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 60px 24px;
+    text-align: center;
+}
+
+.groups-empty p { font-size: 15px; font-weight: 600; }
+
+.empty-wallet {
+    align-items: center;
+    background: var(--gradient-soft);
+    border-radius: var(--r-lg);
+    color: var(--primary);
+    display: flex;
+    height: 72px;
+    justify-content: center;
+    width: 72px;
+}
+
+@media (max-width: 860px) {
+    .balance-summary { gap: 12px; }
+    .balance-card { padding: 14px 16px; }
+    .balance-card strong { font-size: 22px; }
+}
+
+/* Expense row geometry, shared.
+   The row owns these, but the ledger's day headings inset their total by the
+   same amount so that every number on the right edge — day totals and row
+   amounts alike — sits in one column instead of two that nearly line up. */
+:root {
+    --expense-row-pad: 6px;
+    --expense-gap: 14px;
+    --expense-actions-w: 70px;
+    --expense-amount-inset: calc(var(--expense-row-pad) + var(--expense-gap) + var(--expense-actions-w));
+}
+
+@media (max-width: 560px) {
+
+    :root {
+        --expense-row-pad: 2px;
+        --expense-gap: 12px;
+        /* the controls drop to a second line, so the amount is flush right */
+        --expense-amount-inset: var(--expense-row-pad);
+    }
+}

@@ -2,11 +2,16 @@ import { api } from './api'
 import { sendOrQueue } from './offline/mutate'
 
 /**
- * Group expenses, balances and settlements.
+ * Expenses, balances and settlements.
  *
- * An expense is never "mine" — it belongs to a group, has one payer, and splits
- * into shares that always sum to the total. Who owes whom is derived from those
- * plus recorded settlements; a debt is never set directly.
+ * An expense has one of two shapes, told apart by `scope`:
+ *
+ * - **GROUP** — belongs to a group, has one payer, and splits into shares that
+ *   always sum to the total. Who owes whom is derived from those plus recorded
+ *   settlements; a debt is never set directly.
+ * - **PERSONAL** — money that simply left your account. No group, no payer, no
+ *   split. The API still returns `myShare` equal to `totalAmount`, so the same
+ *   row renders both without the caller working out which is which.
  */
 
 export const SPLIT_TYPES = ['EQUAL', 'EXACT', 'PERCENTAGE'] as const
@@ -20,16 +25,26 @@ export type ExpenseShare = {
   amount: number
 }
 
+export const EXPENSE_SCOPES = ['PERSONAL', 'GROUP'] as const
+export type ExpenseScope = (typeof EXPENSE_SCOPES)[number]
+
 export type Expense = {
   id: string
-  groupId: string
+  /** Absent on rows cached before personal expenses existed — see isPersonal. */
+  scope?: ExpenseScope
+  /** Null on a personal expense. */
+  groupId: string | null
   title: string
   description?: string | null
   totalAmount: number
   currency: string
-  paidById: string
+  /** Null on a personal expense: nobody fronted it for anyone. */
+  paidById: string | null
   createdById: string
-  splitType: SplitType
+  /** Null on a personal expense. */
+  splitType: SplitType | null
+  /** Free text. The API exposes this as `notes`; older rows used `description`. */
+  notes?: string | null
   category?: string | null
   date: string
   paidBy?: { id: string; name: string; email: string }
@@ -39,6 +54,17 @@ export type Expense = {
   myShare?: number
   /** True when the caller fronted the money. */
   iPaid?: boolean
+}
+
+/**
+ * Personal or group.
+ *
+ * `scope` is the answer when the server sends it. The fallback exists for rows
+ * cached by an older build, where the absence of a group is the same fact said
+ * a different way.
+ */
+export function isPersonal(expense: Expense): boolean {
+  return expense.scope ? expense.scope === 'PERSONAL' : !expense.groupId
 }
 
 export type ExpenseListPage = {
@@ -153,6 +179,95 @@ export async function createExpense(groupId: string, payload: CreateExpensePaylo
   return sent.data
 }
 
+/* ------------------------------------------------------- personal money -- */
+
+export type CreatePersonalExpensePayload = {
+  title: string
+  totalAmount: number
+  category?: string
+  date?: string
+  notes?: string
+  createdVia?: 'MANUAL' | 'VOICE' | 'IMPORT' | 'SYSTEM'
+}
+
+/**
+ * Your own spending, with no group involved.
+ *
+ * Sent through the outbox like every other write, so an expense captured on a
+ * dead connection is still recorded — which is most of the point, since the
+ * moment you spend money is rarely the moment you have signal.
+ */
+export async function createPersonalExpense(payload: CreatePersonalExpensePayload): Promise<Expense> {
+  const sent = await sendOrQueue<Expense>({
+    entity: 'expense',
+    method: 'POST',
+    url: '/api/expenses',
+    body: payload,
+    optimistic: (tempId) => ({
+      id: tempId,
+      scope: 'PERSONAL',
+      groupId: null,
+      title: payload.title,
+      totalAmount: payload.totalAmount,
+      currency: 'INR',
+      paidById: null,
+      createdById: '',
+      splitType: null,
+      category: payload.category ?? null,
+      notes: payload.notes ?? null,
+      date: payload.date ?? new Date().toISOString(),
+      shares: [],
+      myShare: payload.totalAmount,
+      iPaid: true,
+    }),
+    send: async () => (await api.post('/api/expenses', payload)).data as Expense,
+  })
+  return sent.data
+}
+
+export async function listPersonalExpenses(filters: ExpenseFilters = {}): Promise<ExpenseListPage> {
+  const { data } = await api.get('/api/expenses', { params: filters })
+  const page = (data ?? {}) as Partial<ExpenseListPage>
+  return {
+    total: page.total ?? 0,
+    limit: page.limit ?? 50,
+    offset: page.offset ?? 0,
+    items: (Array.isArray(page.items) ? page.items : []).sort(byDateDesc),
+  }
+}
+
+/**
+ * Every personal expense, walked page by page.
+ *
+ * The analysis page does its own arithmetic — `GET /api/analytics/me` publishes
+ * no response schema (see docs/analytics-api.md) — so it needs the rows, not a
+ * summary. Reports `truncated` rather than quietly charting a subset.
+ */
+export async function listAllPersonalExpenses(
+  filters: Omit<ExpenseFilters, 'limit' | 'offset'> = {},
+): Promise<{ items: Expense[]; total: number; truncated: boolean }> {
+  const first = await listPersonalExpenses({ ...filters, limit: ALL_PAGE_SIZE, offset: 0 })
+  const items = [...first.items]
+
+  while (items.length < Math.min(first.total, ALL_CAP)) {
+    const page = await listPersonalExpenses({ ...filters, limit: ALL_PAGE_SIZE, offset: items.length })
+    if (page.items.length === 0) break
+    items.push(...page.items)
+  }
+
+  // each page arrived sorted; the concatenation of pages is not
+  return { items: items.sort(byDateDesc), total: first.total, truncated: first.total > items.length }
+}
+
+/**
+ * Turns a one-member group into personal expenses and deletes the group.
+ *
+ * Only reversible by typing the data in again, so every caller asks first.
+ */
+export async function convertGroupToPersonal(groupId: string): Promise<void> {
+  await api.post(`/api/groups/${groupId}/convert-to-personal`)
+}
+
 /** Detail is not nested under the group. */
 export async function getExpense(id: string): Promise<Expense> {
   const { data } = await api.get(`/api/expenses/${id}`)
@@ -160,7 +275,10 @@ export async function getExpense(id: string): Promise<Expense> {
 }
 
 /** Changing amount, splitType or shares rebuilds every share server-side. */
-export async function updateExpense(id: string, patch: Partial<CreateExpensePayload>): Promise<Expense> {
+export async function updateExpense(
+  id: string,
+  patch: Partial<CreateExpensePayload & { notes: string }>,
+): Promise<Expense> {
   const { data } = await api.patch(`/api/expenses/${id}`, patch)
   return data as Expense
 }

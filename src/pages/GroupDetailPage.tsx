@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { format, isToday, parseISO } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import {
-  ArrowLeft, ChartPie, CircleAlert, Crown, FileDown, HandCoins, LoaderCircle, Pencil, Plus,
-  Receipt, Trash2, UserPlus, Users,
+  ArrowLeft, ChartPie, CircleAlert, Crown, FileDown, HandCoins, LoaderCircle, Plus,
+  Receipt, UserPlus, Users,
 } from 'lucide-react'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { ExpenseModal } from '../components/groups/ExpenseModal'
@@ -13,10 +13,10 @@ import { useGroupDetail } from '../hooks/useGroupDetail'
 import { useUnlocked } from '../hooks/useUnlocked'
 import type { Expense, MemberBalance } from '../services/expenses'
 import { useAppStore } from '../store/useAppStore'
-import { categoryLook } from '../data/expenseCategories'
 import { downloadFile, slug, toCsv } from '../services/exportFile'
 import { listAllGroupExpenses } from '../services/expenses'
 import { avatarStyle } from '../utils/avatar'
+import { ExpenseRow } from '../components/expenses/ExpenseRow'
 import './GroupDetailPage.scss'
 
 const money = (value: number) => `₹${Math.abs(value).toFixed(2)}`
@@ -34,13 +34,6 @@ function settledLabel(member: MemberBalance): string {
   // owed their share and paid exactly it, so nothing ever moved between people
   if (member.owed > 0.005 || member.paid > 0.005) return 'All square'
   return '—'
-}
-
-/** Today's expenses show the clock, older ones the date — same width either way. */
-function whenLabel(iso: string) {
-  const at = parseISO(iso)
-  if (Number.isNaN(at.getTime())) return ''
-  return isToday(at) ? format(at, 'h:mm a') : format(at, 'd MMM')
 }
 
 
@@ -242,55 +235,17 @@ export function GroupDetailPage() {
             </div>
           ) : (
             <div className="expense-list">
-              {expenses.map((expense) => {
-                // author or owner may edit and delete — mirror the server rule
-                const canEdit = expense.createdById === me || isOwner
-                const look = categoryLook(expense.category)
-                const CategoryIcon = look.icon
-                return (
-                  <div className={`expense-row ${busyId === expense.id ? 'is-busy' : ''}`} key={expense.id}>
-                    <span className={`expense-icon ${look.tone}`} title={expense.category ?? 'Uncategorised'}>
-                      <CategoryIcon size={18} />
-                    </span>
-
-                    <strong className="expense-title">{expense.title}</strong>
-
-                    <div className="expense-meta">
-                      {/* first name only: the full one pushes this line onto a
-                          second row on a phone, and the row already names them
-                          nowhere else */}
-                      <span>
-                        {expense.iPaid ? 'You' : expense.paidBy?.name?.split(' ')[0] ?? 'Someone'} paid {money(expense.totalAmount)}
-                      </span>
-                      {expense.category && <span className="expense-cat-text">{expense.category}</span>}
-                      <span>{whenLabel(expense.date)}</span>
-                    </div>
-
-                    <div className="expense-share">
-                      <small>your share</small>
-                      {/* rendered as returned — the server assigns the rounding remainder */}
-                      <strong>{money(expense.myShare ?? 0)}</strong>
-                    </div>
-
-                    {/* the slot is always rendered, empty when this member may not
-                        touch the expense, so the columns stay aligned down the list */}
-                    <div className="expense-actions">
-                      {canEdit && (
-                        <>
-                          <button className="expense-edit" onClick={() => setEditing(expense)}
-                            aria-label={`Edit ${expense.title}`}>
-                            <Pencil size={15} />
-                          </button>
-                          <button className="expense-delete" onClick={() => setPendingDelete(expense)}
-                            aria-label={`Delete ${expense.title}`}>
-                            <Trash2 size={15} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+              {expenses.map((expense) => (
+                <ExpenseRow
+                  key={expense.id}
+                  expense={expense}
+                  // author or owner may edit and delete — mirror the server rule
+                  canEdit={expense.createdById === me || isOwner}
+                  busy={busyId === expense.id}
+                  onEdit={setEditing}
+                  onDelete={setPendingDelete}
+                />
+              ))}
             </div>
           )}
         </div>

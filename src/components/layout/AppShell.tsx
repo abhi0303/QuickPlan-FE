@@ -29,17 +29,26 @@ import { useGamification } from '../../hooks/useGamification'
 import { useOffline } from '../../hooks/useOffline'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
+import type { MoneyTab } from '../../store/useAppStore'
 import './AppShell.scss'
 
-/** Voice capture creates tasks and reminders; expenses are made inside a group. */
+/**
+ * Where the microphone is offered.
+ *
+ * Personal money joins tasks and reminders now that a spoken sentence is enough
+ * to record one — "spent 400 on petrol" needs nothing else. A group expense
+ * still does not: a sentence cannot name who is in the split, so the Groups
+ * half keeps the plus button alone.
+ */
 const VOICE_ROUTES = ['/', '/tasks', '/reminders']
 
 /**
  * Quick Add only makes tasks and reminders, so across the money area the FAB
  * offers that page's own create action instead.
  */
-function moneyAction(pathname: string) {
-  if (pathname === '/expenses') return 'New group'
+function moneyAction(pathname: string, moneyTab: MoneyTab | null) {
+  // the Money page has two halves, and the FAB offers whichever is in front
+  if (pathname === '/expenses') return moneyTab === 'personal' ? 'Add expense' : 'New group'
   if (pathname.startsWith('/groups/')) return 'Add expense'
   return null
 }
@@ -59,6 +68,7 @@ export function AppShell() {
   const toggleTheme = useAppStore((state) => state.toggleTheme)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
   const setMoneyComposerOpen = useAppStore((state) => state.setMoneyComposerOpen)
+  const moneyTab = useAppStore((state) => state.moneyTab)
   // published by the dashboard; null until it has loaded once
   const openToday = useAppStore((state) => state.openToday)
   // fetched once here and published to the store, so the sidebar card and the
@@ -69,7 +79,8 @@ export function AppShell() {
   const game = useAppStore((state) => state.gamification)
   const { pathname } = useLocation()
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
-  const moneyLabel = moneyAction(pathname)
+    || (pathname === '/expenses' && moneyTab === 'personal')
+  const moneyLabel = moneyAction(pathname, moneyTab)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {

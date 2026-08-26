@@ -9,6 +9,8 @@ type Props = {
   /** What exactly is about to happen — name the item, do not just say "this". */
   message: string
   confirmLabel?: string
+  /** Shown while the action runs. Not every confirmation deletes something. */
+  busyLabel?: string
   cancelLabel?: string
   busy?: boolean
   onConfirm: () => void
@@ -22,7 +24,8 @@ type Props = {
  * or Space lands on.
  */
 export function ConfirmDialog({
-  open, title, message, confirmLabel = 'Delete', cancelLabel = 'Cancel', busy, onConfirm, onCancel,
+  open, title, message, confirmLabel = 'Delete', busyLabel = 'Deleting...',
+  cancelLabel = 'Cancel', busy, onConfirm, onCancel,
 }: Props) {
   const cancelRef = useRef<HTMLButtonElement>(null)
 
@@ -62,7 +65,7 @@ export function ConfirmDialog({
             {cancelLabel}
           </button>
           <button type="button" className="confirm-danger" onClick={onConfirm} disabled={busy}>
-            {busy ? <><LoaderCircle size={16} className="spin" /> Deleting...</> : confirmLabel}
+            {busy ? <><LoaderCircle size={16} className="spin" /> {busyLabel}</> : confirmLabel}
           </button>
         </div>
       </div>

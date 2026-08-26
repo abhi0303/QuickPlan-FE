@@ -1,42 +1,54 @@
-/* GroupsPage — styles owned by this page.
+/* MoneyPage — styles owned by this page.
    Shared tokens and primitives live in src/styles/global.scss. */
 
 .groups-page { padding-top: 10px; }
 
-/* --- totals across every group --- */
-
-.balance-summary {
-    display: grid;
-    gap: 14px;
-    grid-template-columns: 1fr 1fr;
-    margin-bottom: 20px;
-}
-
-.balance-card {
-    background: var(--surface);
+/* Two halves of one page, not two destinations — a segmented switch rather
+   than nav, so it reads as a filter on what is already here. */
+.money-tabs {
+    background: var(--surface-soft);
     border: 1px solid var(--border);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-sm);
-    padding: 18px 20px;
+    border-radius: var(--r-pill);
+    display: inline-flex;
+    gap: 2px;
+    margin-bottom: 20px;
+    padding: 4px;
 }
 
-.balance-card span {
+.money-tabs button {
+    align-items: center;
+    border-radius: var(--r-pill);
     color: var(--muted);
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
+    display: flex;
+    font-size: 13.5px;
+    font-weight: 700;
+    gap: 7px;
+    padding: 8px 16px;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
 }
 
-.balance-card strong {
-    display: block;
-    font-size: 26px;
+.money-tabs button:hover { color: var(--text); }
+
+.money-tabs button.is-active {
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    color: var(--text);
+}
+
+.money-tabs em {
+    background: var(--primary-soft);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    font-size: 11px;
+    font-style: normal;
     font-weight: 800;
-    letter-spacing: -.8px;
-    margin-top: 4px;
+    padding: 1px 7px;
 }
 
-.balance-card.up strong { color: var(--primary-strong); }
-.balance-card.down strong { color: var(--rose); }
+@media (max-width: 560px) {
+    .money-tabs { display: flex; width: 100%; }
+    .money-tabs button { flex: 1; justify-content: center; }
+}
 
 /* --- the grid --- */
 
@@ -191,36 +203,7 @@
 .group-skeleton:nth-child(2) { animation-delay: .15s; }
 .group-skeleton:nth-child(3) { animation-delay: .3s; }
 
-.groups-empty {
-    align-items: center;
-    background: var(--surface);
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--r-xl);
-    color: var(--muted);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 60px 24px;
-    text-align: center;
-}
-
-.groups-empty p { font-size: 15px; font-weight: 600; }
-
-.empty-wallet {
-    align-items: center;
-    background: var(--gradient-soft);
-    border-radius: var(--r-lg);
-    color: var(--primary);
-    display: flex;
-    height: 72px;
-    justify-content: center;
-    width: 72px;
-}
-
 @media (max-width: 860px) {
-    .balance-summary { gap: 12px; }
-    .balance-card { padding: 14px 16px; }
-    .balance-card strong { font-size: 22px; }
     .group-grid { grid-template-columns: 1fr; }
     .group-delete { opacity: 1; }
 }
@@ -239,4 +222,65 @@
     .group-delete {
         opacity: 1;
     }
+}
+
+/* The one-member group offer. Loud enough to notice once, quiet enough that
+   saying no costs nothing. */
+.convert-offer {
+    align-items: center;
+    background: var(--gradient-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    display: flex;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 16px 18px;
+}
+
+.convert-icon {
+    align-items: center;
+    background: var(--surface);
+    border-radius: var(--r-md);
+    color: var(--primary);
+    display: flex;
+    flex: none;
+    height: 40px;
+    justify-content: center;
+    width: 40px;
+}
+
+.convert-offer strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.convert-offer p {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.convert-actions {
+    display: flex;
+    flex: none;
+    gap: 8px;
+    margin-left: auto;
+}
+
+@media (max-width: 620px) {
+
+    .convert-offer {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .convert-actions {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .convert-actions .quick-add { flex: 1; justify-content: center; }
 }

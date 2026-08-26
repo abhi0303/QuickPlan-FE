@@ -15,6 +15,9 @@ export type Session = {
   token: string
 }
 
+/** The two halves of the Money page: your own spending, and shared groups. */
+export type MoneyTab = 'personal' | 'groups'
+
 type AppStore = {
   theme: Theme
   /** Which ringtone reminder alerts use. */
@@ -36,8 +39,23 @@ type AppStore = {
    * flag lets the app shell's FAB open whichever is in front of the user.
    */
   moneyComposerOpen: boolean
+  /**
+   * Which half of the Money page is in front of the user. It lives here rather
+   * than in the page because the shell's FAB has to offer the matching create
+   * action, and the shell only knows the route.
+   *
+   * Null until the page decides — a user with no groups starts on Personal.
+   */
+  moneyTab: MoneyTab | null
   /** Bumped after any task mutation so views know to refetch. */
   tasksVersion: number
+  /** The same, for money — Quick Add can now record an expense from anywhere. */
+  expensesVersion: number
+  /**
+   * One-member groups the user has been offered a conversion for and said no
+   * to. Persisted, because "ask once" has to survive a reload to mean anything.
+   */
+  declinedConversions: string[]
   /**
    * Open tasks today, published by the dashboard for the shell's nav badge.
    * Null until the dashboard has loaded once — the shell shows nothing rather
@@ -70,8 +88,11 @@ type AppStore = {
   setSidebarOpen: (open: boolean) => void
   setQuickAddOpen: (open: boolean) => void
   setMoneyComposerOpen: (open: boolean) => void
+  setMoneyTab: (tab: MoneyTab) => void
   openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
+  bumpExpensesVersion: () => void
+  declineConversion: (groupId: string) => void
   publishOpenToday: (openToday: number | null) => void
   setGamification: (state: GamificationState | null, catalogue: MissionCatalogue | null) => void
   setGamificationStatus: (loading: boolean, error: string) => void
@@ -97,7 +118,10 @@ export const useAppStore = create<AppStore>()(
       quickAddSeed: '',
       quickAddViaVoice: false,
       moneyComposerOpen: false,
+      moneyTab: null,
       tasksVersion: 0,
+      expensesVersion: 0,
+      declinedConversions: [],
       openToday: null,
       gamification: null,
       missionCatalogue: null,
@@ -122,7 +146,12 @@ export const useAppStore = create<AppStore>()(
       openQuickAddWithText: (quickAddSeed) =>
         set({ quickAddSeed, quickAddOpen: true, quickAddViaVoice: true }),
       setMoneyComposerOpen: (moneyComposerOpen) => set({ moneyComposerOpen }),
+      setMoneyTab: (moneyTab) => set({ moneyTab }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
+      bumpExpensesVersion: () => set((state) => ({ expensesVersion: state.expensesVersion + 1 })),
+      declineConversion: (groupId) => set((state) => ({
+        declinedConversions: [...state.declinedConversions, groupId],
+      })),
       publishOpenToday: (openToday) => set({ openToday }),
       setGamification: (gamification, missionCatalogue) =>
         set((state) => ({ gamification, missionCatalogue: missionCatalogue ?? state.missionCatalogue })),
@@ -148,11 +177,13 @@ export const useAppStore = create<AppStore>()(
       version: 1,
       partialize: (state) => ({
         theme: state.theme, ringtone: state.ringtone, session: state.session, seenLevel: state.seenLevel,
+        declinedConversions: state.declinedConversions,
       }),
       // v0 stored a session without a token; those can no longer authenticate.
       migrate: (persisted) => {
         const state = persisted as {
           theme?: Theme; ringtone?: string; session?: Session | null; seenLevel?: number | null
+          declinedConversions?: string[]
         } | undefined
         const session = state?.session?.token ? state.session : null
         return {
@@ -160,6 +191,7 @@ export const useAppStore = create<AppStore>()(
           ringtone: state?.ringtone ?? DEFAULT_RINGTONE_ID,
           session,
           seenLevel: state?.seenLevel ?? null,
+          declinedConversions: state?.declinedConversions ?? [],
         }
       },
     },
