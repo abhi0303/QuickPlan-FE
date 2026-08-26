@@ -237,6 +237,29 @@ export async function listPersonalExpenses(filters: ExpenseFilters = {}): Promis
 }
 
 /**
+ * Every personal expense, walked page by page.
+ *
+ * The analysis page does its own arithmetic — `GET /api/analytics/me` publishes
+ * no response schema (see docs/analytics-api.md) — so it needs the rows, not a
+ * summary. Reports `truncated` rather than quietly charting a subset.
+ */
+export async function listAllPersonalExpenses(
+  filters: Omit<ExpenseFilters, 'limit' | 'offset'> = {},
+): Promise<{ items: Expense[]; total: number; truncated: boolean }> {
+  const first = await listPersonalExpenses({ ...filters, limit: ALL_PAGE_SIZE, offset: 0 })
+  const items = [...first.items]
+
+  while (items.length < Math.min(first.total, ALL_CAP)) {
+    const page = await listPersonalExpenses({ ...filters, limit: ALL_PAGE_SIZE, offset: items.length })
+    if (page.items.length === 0) break
+    items.push(...page.items)
+  }
+
+  // each page arrived sorted; the concatenation of pages is not
+  return { items: items.sort(byDateDesc), total: first.total, truncated: first.total > items.length }
+}
+
+/**
  * Turns a one-member group into personal expenses and deletes the group.
  *
  * Only reversible by typing the data in again, so every caller asks first.

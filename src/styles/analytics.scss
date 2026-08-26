@@ -1,4 +1,8 @@
-/* GroupAnalyticsPage — styles owned by this page.
+/* The analysis pages — group and personal — share these.
+
+   Nothing here is about groups: it is the window pager, the drill trail, the
+   stat tiles and the chart panels, all of which both pages draw the same way.
+   Kept in one stylesheet so the two cannot drift apart visually.
    Shared tokens and primitives live in src/styles/global.scss. */
 
 .analytics-page { padding-top: 10px; }
@@ -156,6 +160,12 @@
 }
 
 /* ---------------------------------------------------------------- panels -- */
+
+/* A tile's sub-line can carry a direction: spending more is not a failure, so
+   it is tinted as movement rather than with the app's rose-for-bad. */
+.a-tile .a-sub.up { color: var(--tangerine); }
+.a-tile .a-sub.down { color: var(--primary-strong); }
+.a-tile .a-sub em { color: var(--muted); font-style: normal; font-weight: 500; }
 
 .analytics-grid {
     align-items: start;

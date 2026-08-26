@@ -1,0 +1,129 @@
+/* PersonalAnalyticsPage — the parts the group analysis has no use for.
+   Everything shared lives in src/styles/analytics.scss. */
+
+/* The forecast reads as a sentence rather than a tile: it is a claim about the
+   future and deserves to be worded, not just numbered. */
+.projection {
+    align-items: flex-start;
+    background: var(--gradient-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    display: flex;
+    font-size: 14px;
+    font-weight: 500;
+    gap: 10px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+    padding: 14px 18px;
+}
+
+.projection svg { color: var(--primary); flex: none; margin-top: 2px; }
+.projection strong { font-weight: 800; }
+
+/* --- category movement --- */
+
+.delta-list {
+    display: grid;
+}
+
+.delta-row {
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    padding: 11px 0;
+}
+
+.delta-row:last-child { border-bottom: 0; }
+
+.delta-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--tone) 15%, var(--surface));
+    border-radius: 10px;
+    color: var(--tone);
+    display: flex;
+    flex: none;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}
+
+.delta-icon.tone-food { --tone: var(--tangerine); }
+.delta-icon.tone-groceries { --tone: #16a34a; }
+.delta-icon.tone-drinks { --tone: #a855f7; }
+.delta-icon.tone-smoke { --tone: #a16207; }
+.delta-icon.tone-travel { --tone: var(--periwinkle); }
+.delta-icon.tone-fuel { --tone: #ef4444; }
+.delta-icon.tone-parking { --tone: #0ea5e9; }
+.delta-icon.tone-transport { --tone: #f59e0b; }
+.delta-icon.tone-stay { --tone: var(--primary); }
+.delta-icon.tone-activities { --tone: #14b8a6; }
+.delta-icon.tone-shopping { --tone: var(--rose); }
+.delta-icon.tone-bills { --tone: #6366f1; }
+.delta-icon.tone-health { --tone: #e11d48; }
+.delta-icon.tone-gifts { --tone: #d946ef; }
+.delta-icon.tone-other { --tone: #64748b; }
+.delta-icon.tone-plain { --tone: var(--muted); }
+
+.delta-copy { min-width: 0; }
+
+.delta-copy strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.delta-copy small {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.delta-values {
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.delta-values strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+}
+
+.delta-values small {
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+/* Spending more is not a failure, so this is a direction, not a verdict — the
+   rose is reserved for what it means everywhere else in the app. */
+.delta-values small.up { color: var(--tangerine); }
+.delta-values small.down { color: var(--primary-strong); }
+.delta-values small.new { color: var(--periwinkle); }
+
+.analytics-foot {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 0 8px;
+    text-align: center;
+}
+
+.analytics-loading {
+    animation: analyticsPulse 1.4s ease-in-out infinite;
+    background: var(--surface-soft);
+    border-radius: var(--r-lg);
+    height: 260px;
+}
+
+@keyframes analyticsPulse {
+
+    0%,
+    100% { opacity: 1; }
+
+    50% { opacity: .5; }
+}

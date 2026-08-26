@@ -235,6 +235,9 @@ h2 {
     font-weight: 700;
     gap: 5px;
     padding: 7px 12px;
+    /* it is sometimes a <button> and sometimes a <Link>, and it should look the
+       same either way — there is no global anchor reset to do this */
+    text-decoration: none;
     transition: background .18s ease;
 }
 

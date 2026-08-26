@@ -32,7 +32,14 @@ import { useAppStore } from '../../store/useAppStore'
 import type { MoneyTab } from '../../store/useAppStore'
 import './AppShell.scss'
 
-/** Voice capture creates tasks and reminders; money has its own composer. */
+/**
+ * Where the microphone is offered.
+ *
+ * Personal money joins tasks and reminders now that a spoken sentence is enough
+ * to record one — "spent 400 on petrol" needs nothing else. A group expense
+ * still does not: a sentence cannot name who is in the split, so the Groups
+ * half keeps the plus button alone.
+ */
 const VOICE_ROUTES = ['/', '/tasks', '/reminders']
 
 /**
@@ -72,6 +79,7 @@ export function AppShell() {
   const game = useAppStore((state) => state.gamification)
   const { pathname } = useLocation()
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
+    || (pathname === '/expenses' && moneyTab === 'personal')
   const moneyLabel = moneyAction(pathname, moneyTab)
 
   useEffect(() => {

@@ -11,7 +11,7 @@ import { LEVELS, LEVEL_LABEL, useGroupAnalytics } from '../hooks/useGroupAnalyti
 import { useGroupDetail } from '../hooks/useGroupDetail'
 import { useUnlocked } from '../hooks/useUnlocked'
 import { avatarStyle } from '../utils/avatar'
-import './GroupAnalyticsPage.scss'
+import '../styles/analytics.scss'
 
 /** Whole rupees in the charts — the paise belong on the expense itself. */
 const money = (value: number) => `₹${Math.round(value).toLocaleString('en-IN')}`

@@ -1,54 +1,17 @@
 import { useEffect, useState } from 'react'
-import {
-  addDays,
-  addMonths,
-  addWeeks,
-  addYears,
-  eachDayOfInterval,
-  eachMonthOfInterval,
-  eachWeekOfInterval,
-  endOfDay,
-  endOfMonth,
-  endOfWeek,
-  endOfYear,
-  format,
-  isWithinInterval,
-  max as maxDate,
-  min as minDate,
-  parseISO,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-  startOfYear,
-} from 'date-fns'
+import { isWithinInterval } from 'date-fns'
 import { getApiErrorMessage } from '../services/api'
 import { getGroupBalances, listAllGroupExpenses } from '../services/expenses'
 import type { Expense, GroupBalances } from '../services/expenses'
 
-/** Year drills into months, a month into weeks, a week into days, a day into its expenses. */
-export const LEVELS = ['year', 'month', 'week', 'day'] as const
-export type Level = (typeof LEVELS)[number]
+import {
+  buildColumns, byCategory, headingOf, LEVELS, step, trailOf, windowFor, withinWindow,
+} from './expenseWindow'
+import type { Column, Level, Slice } from './expenseWindow'
 
-export const LEVEL_LABEL: Record<Level, string> = {
-  year: 'Year',
-  month: 'Month',
-  week: 'Week',
-  day: 'Day',
-}
+export { LEVELS, LEVEL_LABEL } from './expenseWindow'
+export type { Column, Level, Slice } from './expenseWindow'
 
-export type Column = {
-  /** Start of the bucket, or the expense id at day level. */
-  key: string
-  label: string
-  sub?: string
-  value: number
-  /** Present when the column can be opened one level down. */
-  at?: Date
-  /** True for the bucket containing today. */
-  now?: boolean
-}
-
-export type Slice = { label: string, value: number, share: number }
 export type MemberRow = { userId: string, name: string, paid: number, share: number, net: number }
 
 export type Analytics = {
@@ -63,28 +26,6 @@ export type Analytics = {
   byMember: MemberRow[]
   columns: Column[]
   topExpenses: Expense[]
-}
-
-const WEEK = { weekStartsOn: 1 } as const
-
-function windowFor(level: Level, anchor: Date) {
-  if (level === 'year') return { from: startOfYear(anchor), to: endOfYear(anchor) }
-  if (level === 'month') return { from: startOfMonth(anchor), to: endOfMonth(anchor) }
-  if (level === 'week') return { from: startOfWeek(anchor, WEEK), to: endOfWeek(anchor, WEEK) }
-  return { from: startOfDay(anchor), to: endOfDay(anchor) }
-}
-
-/** How far one press of the arrows moves at each level. */
-function step(level: Level, anchor: Date, delta: number) {
-  if (level === 'year') return addYears(anchor, delta)
-  if (level === 'month') return addMonths(anchor, delta)
-  if (level === 'week') return addWeeks(anchor, delta)
-  return addDays(anchor, delta)
-}
-
-const dateOf = (expense: Expense) => {
-  const parsed = parseISO(expense.date)
-  return Number.isNaN(parsed.getTime()) ? null : parsed
 }
 
 /**
@@ -135,24 +76,14 @@ export function useGroupAnalytics(groupId: string, memberCount: number) {
   }, [groupId, retryToken])
 
   const { from, to } = windowFor(level, anchor)
-  const inRange = expenses.filter((expense) => {
-    const at = dateOf(expense)
-    return at !== null && isWithinInterval(at, { start: from, end: to })
-  })
+  const inRange = withinWindow(expenses, from, to)
 
   const totalSpent = inRange.reduce((sum, expense) => sum + expense.totalAmount, 0)
   const myShare = inRange.reduce((sum, expense) => sum + (expense.myShare ?? 0), 0)
   const myPaid = inRange.reduce((sum, expense) => sum + (expense.iPaid ? expense.totalAmount : 0), 0)
 
   // ---- by category ----
-  const categoryTotals = new Map<string, number>()
-  for (const expense of inRange) {
-    const key = expense.category?.trim() || 'Uncategorised'
-    categoryTotals.set(key, (categoryTotals.get(key) ?? 0) + expense.totalAmount)
-  }
-  const byCategory: Slice[] = [...categoryTotals.entries()]
-    .map(([label, value]) => ({ label, value, share: totalSpent > 0 ? (value / totalSpent) * 100 : 0 }))
-    .sort((a, b) => b.value - a.value)
+  const byCategorySlices = byCategory(inRange, totalSpent)
 
   // ---- by member: what they fronted against what they owe ----
   const paidBy = new Map<string, number>()
@@ -179,83 +110,15 @@ export function useGroupAnalytics(groupId: string, memberCount: number) {
     })
     .sort((a, b) => b.paid - a.paid)
 
-  // ---- the columns for this level ----
-  const today = new Date()
-
-  function sumBetween(start: Date, end: Date) {
-    return inRange.reduce((sum, expense) => {
-      const at = dateOf(expense)
-      return at && at >= start && at <= end ? sum + expense.totalAmount : sum
-    }, 0)
-  }
-
-  const columns: Column[] = ((): Column[] => {
-    if (level === 'year') {
-      return eachMonthOfInterval({ start: from, end: to }).map((month) => ({
-        key: String(month.getTime()),
-        label: format(month, 'MMM'),
-        value: sumBetween(startOfMonth(month), endOfMonth(month)),
-        at: month,
-        now: format(month, 'yyyy-MM') === format(today, 'yyyy-MM'),
-      }))
-    }
-
-    if (level === 'month') {
-      // weeks are clipped to the month, so the first and last bars only count
-      // the days that actually belong to it
-      return eachWeekOfInterval({ start: from, end: to }, WEEK).map((weekStart) => {
-        const start = maxDate([startOfWeek(weekStart, WEEK), from])
-        const end = minDate([endOfWeek(weekStart, WEEK), to])
-        return {
-          key: String(weekStart.getTime()),
-          label: `${format(start, 'd')}–${format(end, 'd')}`,
-          sub: format(start, 'MMM'),
-          value: sumBetween(start, end),
-          at: weekStart,
-          now: isWithinInterval(today, { start, end }),
-        }
-      })
-    }
-
-    if (level === 'week') {
-      return eachDayOfInterval({ start: from, end: to }).map((day) => ({
-        key: String(day.getTime()),
-        label: format(day, 'EEE'),
-        sub: format(day, 'd'),
-        value: sumBetween(startOfDay(day), endOfDay(day)),
-        at: day,
-        now: format(day, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'),
-      }))
-    }
-
-    // the day itself has no smaller bucket, so each expense is its own bar
-    return [...inRange]
-      .sort((a, b) => (dateOf(a)?.getTime() ?? 0) - (dateOf(b)?.getTime() ?? 0))
-      .map((expense) => ({
-        key: expense.id,
-        label: expense.title,
-        sub: dateOf(expense) ? format(dateOf(expense) as Date, 'h:mm a') : undefined,
-        value: expense.totalAmount,
-      }))
-  })()
+  const columns = buildColumns(level, from, to, inRange)
 
   const largest = inRange.reduce<Expense | null>(
     (biggest, expense) => (!biggest || expense.totalAmount > biggest.totalAmount ? expense : biggest), null)
 
   const topExpenses = [...inRange].sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5)
 
-  /** Breadcrumb: every level above this one, plus the current window's own name. */
-  const trail = [
-    { level: 'year' as Level, label: format(anchor, 'yyyy') },
-    { level: 'month' as Level, label: format(anchor, 'MMMM') },
-    { level: 'week' as Level, label: `${format(startOfWeek(anchor, WEEK), 'd')}–${format(endOfWeek(anchor, WEEK), 'd MMM')}` },
-    { level: 'day' as Level, label: format(anchor, 'd MMM') },
-  ].slice(0, LEVELS.indexOf(level) + 1)
-
-  const heading = level === 'year' ? format(anchor, 'yyyy')
-    : level === 'month' ? format(anchor, 'MMMM yyyy')
-      : level === 'week' ? `${format(startOfWeek(anchor, WEEK), 'd MMM')} – ${format(endOfWeek(anchor, WEEK), 'd MMM yyyy')}`
-        : format(anchor, 'EEEE, d MMM yyyy')
+  const trail = trailOf(level, anchor)
+  const heading = headingOf(level, anchor)
 
   /** Opening a bar moves down a level onto the moment it represents. */
   function drillInto(column: Column) {
@@ -292,7 +155,7 @@ export function useGroupAnalytics(groupId: string, memberCount: number) {
     myPaid,
     largest,
     perPerson: memberCount > 0 ? totalSpent / memberCount : 0,
-    byCategory,
+    byCategory: byCategorySlices,
     byMember,
     columns,
     topExpenses,
@@ -316,7 +179,7 @@ export function useGroupAnalytics(groupId: string, memberCount: number) {
     jumpToNow,
     drillInto,
     canDrill: level !== 'day',
-    isNow: isWithinInterval(today, { start: from, end: to }),
+    isNow: isWithinInterval(new Date(), { start: from, end: to }),
     hasHistory: expenses.length > 0,
   }
 }

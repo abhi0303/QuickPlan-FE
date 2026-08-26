@@ -86,3 +86,53 @@
 @media (max-width: 560px) {
     .ledger-day { padding: 0 12px 2px; }
 }
+
+/* The way into the analysis, placed where the totals are — that is where the
+   question "is that a lot?" gets asked. */
+.ledger-analysis {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    color: inherit;
+    display: flex;
+    gap: 13px;
+    margin-bottom: 18px;
+    padding: 13px 16px;
+    /* there is no global anchor reset, so a link that is not meant to look like
+       one has to say so */
+    text-decoration: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.ledger-analysis:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+
+.analysis-icon {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-md);
+    color: var(--primary-strong);
+    display: flex;
+    flex: none;
+    height: 36px;
+    justify-content: center;
+    width: 36px;
+}
+
+.ledger-analysis strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.ledger-analysis small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.ledger-analysis > svg { color: var(--muted); flex: none; margin-left: auto; }

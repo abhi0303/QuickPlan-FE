@@ -38,6 +38,8 @@ const DEFAULT_TIME = '09:00'
 const ROUTE_INTENT: Record<string, ParsedIntent> = {
   '/reminders': 'reminder',
   '/tasks': 'task',
+  // opened from the personal ledger, so money is what is being added
+  '/expenses': 'expense',
 }
 
 const EMPTY = {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CircleAlert, TrendingUp, Wallet } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ChartPie, ChevronRight, CircleAlert, TrendingUp, Wallet } from 'lucide-react'
 import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ExpenseRow } from './ExpenseRow'
@@ -90,6 +91,17 @@ export function PersonalLedger() {
             <strong>{money(spent)}</strong>
           </div>
         </div>
+      )}
+
+      {!loading && !error && expenses.length > 0 && (
+        <Link to="/expenses/analysis" className="ledger-analysis">
+          <span className="analysis-icon"><ChartPie size={18} /></span>
+          <div>
+            <strong>See the analysis</strong>
+            <small>By year, month, week or day — and against what you spent before.</small>
+          </div>
+          <ChevronRight size={18} />
+        </Link>
       )}
 
       {loading && (
