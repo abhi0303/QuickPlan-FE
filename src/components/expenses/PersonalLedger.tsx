@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CircleAlert, TrendingUp, Wallet } from 'lucide-react'
-import { format, parseISO, startOfMonth } from 'date-fns'
+import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ExpenseRow } from './ExpenseRow'
 import { PersonalExpenseModal } from './PersonalExpenseModal'
@@ -19,12 +19,24 @@ import './PersonalLedger.scss'
 
 const money = (value: number) => `₹${value.toFixed(2)}`
 
-function dayLabel(iso: string) {
+/**
+ * The local calendar day, which is the only one a person means.
+ *
+ * `date.slice(0, 10)` would read the UTC day out of the ISO string, and in
+ * IST that is the *previous* day for anything before 05:30 — so a 1 AM coffee
+ * would open its own group and inherit the wrong heading.
+ */
+function dayKey(iso: string) {
   const at = parseISO(iso)
-  if (Number.isNaN(at.getTime())) return 'Undated'
-  const today = new Date()
-  if (format(at, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')) return 'Today'
-  return format(at, 'EEEE, d MMM')
+  return Number.isNaN(at.getTime()) ? 'undated' : format(at, 'yyyy-MM-dd')
+}
+
+function dayLabel(key: string) {
+  if (key === 'undated') return 'Undated'
+  const today = format(new Date(), 'yyyy-MM-dd')
+  if (key === today) return 'Today'
+  if (key === format(subDays(new Date(), 1), 'yyyy-MM-dd')) return 'Yesterday'
+  return format(parseISO(key), 'EEEE, d MMM')
 }
 
 export function PersonalLedger() {
@@ -50,13 +62,13 @@ export function PersonalLedger() {
   const days = useMemo(() => {
     const out: { key: string; label: string; total: number; items: Expense[] }[] = []
     for (const expense of expenses) {
-      const key = expense.date.slice(0, 10)
+      const key = dayKey(expense.date)
       const last = out[out.length - 1]
       if (last?.key === key) {
         last.items.push(expense)
         last.total += expense.totalAmount
       } else {
-        out.push({ key, label: dayLabel(expense.date), total: expense.totalAmount, items: [expense] })
+        out.push({ key, label: dayLabel(key), total: expense.totalAmount, items: [expense] })
       }
     }
     return out
@@ -108,7 +120,7 @@ export function PersonalLedger() {
             <section className="ledger-day" key={day.key}>
               <header>
                 <h3>{day.label}</h3>
-                <strong>{money(day.total)}</strong>
+                <span className="ledger-total"><small>total</small> {money(day.total)}</span>
               </header>
               <div className="expense-list">
                 {day.items.map((expense) => (
@@ -118,6 +130,8 @@ export function PersonalLedger() {
                     // it is your own ledger; there is nobody else it could belong to
                     canEdit
                     busy={busyId === expense.id}
+                    // the day heading above already says which day this is
+                    timeOnly
                     onEdit={setEditing}
                     onDelete={setPendingDelete}
                   />

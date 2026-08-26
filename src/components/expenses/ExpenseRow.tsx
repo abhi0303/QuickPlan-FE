@@ -18,21 +18,23 @@ import './ExpenseRow.scss'
 
 const money = (value: number) => `₹${Math.abs(value).toFixed(2)}`
 
-function whenLabel(iso: string) {
+function whenLabel(iso: string, timeOnly: boolean) {
   const at = parseISO(iso)
   if (Number.isNaN(at.getTime())) return ''
-  return isToday(at) ? format(at, 'h:mm a') : format(at, 'd MMM')
+  return timeOnly || isToday(at) ? format(at, 'h:mm a') : format(at, 'd MMM')
 }
 
 type Props = {
   expense: Expense
   canEdit: boolean
   busy?: boolean
+  /** For a list already grouped by day: repeating the date would say nothing. */
+  timeOnly?: boolean
   onEdit: (expense: Expense) => void
   onDelete: (expense: Expense) => void
 }
 
-export function ExpenseRow({ expense, canEdit, busy, onEdit, onDelete }: Props) {
+export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, onDelete }: Props) {
   const look = categoryLook(expense.category)
   const CategoryIcon = look.icon
   const personal = isPersonal(expense)
@@ -55,7 +57,7 @@ export function ExpenseRow({ expense, canEdit, busy, onEdit, onDelete }: Props) 
           </span>
         )}
         {expense.category && <span className="expense-cat-text">{expense.category}</span>}
-        <span>{whenLabel(expense.date)}</span>
+        <span>{whenLabel(expense.date, timeOnly)}</span>
         {personal && expense.notes && <span className="expense-note">{expense.notes}</span>}
       </div>
 

@@ -1398,3 +1398,24 @@ select {
     .balance-card { padding: 14px 16px; }
     .balance-card strong { font-size: 22px; }
 }
+
+/* Expense row geometry, shared.
+   The row owns these, but the ledger's day headings inset their total by the
+   same amount so that every number on the right edge — day totals and row
+   amounts alike — sits in one column instead of two that nearly line up. */
+:root {
+    --expense-row-pad: 6px;
+    --expense-gap: 14px;
+    --expense-actions-w: 70px;
+    --expense-amount-inset: calc(var(--expense-row-pad) + var(--expense-gap) + var(--expense-actions-w));
+}
+
+@media (max-width: 560px) {
+
+    :root {
+        --expense-row-pad: 2px;
+        --expense-gap: 12px;
+        /* the controls drop to a second line, so the amount is flush right */
+        --expense-amount-inset: var(--expense-row-pad);
+    }
+}
