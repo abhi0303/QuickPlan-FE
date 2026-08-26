@@ -2,7 +2,6 @@
    The modal shell and field primitives live in src/styles/global.scss. */
 
 .expense-modal { max-width: 540px; }
-.expense-modal form { display: grid; gap: 20px; }
 
 .expense-modal .field-pair {
     display: grid;

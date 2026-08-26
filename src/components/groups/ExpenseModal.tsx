@@ -202,7 +202,7 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal expense-modal" role="dialog" aria-modal="true" aria-labelledby="expense-title"
+      <div className="modal expense-modal is-framed" role="dialog" aria-modal="true" aria-labelledby="expense-title"
         onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-head">
           <div>
@@ -215,6 +215,8 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
         </header>
 
         <form onSubmit={handleSubmit}>
+          {/* only the fields scroll; the title and the buttons stay put */}
+          <div className="modal-body">
           <div className="field">
             <label className="field-label" htmlFor="exp-title">What was it for?</label>
             <input id="exp-title" className="control" ref={titleRef} value={title}
@@ -336,6 +338,8 @@ function ExpenseDialog({ groupId, members, currentUserId, expense, onClose, onSa
           </div>
 
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
+
+          </div>
 
           <footer className="modal-actions">
             <button type="button" className="voice-ghost" onClick={onClose} disabled={saving}>Cancel</button>

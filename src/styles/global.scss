@@ -836,6 +836,47 @@ select {
     width: 100%;
 }
 
+/* A dialog that pins its header and footer and scrolls only its fields.
+   Opt-in, because a short dialog reads better growing to fit: add `is-framed`
+   and wrap the fields in `.modal-body`. */
+.modal.is-framed {
+    display: flex;
+    flex-direction: column;
+    /* the backdrop is fixed to the viewport, so this is the viewport less its
+       gutters — the dialog then never needs the backdrop's own scrollbar */
+    max-height: 100%;
+}
+
+.modal.is-framed form {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    /* without this a flex child refuses to shrink below its content */
+    min-height: 0;
+}
+
+.modal.is-framed .modal-head,
+.modal.is-framed .modal-actions {
+    flex: none;
+}
+
+/* Anything the dialog puts between its header and its form — a summary of who
+   is being paid, say — belongs to the frame, not to the scrolling part. */
+.modal.is-framed > *:not(form) { flex: none; }
+
+.modal-body {
+    display: grid;
+    gap: 20px;
+    min-height: 0;
+    overflow-y: auto;
+    /* room for focus rings, which an overflow container would otherwise clip */
+    margin: -3px;
+    padding: 3px;
+}
+
+/* Reads as an edge to scroll past rather than a line under the last field. */
+.modal.is-framed .modal-head { border-bottom: 1px solid var(--border); padding-bottom: 18px; }
+
 .modal-head {
     align-items: flex-start;
     display: flex;

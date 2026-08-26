@@ -98,6 +98,17 @@
 .fall-step.is-short { --fall: var(--rose); }
 .fall-step.is-short .fall-value { color: var(--rose); }
 
+/* Stated, not inferred: a running balance read on the 4th flatters badly. */
+.planner-pace {
+    border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 14px auto 0;
+    max-width: 34rem;
+    padding-top: 12px;
+}
+
 /* --- income --- */
 
 .planner-income {
@@ -147,6 +158,27 @@
 
 .plan-row:last-child { border-bottom: 0; }
 .plan-row.is-busy { opacity: .5; pointer-events: none; }
+
+/* Money already spent has nothing to switch: you cannot opt out of it. */
+.plan-row.is-static .plan-copy { flex: 1; min-width: 0; }
+
+/* The share of the month, as a line under the name — the comparison is the
+   reason to read the list at all. */
+.plan-bar {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 4px;
+    margin-top: 7px;
+    max-width: 260px;
+    overflow: hidden;
+}
+
+.plan-bar i {
+    border-radius: var(--r-pill);
+    display: block;
+    height: 100%;
+}
 
 /* Left out of the plan, not deleted from it: still readable, clearly inactive. */
 .plan-row.is-off .plan-copy,

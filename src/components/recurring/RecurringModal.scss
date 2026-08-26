@@ -1,5 +1,4 @@
 .recurring-modal { max-width: 460px; }
-.recurring-modal form { display: grid; gap: 20px; }
 
 .rec-pair {
     display: grid;
@@ -21,3 +20,113 @@
 @media (max-width: 460px) {
     .rec-pair { grid-template-columns: 1fr; }
 }
+
+/* The rule, in dates. A form can describe "every month, on the 5th, from
+   September" and still leave somebody unsure which months are in. */
+.rec-preview {
+    background: var(--surface-soft);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+}
+
+.rec-preview-label {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 11.5px;
+    font-weight: 700;
+    gap: 5px;
+    letter-spacing: .3px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.rec-preview-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rec-preview-dates span {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 4px 11px;
+}
+
+.rec-preview-more {
+    background: none !important;
+    border: 0 !important;
+    color: var(--muted);
+    padding: 4px 2px !important;
+}
+
+/* A flag rather than a fifth cadence: "every other month" is a modifier on
+   monthly, and the entry point is the only other thing it needs. */
+.rec-alternate {
+    align-items: flex-start;
+    cursor: pointer;
+    display: flex;
+    gap: 11px;
+    margin-top: 14px;
+    position: relative;
+}
+
+.rec-alternate input {
+    height: 100%;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+}
+
+.rec-alternate > span {
+    background: var(--surface);
+    border: 2px solid var(--border-strong);
+    border-radius: 7px;
+    flex: none;
+    height: 22px;
+    margin-top: 1px;
+    position: relative;
+    transition: background .18s ease, border-color .18s ease;
+    width: 22px;
+}
+
+.rec-alternate > span::after {
+    border-bottom: 2.5px solid var(--on-primary, #fff);
+    border-left: 2.5px solid var(--on-primary, #fff);
+    content: '';
+    height: 5px;
+    left: 4px;
+    opacity: 0;
+    position: absolute;
+    top: 5px;
+    transform: rotate(-45deg);
+    transition: opacity .14s ease;
+    width: 10px;
+}
+
+.rec-alternate input:checked + span {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.rec-alternate input:checked + span::after { opacity: 1; }
+
+.rec-alternate strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.rec-alternate small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.rec-start-month { margin-top: 14px; }

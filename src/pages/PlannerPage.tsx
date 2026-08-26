@@ -1,35 +1,38 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { format, parseISO } from 'date-fns'
-import {
-  ArrowLeft, CircleAlert, IndianRupee, Lightbulb, Lock, Pencil, RefreshCw, TriangleAlert, Wallet, X,
-} from 'lucide-react'
+import { format } from 'date-fns'
+import { ArrowLeft, CircleAlert, IndianRupee, Lightbulb, Lock, Pencil, Wallet, X } from 'lucide-react'
 import { categoryLook } from '../data/expenseCategories'
+import { useMonthSpending } from '../hooks/useMonthSpending'
 import { usePlanner } from '../hooks/usePlanner'
-import { CADENCE_LABEL } from '../services/recurring'
-import type { EstimatedItem, Plan } from '../services/planner'
+import { cadenceLabel } from '../services/recurring'
+import type { Plan } from '../services/planner'
 import './PlannerPage.scss'
 
 /**
- * What is actually left to save.
+ * What is left of this month.
  *
- * Income, minus what is already committed, minus what history says the rest of
- * the month costs. One subtraction nobody can do in their head, because the
- * second half is scattered across a rent schedule, four subscriptions and three
- * months of dinners.
+ * Income, minus what is already committed, minus what has actually been spent
+ * since the 1st. One subtraction nobody can do in their head, because the
+ * second half is scattered across a rent schedule and three weeks of receipts.
  *
- * Every figure here comes from the server computed — see docs/budget-planner.md
- * §5.2. The page's job is to make the subtraction legible and every line of it
- * traceable, not to do the maths again.
+ * **This is a running balance, not a forecast.** It used to average the last
+ * three months, which is the wrong answer for somebody asking where *this*
+ * month is going and no answer at all for somebody two weeks into using the
+ * app. Real expenses, added up, with the month's pace stated underneath so the
+ * number cannot be mistaken for a whole-month figure on the 4th.
+ *
+ * The commitments and their switches still come from the server computed. The
+ * month's spending is added up here, from the expenses themselves.
  */
 
 const money = (value: number) => `₹${Math.round(Math.abs(value)).toLocaleString('en-IN')}`
 
 export function PlannerPage() {
-  const { plan, loading, error, busyId, saving, retry, saveIncome, patchItem, recalculate } = usePlanner()
+  const { plan, loading, error, busyId, saving, retry, saveIncome, patchItem } = usePlanner()
+  const month = useMonthSpending()
   const [editingIncome, setEditingIncome] = useState(false)
   const [dismissed, setDismissed] = useState<string[]>([])
-  const [editingItem, setEditingItem] = useState<EstimatedItem | null>(null)
 
   if (loading) {
     return (
@@ -72,9 +75,23 @@ export function PlannerPage() {
     )
   }
 
-  const short = plan.canSave < 0
+  /*
+   * Computed here rather than taken from `plan.canSave`, because the server's
+   * figure is built on a three-month average and this page is now showing the
+   * month as it actually stands. Two different questions; only one is on
+   * screen. See docs/budget-planner.md — the basis belongs server-side
+   * eventually, and that is a one-parameter change to GET /api/planner.
+   */
+  const left = plan.monthlyIncome - plan.committed.total - month.total
+  const short = left < 0
   const suggestions = plan.suggestions.filter((item) => !dismissed.includes(item.id))
-  const targetGap = plan.savingsTarget !== null ? plan.canSave - plan.savingsTarget : null
+  const targetGap = plan.savingsTarget !== null ? left - plan.savingsTarget : null
+
+  const { daysElapsed, daysTotal } = month.period
+  // spending to date, carried forward at the same rate
+  const projected = daysElapsed > 0 ? (month.total / daysElapsed) * daysTotal : 0
+  const projectedLeft = plan.monthlyIncome - plan.committed.total - projected
+  const midMonth = daysElapsed > 2 && daysElapsed < daysTotal
 
   return (
     <section className="planner-page">
@@ -82,12 +99,12 @@ export function PlannerPage() {
 
       {/* The number. Everything else on the page explains or improves it. */}
       <section className={`planner-headline ${short ? 'is-short' : ''}`}>
-        <p className="eyebrow">{short ? 'This month does not balance' : 'You can save'}</p>
-        <strong>{short ? `${money(plan.canSave)} short` : `${money(plan.canSave)}`}</strong>
+        <p className="eyebrow">{short ? 'This month does not balance' : 'Left of this month'}</p>
+        <strong>{short ? `${money(left)} short` : money(left)}</strong>
         <p className="planner-sub">
           {short
-            ? 'Your commitments and usual spending come to more than you earn.'
-            : <>{Math.round(plan.savingsRate)}% of what you earn
+            ? 'Your commitments and what you have spent come to more than you earn.'
+            : <>{Math.round((left / Math.max(plan.monthlyIncome, 1)) * 100)}% of what you earn
                 {targetGap !== null && (
                   targetGap >= 0
                     ? <> · {money(targetGap)} past your {money(plan.savingsTarget as number)} target</>
@@ -95,9 +112,18 @@ export function PlannerPage() {
                 )}
               </>}
         </p>
+
+        {/* A running balance read on the 4th would flatter you badly, so the
+            pace is stated beside it rather than left to be inferred. */}
+        {midMonth && month.total > 0 && (
+          <p className="planner-pace">
+            Day {daysElapsed} of {daysTotal}. At this rate the month ends
+            at {money(projected)} spent, leaving {money(projectedLeft)}.
+          </p>
+        )}
       </section>
 
-      <Waterfall plan={plan} />
+      <Waterfall plan={plan} spent={month.total} />
 
       <section className="panel planner-income">
         <div>
@@ -129,7 +155,7 @@ export function PlannerPage() {
                 <div className="plan-copy">
                   <strong>{item.label}</strong>
                   <small>
-                    {CADENCE_LABEL[item.cadence]}
+                    {cadenceLabel(item.cadence, item.interval)}
                     {item.cadence !== 'MONTHLY' && <> · {money(item.amount)} each time</>}
                     {item.paused && ' · paused'}
                   </small>
@@ -159,73 +185,48 @@ export function PlannerPage() {
 
       <section className="panel">
         <div className="panel-heading">
-          <h2>Everything else</h2>
-          <span className="planner-total">{money(plan.estimated.total)}</span>
+          <h2>Spent so far this month</h2>
+          <span className="planner-total">{money(month.total)}</span>
         </div>
         <p className="muted">
-          {plan.estimated.basis
-            ? plan.estimated.basis.complete
-              ? `Averaged from your last ${plan.estimated.basis.months} complete months.`
-              : `Based on the ${plan.estimated.basis.months} month${plan.estimated.basis.months === 1 ? '' : 's'} of history you have so far.`
-            : 'Estimated from your spending history.'}
+          {format(month.period.from, 'd MMM')} – {format(new Date(), 'd MMM')} · your own expenses,
+          grouped so you can see where it went.
         </p>
 
+        {month.error && (
+          <p className="plan-empty">{month.error} <button className="text-button" onClick={month.reload}>Try again</button></p>
+        )}
+
         <div className="plan-list">
-          {plan.estimated.items.map((item) => {
-            const look = categoryLook(item.category)
+          {month.categories.map((row) => {
+            const look = categoryLook(row.category)
             const Icon = look.icon
+            // what this category is of everything spent — the comparison that
+            // makes the list worth reading rather than just a set of totals
+            const share = month.total > 0 ? (row.total / month.total) * 100 : 0
             return (
-              <div className={`plan-row ${item.included ? '' : 'is-off'} ${busyId === item.id ? 'is-busy' : ''}`} key={item.id}>
+              <div className="plan-row is-static" key={row.category}>
                 <span className={`delta-icon ${look.tone}`}><Icon size={15} /></span>
-
                 <div className="plan-copy">
-                  <strong>{item.category}</strong>
+                  <strong>{row.category}</strong>
                   <small>
-                    {item.source === 'OVERRIDE' ? 'Your figure'
-                      : item.source === 'BUDGET' ? 'From the budget you set'
-                        : `Usually ${money(item.median)} · last month ${money(item.lastMonth)}`}
+                    {row.count} expense{row.count === 1 ? '' : 's'} · {Math.round(share)}% of the month
+                    {row.largest && row.count > 1 && <> · biggest {money(row.largest.totalAmount)}</>}
                   </small>
-
-                  {/* Named, not silently removed: the app does not get to decide
-                      which of somebody's spending was real. */}
-                  {item.outlier && item.source === 'AVERAGE' && (
-                    <p className="plan-outlier">
-                      <TriangleAlert size={12} />
-                      {money(item.outlier.amount)} of this is “{item.outlier.title}” on{' '}
-                      {format(parseISO(item.outlier.date), 'd MMM')}.
-                      <button onClick={() => patchItem(item.id, { amountOverride: item.median })}>
-                        Use your usual {money(item.median)}
-                      </button>
-                    </p>
-                  )}
+                  <span className="plan-bar"><i style={{ width: `${Math.max(2, share)}%`, background: look.color }} /></span>
                 </div>
-
-                <button className="plan-amount is-editable" onClick={() => setEditingItem(item)}
-                  title="Type your own figure">
-                  {money(item.amountOverride ?? item.monthly)}
-                  <Pencil size={12} />
-                </button>
-
-                <label className="plan-switch" title={item.included ? 'Counted in the plan' : 'Left out'}>
-                  <input
-                    type="checkbox"
-                    checked={item.included}
-                    onChange={(event) => patchItem(item.id, { included: event.target.checked })}
-                  />
-                  <span />
-                </label>
+                <strong className="plan-amount">{money(row.total)}</strong>
               </div>
             )
           })}
 
-          {plan.estimated.items.length === 0 && (
-            <p className="plan-empty">No spending history yet, so there is nothing to estimate from.</p>
+          {!month.loading && month.categories.length === 0 && (
+            <p className="plan-empty">
+              Nothing spent yet this month. Anything you record in{' '}
+              <Link to="/expenses">Money</Link> lands here.
+            </p>
           )}
         </div>
-
-        <button className="text-button planner-recalc" onClick={recalculate} disabled={saving}>
-          <RefreshCw size={14} /> Refresh from my latest spending
-        </button>
       </section>
 
       {suggestions.length > 0 && (
@@ -252,16 +253,6 @@ export function PlannerPage() {
         </section>
       )}
 
-      {editingItem && (
-        <OverrideDialog
-          item={editingItem}
-          onClose={() => setEditingItem(null)}
-          onSave={async (value) => {
-            await patchItem(editingItem.id, { amountOverride: value })
-            setEditingItem(null)
-          }}
-        />
-      )}
     </section>
   )
 }
@@ -274,26 +265,27 @@ export function PlannerPage() {
  * picture is the subtraction rather than four unrelated columns. That is the
  * whole reason this is not a pie — a pie cannot show something being taken away.
  */
-function Waterfall({ plan }: { plan: Plan }) {
+function Waterfall({ plan, spent }: { plan: Plan, spent: number }) {
   const income = Math.max(plan.monthlyIncome, 1)
   const pct = (value: number) => (Math.abs(value) / income) * 100
   const clamp = (value: number) => Math.max(0, Math.min(100, value))
 
   const committed = pct(plan.committed.total)
-  const estimated = pct(plan.estimated.total)
-  const left = pct(plan.canSave)
+  const estimated = pct(spent)
+  const canSave = plan.monthlyIncome - plan.committed.total - spent
+  const left = pct(canSave)
 
   const steps = [
     { key: 'income', label: 'Income', value: plan.monthlyIncome, tone: 'income', bottom: 0, height: 100 },
     // hangs from the top of the income bar
     { key: 'committed', label: 'Committed', value: plan.committed.total, tone: 'committed', bottom: 100 - committed, height: committed },
     // and this one from the bottom of that
-    { key: 'estimated', label: 'Spending', value: plan.estimated.total, tone: 'estimated', bottom: 100 - committed - estimated, height: estimated },
+    { key: 'estimated', label: 'Spent', value: spent, tone: 'estimated', bottom: 100 - committed - estimated, height: estimated },
     {
       key: 'save',
-      label: plan.canSave < 0 ? 'Short' : 'Left to save',
-      value: plan.canSave,
-      tone: plan.canSave < 0 ? 'short' : 'save',
+      label: canSave < 0 ? 'Short' : 'Left',
+      value: canSave,
+      tone: canSave < 0 ? 'short' : 'save',
       bottom: 0,
       height: left,
     },
@@ -373,52 +365,5 @@ function IncomeForm({
         </footer>
       </form>
     </section>
-  )
-}
-
-function OverrideDialog({
-  item, onClose, onSave,
-}: {
-  item: EstimatedItem
-  onClose: () => void
-  onSave: (value: number | null) => void
-}) {
-  const [value, setValue] = useState(String(Math.round(item.amountOverride ?? item.monthly)))
-
-  return (
-    <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal override-modal" role="dialog" aria-modal="true"
-        onMouseDown={(event) => event.stopPropagation()}>
-        <header className="modal-head">
-          <div>
-            <h2>{item.category} each month</h2>
-            <p className="muted">
-              Averaged at {money(item.monthly)}. Your usual month is {money(item.median)}.
-            </p>
-          </div>
-          <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
-        </header>
-
-        <form onSubmit={(event) => { event.preventDefault(); onSave(Number(value) || 0) }}>
-          <div className="field">
-            <span className="control adorned">
-              <IndianRupee size={17} />
-              <input type="number" min="0" step="any" inputMode="decimal" autoFocus
-                value={value} onChange={(event) => setValue(event.target.value)} />
-            </span>
-          </div>
-
-          <footer className="modal-actions">
-            {/* clearing it resumes tracking history rather than pinning zero */}
-            {item.amountOverride !== null && (
-              <button type="button" className="voice-ghost" onClick={() => onSave(null)}>
-                Go back to the average
-              </button>
-            )}
-            <button className="modal-submit">Use this figure</button>
-          </footer>
-        </form>
-      </div>
-    </div>
   )
 }

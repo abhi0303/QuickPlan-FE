@@ -44,8 +44,19 @@ export function useRecurring() {
   }
 
   async function create(payload: CreateRecurringPayload) {
-    await createRecurring(payload)
+    const created = await createRecurring(payload)
     reload()
+
+    /*
+     * An API that does not know `interval` yet will drop it rather than refuse
+     * it, and the schedule would then quietly run every month while the form
+     * said otherwise. Saying so beats letting somebody find out in October.
+     */
+    if (payload.interval && payload.interval > 1 && (created?.interval ?? 1) !== payload.interval) {
+      toast('Saved — but the server is still recording this as every month.', { icon: '\u26A0\uFE0F', duration: 6000 })
+      return
+    }
+
     toast.success('Scheduled')
   }
 

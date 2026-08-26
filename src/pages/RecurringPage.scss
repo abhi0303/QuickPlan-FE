@@ -8,6 +8,10 @@
     gap: 12px;
 }
 
+/* Wrapping rather than a width breakpoint: the sidebar means the content
+   column is far narrower than the viewport, and a media query cannot see that.
+   Five labelled controls plus an amount stop fitting long before the phone
+   breakpoint, and this heals wherever that happens. */
 .recurring-card {
     align-items: center;
     background: var(--surface);
@@ -15,10 +19,14 @@
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-sm);
     display: flex;
+    flex-wrap: wrap;
     gap: 14px;
     padding: 15px 18px;
+    row-gap: 10px;
     transition: opacity .18s ease, border-color .18s ease;
 }
+
+.recurring-card > .rec-copy { flex: 1 1 12rem; }
 
 .recurring-card.is-busy { opacity: .5; pointer-events: none; }
 
@@ -88,6 +96,7 @@
     display: flex;
     flex: none;
     gap: 2px;
+    margin-left: auto;
 }
 
 .rec-actions button {

@@ -9,7 +9,7 @@ import { RecurringHelp } from '../components/recurring/RecurringHelp'
 import { RecurringModal } from '../components/recurring/RecurringModal'
 import { categoryLook } from '../data/expenseCategories'
 import { useRecurring } from '../hooks/useRecurring'
-import { CADENCE_LABEL } from '../services/recurring'
+import { cadenceLabel } from '../services/recurring'
 import type { Recurring } from '../services/recurring'
 import './RecurringPage.scss'
 
@@ -106,7 +106,7 @@ export function RecurringPage() {
                 <div className="rec-copy">
                   <strong>{item.title}</strong>
                   <small>
-                    {CADENCE_LABEL[item.cadence]}
+                    {cadenceLabel(item.cadence, item.interval)}
                     {item.category ? ` · ${item.category}` : ''}
                     {item.endsOn ? ` · until ${format(parseISO(item.endsOn), 'd MMM yyyy')}` : ''}
                   </small>

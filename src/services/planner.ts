@@ -19,6 +19,8 @@ export type CommittedItem = {
   label: string
   category?: string | null
   cadence: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+  /** Every `interval` × cadence; absent means 1. */
+  interval?: number
   /** As entered on the schedule. */
   amount: number
   /** The same thing per month — the only figure the page adds up. */
