@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChartPie, ChevronRight, CircleAlert, Repeat, TrendingUp, Wallet } from 'lucide-react'
+import { Calculator, ChartPie, ChevronRight, CircleAlert, Repeat, TrendingUp, Wallet } from 'lucide-react'
 import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ExpenseRow } from './ExpenseRow'
@@ -114,6 +114,15 @@ export function PersonalLedger() {
             <div>
               <strong>Recurring</strong>
               <small>Rent, EMIs and subscriptions record themselves.</small>
+            </div>
+            <ChevronRight size={18} />
+          </Link>
+
+          <Link to="/expenses/planner" className="ledger-analysis wide">
+            <span className="analysis-icon plan"><Calculator size={18} /></span>
+            <div>
+              <strong>Budget planner</strong>
+              <small>Your income, minus what is already committed — and what is left to save.</small>
             </div>
             <ChevronRight size={18} />
           </Link>

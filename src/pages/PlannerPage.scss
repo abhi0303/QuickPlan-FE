@@ -1,0 +1,358 @@
+/* PlannerPage — styles owned by this page.
+   Shared tokens and primitives live in src/styles/global.scss. */
+
+.planner-page { padding-top: 10px; }
+
+/* The one number the page exists for. Nothing competes with it for space. */
+.planner-headline {
+    background: var(--gradient-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-xl);
+    margin-bottom: 16px;
+    padding: 26px 24px 24px;
+    text-align: center;
+}
+
+.planner-headline strong {
+    display: block;
+    font-size: clamp(34px, 9vw, 46px);
+    font-weight: 800;
+    letter-spacing: -1.6px;
+    line-height: 1.1;
+    margin: 6px 0 8px;
+}
+
+.planner-sub {
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+/* Coming up short is stated, not scolded — a different colour, the same calm. */
+.planner-headline.is-short { background: var(--rose-soft); }
+.planner-headline.is-short strong { color: var(--rose); }
+
+/* --- the subtraction, drawn --- */
+
+.waterfall {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, 1fr);
+    margin-bottom: 16px;
+    padding: 16px 14px 12px;
+}
+
+.fall-step {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fall-value {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: -.3px;
+    white-space: nowrap;
+}
+
+.fall-track {
+    background: var(--surface-alt);
+    border-radius: var(--r-sm);
+    height: 88px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+/* positioned from the bottom, so a bar can hang where the one before it ended */
+.fall-track i {
+    background: var(--fall);
+    border-radius: var(--r-sm);
+    display: block;
+    left: 0;
+    position: absolute;
+    right: 0;
+}
+
+.fall-label {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.fall-step.is-income { --fall: var(--periwinkle); }
+.fall-step.is-committed { --fall: #6366f1; }
+.fall-step.is-estimated { --fall: var(--tangerine); }
+.fall-step.is-save { --fall: var(--primary); }
+.fall-step.is-short { --fall: var(--rose); }
+.fall-step.is-short .fall-value { color: var(--rose); }
+
+/* --- income --- */
+
+.planner-income {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.planner-income small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.planner-income strong {
+    display: block;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.6px;
+}
+
+.planner-ask h1 { font-size: 24px; letter-spacing: -.8px; }
+.planner-ask .muted { margin: 6px 0 20px; }
+.planner-ask form { display: grid; gap: 18px; }
+
+/* --- the two lists --- */
+
+.planner-total {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+    margin-left: auto;
+}
+
+.panel-heading .planner-total { align-self: center; }
+
+.plan-list { display: grid; }
+
+.plan-row {
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    transition: opacity .18s ease;
+}
+
+.plan-row:last-child { border-bottom: 0; }
+.plan-row.is-busy { opacity: .5; pointer-events: none; }
+
+/* Left out of the plan, not deleted from it: still readable, clearly inactive. */
+.plan-row.is-off .plan-copy,
+.plan-row.is-off .plan-amount { opacity: .45; text-decoration: line-through; }
+
+.plan-row.is-off .delta-icon { opacity: .45; }
+
+.plan-copy { min-width: 0; }
+
+.plan-copy strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.plan-copy small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.plan-amount {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+.plan-amount.is-editable {
+    align-items: center;
+    border-radius: var(--r-pill);
+    display: inline-flex;
+    gap: 5px;
+    padding: 5px 10px;
+    transition: background .18s ease;
+}
+
+.plan-amount.is-editable svg { color: var(--muted); }
+.plan-amount.is-editable:hover { background: var(--primary-soft); }
+
+.plan-outlier {
+    align-items: center;
+    color: var(--tangerine);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.plan-outlier button {
+    background: var(--tangerine-soft);
+    border-radius: var(--r-pill);
+    color: var(--tangerine);
+    font-size: 11.5px;
+    font-weight: 800;
+    padding: 3px 9px;
+}
+
+.plan-empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 0;
+}
+
+.planner-recalc { margin-top: 12px; }
+
+/* --- the switch --- */
+
+.plan-switch {
+    cursor: pointer;
+    flex: none;
+    position: relative;
+}
+
+.plan-switch input {
+    height: 100%;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+}
+
+.plan-switch span {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 24px;
+    transition: background .18s ease;
+    width: 42px;
+}
+
+.plan-switch span::after {
+    background: var(--surface);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    content: '';
+    height: 18px;
+    left: 3px;
+    position: absolute;
+    top: 3px;
+    transition: transform .18s ease;
+    width: 18px;
+}
+
+.plan-switch input:checked + span { background: var(--primary); }
+.plan-switch input:checked + span::after { transform: translateX(18px); }
+.plan-switch input:disabled + span { opacity: .5; }
+
+/* --- suggestions --- */
+
+.suggestion-list { display: grid; gap: 8px; }
+
+.suggestion {
+    align-items: center;
+    background: var(--surface-soft);
+    border-radius: var(--r-lg);
+    display: flex;
+    gap: 12px;
+    padding: 13px 14px;
+}
+
+.suggestion-icon {
+    align-items: center;
+    background: var(--tangerine-soft);
+    border-radius: var(--r-md);
+    color: var(--tangerine);
+    display: flex;
+    flex: none;
+    height: 34px;
+    justify-content: center;
+    width: 34px;
+}
+
+.suggestion strong {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.suggestion small {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.suggestion-saves {
+    color: var(--primary-strong);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -.4px;
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.suggestion-saves i {
+    color: var(--muted);
+    display: block;
+    font-size: 10.5px;
+    font-style: normal;
+    font-weight: 600;
+}
+
+.suggestion-dismiss {
+    align-items: center;
+    border-radius: var(--r-pill);
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.suggestion-dismiss:hover { background: var(--rose-soft); color: var(--rose); }
+
+.override-modal { max-width: 380px; }
+.override-modal form { display: grid; gap: 18px; }
+
+.planner-loading {
+    animation: plannerPulse 1.4s ease-in-out infinite;
+    background: var(--surface-soft);
+    border-radius: var(--r-xl);
+    height: 240px;
+}
+
+@keyframes plannerPulse {
+
+    0%,
+    100% { opacity: 1; }
+
+    50% { opacity: .5; }
+}
+
+@media (max-width: 560px) {
+
+    .waterfall { gap: 6px; padding: 14px 10px 10px; }
+    .fall-value { font-size: 11px; }
+    .fall-label { font-size: 10px; }
+    .suggestion { flex-wrap: wrap; }
+    .suggestion-saves { margin-left: auto; }
+}

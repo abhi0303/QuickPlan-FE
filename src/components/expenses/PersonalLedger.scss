@@ -121,6 +121,11 @@
 }
 
 .analysis-icon.alt { background: var(--periwinkle-soft); color: var(--periwinkle); }
+.analysis-icon.plan { background: var(--tangerine-soft); color: var(--tangerine); }
+
+/* the planner answers a bigger question than the other two, so it takes the
+   full width underneath them rather than being a third of a row */
+.ledger-analysis.wide { grid-column: 1 / -1; }
 
 .analysis-icon {
     align-items: center;

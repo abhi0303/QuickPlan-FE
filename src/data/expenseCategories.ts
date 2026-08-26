@@ -6,6 +6,7 @@ import {
   Fuel,
   Gift,
   HeartPulse,
+  House,
   Landmark,
   PiggyBank,
   Plane,
@@ -52,9 +53,11 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   { label: 'Stay', icon: BedDouble, tone: 'tone-stay', color: 'var(--primary)' },
   { label: 'Activities', icon: Ticket, tone: 'tone-activities', color: '#14b8a6' },
   { label: 'Shopping', icon: ShoppingBag, tone: 'tone-shopping', color: 'var(--rose)' },
+  // The commitments cluster: money that leaves on a date somebody else chose.
+  // Rent earns its own entry rather than falling under Bills — it is the
+  // largest line most people have, and the API already sends it as a category.
+  { label: 'Rent', icon: House, tone: 'tone-rent', color: '#1d4ed8' },
   { label: 'Bills', icon: ReceiptText, tone: 'tone-bills', color: '#6366f1' },
-  // the two obligations sit next to Bills: they are the same kind of thing —
-  // money that leaves on a date somebody else chose
   { label: 'EMI', icon: CalendarClock, tone: 'tone-emi', color: '#7c3aed' },
   { label: 'Loan', icon: Landmark, tone: 'tone-loan', color: '#0e7490' },
   // SIPs, FDs and RDs: money that leaves the account on a schedule like the two
