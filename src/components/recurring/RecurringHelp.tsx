@@ -20,7 +20,7 @@ const ACTIONS = [
   {
     icon: SkipForward,
     name: 'Skip',
-    what: 'Misses the next run only, then carries on as normal. Useful when you have already paid this one by hand.',
+    what: 'Misses the next turn only, then carries on as normal. Useful when you have already paid this one by hand.',
   },
   {
     icon: Zap,

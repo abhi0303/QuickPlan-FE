@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { format } from 'date-fns'
+import { addMonths, format, getDaysInMonth, setDate, startOfDay } from 'date-fns'
 import { createPortal } from 'react-dom'
-import { CalendarDays, CircleAlert, IndianRupee, LoaderCircle, Plus, Repeat, Save, X } from 'lucide-react'
+import {
+  CalendarCheck, CalendarDays, CircleAlert, IndianRupee, LoaderCircle, Plus, Repeat, Save, X,
+} from 'lucide-react'
 import { getApiErrorMessage } from '../../services/api'
 import { CADENCES, CADENCE_LABEL } from '../../services/recurring'
+import { nextRuns } from './schedulePreview'
 import type { Cadence, CreateRecurringPayload, Recurring } from '../../services/recurring'
 import { EXPENSE_CATEGORIES } from '../../data/expenseCategories'
 import './RecurringModal.scss'
@@ -21,6 +24,23 @@ import './RecurringModal.scss'
  */
 
 const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/**
+ * The twelve months this schedule could start in, as its actual run date.
+ *
+ * The current month is always offered even when its day has gone: "I paid this
+ * month already, so the next is the month after next" is exactly the thing an
+ * entry point is for. A past anchor sets the phase without producing a run.
+ */
+function startMonthOptions(dayOfMonth: number, today: Date) {
+  const options: { value: string, label: string, date: Date }[] = []
+  for (let ahead = 0; ahead < 12; ahead += 1) {
+    const month = addMonths(today, ahead)
+    const run = setDate(month, Math.min(dayOfMonth, getDaysInMonth(month)))
+    options.push({ value: format(month, 'yyyy-MM'), label: format(run, 'MMMM yyyy'), date: run })
+  }
+  return options
+}
 
 type Props = {
   open: boolean
@@ -49,6 +69,17 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
   const [dayOfMonth, setDayOfMonth] = useState(String(item?.dayOfMonth ?? today.getDate()))
   const [weekday, setWeekday] = useState(String(item?.weekday ?? today.getDay()))
   const [endsOn, setEndsOn] = useState(item?.endsOn ? item.endsOn.slice(0, 10) : '')
+  // when the first one falls. Everything after it is counted from here, which
+  // is what makes "the 5th of alternate months" a thing you can state once.
+  const [startsOn, setStartsOn] = useState('')
+  /*
+   * Alternate months are the case a plain cadence cannot express: paid in
+   * August, skipped in September, paid again in October. Which month it starts
+   * in is the whole of the setting — everything after follows from it — so the
+   * entry point is a month, not a date.
+   */
+  const [alternate, setAlternate] = useState((item?.interval ?? 1) > 1)
+  const [startMonth, setStartMonth] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -66,6 +97,29 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
     }
   }, [onClose])
 
+  /*
+   * What the form is actually promising, in dates.
+   *
+   * Described in words — "monthly, on the 5th, from September" — somebody still
+   * has to work out which months are in. Shown as dates, nobody does.
+   */
+  const monthOptions = startMonthOptions(Number(dayOfMonth) || today.getDate(), today)
+  const chosenMonth = monthOptions.find((option) => option.value === startMonth) ?? monthOptions[0]
+  // monthly says its start as a month; every other cadence still uses a date
+  const anchor = cadence === 'MONTHLY'
+    ? (alternate && chosenMonth ? format(chosenMonth.date, 'yyyy-MM-dd') : '')
+    : startsOn
+  const interval = cadence === 'MONTHLY' && alternate ? 2 : 1
+
+  const preview = editing ? [] : nextRuns({
+    interval,
+    cadence,
+    dayOfMonth: Number(dayOfMonth) || undefined,
+    weekday: Number(weekday),
+    startsOn: anchor ? new Date(`${anchor}T00:00:00`) : null,
+    endsOn: endsOn ? new Date(`${endsOn}T00:00:00`) : null,
+  }, alternate ? 4 : 5)
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const trimmed = title.trim()
@@ -73,6 +127,13 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
 
     if (!trimmed) return setError('Give it a name — "Rent", "Netflix".')
     if (value <= 0) return setError('Enter an amount greater than zero.')
+    // a schedule that stops before it starts would never run once
+    if (anchor && endsOn && endsOn < anchor) {
+      return setError('It cannot stop before the first one. Move the end date, or clear it.')
+    }
+    if (!editing && preview.length === 0) {
+      return setError('Nothing would ever run with these dates. Check when it starts and stops.')
+    }
 
     setSaving(true)
     try {
@@ -91,6 +152,8 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
           category: category || undefined,
           ...(cadence === 'MONTHLY' ? { dayOfMonth: Number(dayOfMonth) || today.getDate() } : {}),
           ...(cadence === 'WEEKLY' ? { weekday: Number(weekday) } : {}),
+          ...(anchor ? { startsOn: anchor } : {}),
+          ...(interval > 1 ? { interval } : {}),
           ...(endsOn ? { endsOn } : {}),
         })
       }
@@ -104,7 +167,7 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal recurring-modal" role="dialog" aria-modal="true" aria-labelledby="recurring-title"
+      <div className="modal recurring-modal is-framed" role="dialog" aria-modal="true" aria-labelledby="recurring-title"
         onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-head">
           <div>
@@ -115,6 +178,8 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
         </header>
 
         <form onSubmit={handleSubmit}>
+          {/* only the fields scroll; the title and the buttons stay put */}
+          <div className="modal-body">
           <div className="field">
             <label className="field-label" htmlFor="rec-title">What is it?</label>
             <input id="rec-title" className="control" ref={titleRef} value={title}
@@ -175,6 +240,33 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
                       Months without a {dayOfMonth}th use their last day, so February still gets it.
                     </p>
                   )}
+
+                  <label className="rec-alternate">
+                    <input type="checkbox" checked={alternate} disabled={saving}
+                      onChange={(event) => { setAlternate(event.target.checked); setError('') }} />
+                    <span />
+                    <div>
+                      <strong>Every other month</strong>
+                      <small>Pay one month, skip the next, pay again.</small>
+                    </div>
+                  </label>
+
+                  {alternate && (
+                    <div className="rec-start-month">
+                      <label className="field-label" htmlFor="rec-start-month">Starting from</label>
+                      <select id="rec-start-month" value={chosenMonth?.value ?? ''} disabled={saving}
+                        onChange={(event) => setStartMonth(event.target.value)}>
+                        {monthOptions.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <p className="field-hint">
+                        {chosenMonth && chosenMonth.date < startOfDay(today)
+                          ? `${format(chosenMonth.date, 'd MMM')} has already gone — it sets the rhythm, and the next one is ${preview[0] ? format(preview[0], 'd MMM') : 'later'}.`
+                          : 'This month is the one it runs in. The months between are skipped.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -191,19 +283,52 @@ function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
             </>
           )}
 
+          {/* Editing cannot move the first run: it has already happened. */}
+          {!editing && cadence !== 'MONTHLY' && (
+            <div className="field">
+              <label className="field-label" htmlFor="rec-starts">
+                First one <span className="field-optional">optional</span>
+              </label>
+              <span className="control adorned">
+                <CalendarDays size={17} />
+                <input id="rec-starts" type="date" value={startsOn} min={format(today, 'yyyy-MM-dd')}
+                  onChange={(e) => setStartsOn(e.target.value)} disabled={saving} />
+              </span>
+              <p className="field-hint">
+                Leave it empty to start at the next{' '}
+                {cadence === 'WEEKLY' ? WEEKDAYS[Number(weekday)] : 'occurrence'} from today.
+              </p>
+            </div>
+          )}
+
           <div className="field">
             <label className="field-label" htmlFor="rec-ends">
               Stop after <span className="field-optional">optional</span>
             </label>
             <span className="control adorned">
               <CalendarDays size={17} />
-              <input id="rec-ends" type="date" value={endsOn} min={format(today, 'yyyy-MM-dd')}
+              <input id="rec-ends" type="date" value={endsOn} min={anchor || format(today, 'yyyy-MM-dd')}
                 onChange={(e) => setEndsOn(e.target.value)} disabled={saving} />
             </span>
             <p className="field-hint">Leave it empty and it runs until you stop it.</p>
           </div>
 
+          {preview.length > 0 && (
+            <div className="rec-preview">
+              <span className="rec-preview-label">
+                <CalendarCheck size={13} /> {editing ? 'Runs on' : 'It will run on'}
+              </span>
+              <div className="rec-preview-dates">
+                {preview.map((run) => (
+                  <span key={run.toISOString()}>{format(run, 'd MMM')}</span>
+                ))}
+                <span className="rec-preview-more">…</span>
+              </div>
+            </div>
+          )}
+
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
+          </div>
 
           <footer className="modal-actions">
             <button type="button" className="voice-ghost" onClick={onClose} disabled={saving}>Cancel</button>

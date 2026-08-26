@@ -17,7 +17,7 @@ import { idbAll, idbDelete, idbPut, QUEUE_STORE, storageAvailable } from './db'
  *    it, so the queue is flushed oldest first and stops at the first failure.
  */
 
-export type QueuedEntity = 'task' | 'reminder' | 'expense'
+export type QueuedEntity = 'task' | 'reminder' | 'expense' | 'plan'
 
 export type QueuedMutation = {
   /** Also the Idempotency-Key sent with the request. */

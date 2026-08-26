@@ -18,8 +18,42 @@ export const CADENCE_LABEL: Record<Cadence, string> = {
   YEARLY: 'Every year',
 }
 
+const PLURAL: Record<Cadence, string> = {
+  DAILY: 'days',
+  WEEKLY: 'weeks',
+  MONTHLY: 'months',
+  YEARLY: 'years',
+}
+
+const EVERY_OTHER: Record<Cadence, string> = {
+  DAILY: 'Every other day',
+  WEEKLY: 'Every other week',
+  MONTHLY: 'Every other month',
+  YEARLY: 'Every other year',
+}
+
+/**
+ * How often, in words.
+ *
+ * "Every other month" rather than "Every 2 months" for the commonest case,
+ * because that is how people say it; anything longer counts.
+ */
+export function cadenceLabel(cadence: Cadence, interval?: number): string {
+  const every = Math.max(1, Math.round(interval ?? 1))
+  if (every === 1) return CADENCE_LABEL[cadence]
+  if (every === 2) return EVERY_OTHER[cadence]
+  return `Every ${every} ${PLURAL[cadence]}`
+}
+
 export type Recurring = {
   id: string
+  /**
+   * Every `interval` × cadence — 2 with MONTHLY is every other month.
+   *
+   * Absent until the API grows it; everything here reads it as 1, which is
+   * what every existing schedule means.
+   */
+  interval?: number
   scope: 'PERSONAL' | 'GROUP'
   groupId?: string | null
   title: string
@@ -40,6 +74,8 @@ export type CreateRecurringPayload = {
   title: string
   amount: number
   cadence: Cadence
+  /** Every `interval` × cadence. Needs the API change in docs/recurring-interval.md. */
+  interval?: number
   category?: string
   scope?: 'PERSONAL' | 'GROUP'
   groupId?: string

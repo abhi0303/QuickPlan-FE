@@ -107,7 +107,7 @@ function BudgetDialog({ budget, taken, onClose, onSave, onEdit }: DialogProps) {
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal budget-modal" role="dialog" aria-modal="true" aria-labelledby="budget-title"
+      <div className="modal budget-modal is-framed" role="dialog" aria-modal="true" aria-labelledby="budget-title"
         onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-head">
           <div>
@@ -118,6 +118,8 @@ function BudgetDialog({ budget, taken, onClose, onSave, onEdit }: DialogProps) {
         </header>
 
         <form onSubmit={handleSubmit}>
+          {/* only the fields scroll; the title and the buttons stay put */}
+          <div className="modal-body">
           {!editing && (
             <div className="field">
               <label className="field-label" htmlFor="budget-category">What for?</label>
@@ -188,6 +190,8 @@ function BudgetDialog({ budget, taken, onClose, onSave, onEdit }: DialogProps) {
           </div>
 
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
+
+          </div>
 
           <footer className="modal-actions">
             <button type="button" className="voice-ghost" onClick={onClose} disabled={saving}>Cancel</button>

@@ -80,7 +80,7 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal settle-modal" role="dialog" aria-modal="true" aria-labelledby="settle-title"
+      <div className="modal settle-modal is-framed" role="dialog" aria-modal="true" aria-labelledby="settle-title"
         onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-head">
           <div>
@@ -90,6 +90,8 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
           <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </header>
 
+        {/* who you are paying is context for the whole dialog, so it stays
+            with the header rather than scrolling away from the amount */}
         <div className="settle-who">
           <span className="friend-avatar" style={avatarStyle(seed.toName)}>
             {seed.toName.charAt(0).toUpperCase()}
@@ -105,6 +107,8 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* only the fields scroll; the title and the buttons stay put */}
+          <div className="modal-body">
           <div className="field">
             <label className="field-label" htmlFor="settle-amount">How much are you paying?</label>
             <span className="control adorned">
@@ -172,6 +176,8 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
           </div>
 
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
+
+          </div>
 
           <footer className="modal-actions">
             <button type="button" className="voice-ghost" onClick={onClose} disabled={busy}>Cancel</button>

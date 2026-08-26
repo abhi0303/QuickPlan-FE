@@ -127,7 +127,7 @@ function PersonalExpenseDialog({ expense, draft, onClose, onSaved }: DialogProps
 
   return createPortal(
     <div className="modal-backdrop" onMouseDown={onClose}>
-      <div className="modal personal-expense-modal" role="dialog" aria-modal="true"
+      <div className="modal personal-expense-modal is-framed" role="dialog" aria-modal="true"
         aria-labelledby="personal-expense-title" onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-head">
           <div>
@@ -138,6 +138,8 @@ function PersonalExpenseDialog({ expense, draft, onClose, onSaved }: DialogProps
         </header>
 
         <form onSubmit={handleSubmit}>
+          {/* only the fields scroll; the title and the buttons stay put */}
+          <div className="modal-body">
           <div className="field">
             <label className="field-label" htmlFor="pex-title">What was it for?</label>
             <input id="pex-title" className="control" ref={titleRef} value={title}
@@ -193,6 +195,8 @@ function PersonalExpenseDialog({ expense, draft, onClose, onSaved }: DialogProps
           </div>
 
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
+
+          </div>
 
           <footer className="modal-actions">
             <button type="button" className="voice-ghost" onClick={onClose} disabled={saving}>Cancel</button>
