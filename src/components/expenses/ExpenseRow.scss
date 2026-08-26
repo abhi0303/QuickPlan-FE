@@ -37,22 +37,6 @@
     width: 40px;
 }
 
-.expense-icon.tone-food { --tone: var(--tangerine); }
-.expense-icon.tone-groceries { --tone: #16a34a; }
-.expense-icon.tone-drinks { --tone: #a855f7; }
-.expense-icon.tone-smoke { --tone: #a16207; }
-.expense-icon.tone-travel { --tone: var(--periwinkle); }
-.expense-icon.tone-fuel { --tone: #ef4444; }
-.expense-icon.tone-parking { --tone: #0ea5e9; }
-.expense-icon.tone-transport { --tone: #f59e0b; }
-.expense-icon.tone-stay { --tone: var(--primary); }
-.expense-icon.tone-activities { --tone: #14b8a6; }
-.expense-icon.tone-shopping { --tone: var(--rose); }
-.expense-icon.tone-bills { --tone: #6366f1; }
-.expense-icon.tone-health { --tone: #e11d48; }
-.expense-icon.tone-gifts { --tone: #d946ef; }
-.expense-icon.tone-other { --tone: #64748b; }
-.expense-icon.tone-plain { --tone: var(--muted); }
 
 .expense-title {
     font-size: 15px;
@@ -185,6 +169,21 @@
 .expense-share strong:only-child {
     padding: 3px 0;
 }
+
+.expense-auto {
+    background: var(--periwinkle-soft);
+    border-radius: var(--r-pill);
+    color: var(--periwinkle);
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    padding: 1px 7px;
+    text-transform: uppercase;
+}
+
+/* the chip is its own label, so the dot separator would read as punctuation
+   inside it */
+.expense-meta span.expense-auto::before { content: none; margin: 0; }
 
 .expense-note {
     font-style: italic;

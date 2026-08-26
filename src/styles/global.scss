@@ -1422,3 +1422,51 @@ select {
         --expense-amount-inset: var(--expense-row-pad);
     }
 }
+
+/* Category colour, defined once.
+   Any glyph that carries a category adds its .tone-* class and reads var(--tone)
+   for whatever it needs it for — a background wash, a stroke, a fill. Three
+   components were carrying identical copies of this map before. */
+.tone-food { --tone: var(--tangerine); }
+.tone-groceries { --tone: #16a34a; }
+.tone-drinks { --tone: #a855f7; }
+.tone-smoke { --tone: #a16207; }
+.tone-travel { --tone: var(--periwinkle); }
+.tone-fuel { --tone: #ef4444; }
+.tone-parking { --tone: #0ea5e9; }
+.tone-transport { --tone: #f59e0b; }
+.tone-stay { --tone: var(--primary); }
+.tone-activities { --tone: #14b8a6; }
+.tone-shopping { --tone: var(--rose); }
+.tone-bills { --tone: #6366f1; }
+.tone-emi { --tone: #7c3aed; }
+.tone-loan { --tone: #0e7490; }
+.tone-investments { --tone: #65a30d; }
+.tone-health { --tone: #e11d48; }
+.tone-gifts { --tone: #d946ef; }
+.tone-other { --tone: #64748b; }
+.tone-plain { --tone: var(--muted); }
+
+/* Two lists lay their budget rings out the same way. */
+.budget-rings {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+}
+
+@media (max-width: 460px) {
+    .budget-rings { grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); }
+}
+
+/* The small category glyph, shared by the analysis and budget lists. */
+.delta-icon {
+    align-items: center;
+    background: color-mix(in srgb, var(--tone) 15%, var(--surface));
+    border-radius: 10px;
+    color: var(--tone);
+    display: flex;
+    flex: none;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+}

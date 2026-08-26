@@ -1,0 +1,88 @@
+.budget-ring {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 10px 13px;
+    text-align: center;
+    transition: border-color .18s ease, box-shadow .18s ease;
+    width: 100%;
+}
+
+button.budget-ring:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+
+.ring-art {
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+
+.ring-art > svg { display: block; }
+
+.ring-track {
+    fill: none;
+    stroke: var(--surface-alt);
+}
+
+.ring-fill {
+    fill: none;
+    stroke: var(--ring);
+    stroke-linecap: round;
+    transition: stroke-dasharray .4s ease;
+}
+
+/* Where the period is, not where the money is — a month a third gone should
+   have a third of the ring filled. A butt cap so it reads as a notch cut
+   across the ring; a round one looked like a stray dot beside it. */
+.ring-pace {
+    fill: none;
+    opacity: .45;
+    stroke: var(--text);
+    stroke-linecap: butt;
+}
+
+.ring-glyph {
+    align-items: center;
+    color: var(--tone);
+    display: flex;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+}
+
+
+/* On track is quiet, over budget is not. The tone is carried by the ring
+   rather than by the whole card, so a row of them stays calm. */
+.budget-ring.is-on-track { --ring: var(--primary); }
+.budget-ring.is-warning { --ring: var(--tangerine); }
+
+.budget-ring.is-exceeded {
+    --ring: var(--rose);
+    border-color: color-mix(in srgb, var(--rose) 40%, var(--border));
+}
+
+.ring-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ring-figure {
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.ring-figure i { font-style: normal; font-weight: 500; opacity: .85; }
+
+.budget-ring.is-exceeded .ring-figure { color: var(--rose); }

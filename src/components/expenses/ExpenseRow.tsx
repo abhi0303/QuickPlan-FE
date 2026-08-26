@@ -64,6 +64,8 @@ export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, o
         {expense.category && <span className="expense-cat-text">{expense.category}</span>}
         <span>{whenLabel(expense.date, timeOnly)}</span>
         {personal && expense.notes && <span className="expense-note">{expense.notes}</span>}
+        {/* posted by a recurring schedule rather than typed by anyone */}
+        {expense.createdVia === 'SYSTEM' && <span className="expense-auto">auto</span>}
       </div>
 
       <div className="expense-share">

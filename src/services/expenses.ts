@@ -45,6 +45,8 @@ export type Expense = {
   splitType: SplitType | null
   /** Free text. The API exposes this as `notes`; older rows used `description`. */
   notes?: string | null
+  /** SYSTEM means a recurring schedule posted it rather than a person. */
+  createdVia?: 'MANUAL' | 'VOICE' | 'IMPORT' | 'SYSTEM'
   category?: string | null
   date: string
   paidBy?: { id: string; name: string; email: string }

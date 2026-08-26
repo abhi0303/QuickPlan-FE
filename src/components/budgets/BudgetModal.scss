@@ -1,0 +1,20 @@
+.budget-modal { max-width: 440px; }
+.budget-modal form { display: grid; gap: 20px; }
+
+/* Offered, not imposed: one tap accepts last period's number, and ignoring it
+   costs nothing. */
+.budget-suggest {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: inline-flex;
+    font-size: 12.5px;
+    font-weight: 700;
+    gap: 6px;
+    margin-top: 9px;
+    padding: 8px 13px;
+    text-align: left;
+}
+
+.budget-suggest:hover { background: color-mix(in srgb, var(--primary) 22%, transparent); }
