@@ -68,14 +68,17 @@ export function useGroupDetail(groupId: string) {
     }
   }
 
-  async function settle(payload: CreateSettlementPayload) {
+  /** Reports whether it landed, so a dialog can stay open on failure. */
+  async function settle(payload: CreateSettlementPayload): Promise<boolean> {
     setBusyId(payload.toUserId)
     try {
       await createSettlement(groupId, payload)
       refresh()
       toast.success('Payment recorded')
+      return true
     } catch (e) {
       toast.error(getApiErrorMessage(e, 'Could not record that payment.'))
+      return false
     } finally {
       setBusyId('')
     }
