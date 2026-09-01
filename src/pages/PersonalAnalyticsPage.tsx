@@ -7,6 +7,7 @@ import {
 import { BarList, ChartLegend, ColumnChart, DonutChart } from '../components/charts/Charts'
 import { categoryLook } from '../data/expenseCategories'
 import { LEVEL_LABEL, LEVELS, usePersonalAnalytics } from '../hooks/usePersonalAnalytics'
+import { sharePercent } from '../utils/share'
 import '../styles/analytics.scss'
 import './PersonalAnalyticsPage.scss'
 
@@ -47,6 +48,18 @@ export function PersonalAnalyticsPage() {
         </div>
       </section>
     )
+  }
+
+  /** The expenses behind one slice, newest first. */
+  function detailsFor(label: string) {
+    return expenses
+      .filter((expense) => (expense.category?.trim() || 'Uncategorised') === label)
+      .map((expense) => ({
+        id: expense.id,
+        title: expense.title,
+        sub: format(parseISO(expense.date), 'd MMM, h:mm a'),
+        value: expense.totalAmount,
+      }))
   }
 
   const spendingMore = analytics.delta > 0
@@ -215,7 +228,9 @@ export function PersonalAnalyticsPage() {
 
                   <div className="category-split">
                     <DonutChart slices={analytics.categories} total={analytics.spent} caption="total" format={money} />
-                    <ChartLegend slices={analytics.categories} format={money} />
+                    {/* the page already added these up to draw the donut, so
+                        opening a slice costs nothing but the click */}
+                    <ChartLegend slices={analytics.categories} format={money} detailsFor={detailsFor} />
                   </div>
                 </section>
 
@@ -232,7 +247,7 @@ export function PersonalAnalyticsPage() {
                           <span className={`delta-icon ${look.tone}`}><Icon size={15} /></span>
                           <div className="delta-copy">
                             <strong>{row.label}</strong>
-                            <small>{row.count} expense{row.count === 1 ? '' : 's'} · {Math.round(row.share)}% of the total</small>
+                            <small>{row.count} expense{row.count === 1 ? '' : 's'} · {sharePercent(row.share)} of the total</small>
                           </div>
                           <div className="delta-values">
                             <strong>{money(row.value)}</strong>

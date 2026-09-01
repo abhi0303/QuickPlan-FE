@@ -6,6 +6,7 @@ import { categoryLook } from '../data/expenseCategories'
 import { useMonthSpending } from '../hooks/useMonthSpending'
 import { usePlanner } from '../hooks/usePlanner'
 import { cadenceLabel } from '../services/recurring'
+import { sharePercent } from '../utils/share'
 import type { Plan } from '../services/planner'
 import './PlannerPage.scss'
 
@@ -210,7 +211,7 @@ export function PlannerPage() {
                 <div className="plan-copy">
                   <strong>{row.category}</strong>
                   <small>
-                    {row.count} expense{row.count === 1 ? '' : 's'} · {Math.round(share)}% of the month
+                    {row.count} expense{row.count === 1 ? '' : 's'} · {sharePercent(share)} of the month
                     {row.largest && row.count > 1 && <> · biggest {money(row.largest.totalAmount)}</>}
                   </small>
                   <span className="plan-bar"><i style={{ width: `${Math.max(2, share)}%`, background: look.color }} /></span>

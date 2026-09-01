@@ -1,4 +1,7 @@
+import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { colorFor } from './palette'
+import { sharePercent } from '../../utils/share'
 import './Charts.scss'
 
 /**
@@ -65,22 +68,70 @@ export function DonutChart({
   )
 }
 
+export type LegendDetail = { id: string, title: string, sub?: string, value: number }
+
+/**
+ * The donut's key, and — where the caller can supply them — what each slice is
+ * made of.
+ *
+ * "Bills, ₹25,360, 57%" invites exactly one question, and the page already
+ * holds the answer: it added those expenses up to draw the slice. So a row with
+ * detail opens to show them rather than sending anybody off to filter a list.
+ */
 export function ChartLegend({
-  slices, format,
+  slices, format, detailsFor,
 }: {
   slices: DonutSlice[]
   format: (value: number) => string
+  /** Return the expenses behind a slice to make its row expandable. */
+  detailsFor?: (label: string) => LegendDetail[]
 }) {
+  const [open, setOpen] = useState<string | null>(null)
+
   return (
     <ul className="chart-legend">
-      {slices.map((slice, index) => (
-        <li key={slice.label}>
-          <i style={{ background: colorFor(slice.label, index) }} />
-          <span className="legend-label">{slice.label}</span>
-          <span className="legend-value">{format(slice.value)}</span>
-          <span className="legend-share">{slice.share.toFixed(0)}%</span>
-        </li>
-      ))}
+      {slices.map((slice, index) => {
+        const details = detailsFor?.(slice.label) ?? []
+        const expandable = details.length > 0
+        const isOpen = open === slice.label
+
+        const row = (
+          <>
+            <i style={{ background: colorFor(slice.label, index) }} />
+            <span className="legend-label">{slice.label}</span>
+            <span className="legend-value">{format(slice.value)}</span>
+            <span className="legend-share">{sharePercent(slice.share)}</span>
+            {expandable && (
+              <ChevronDown size={14} className={`legend-caret ${isOpen ? 'is-open' : ''}`} />
+            )}
+          </>
+        )
+
+        return (
+          <li key={slice.label} className={`${expandable ? 'is-expandable' : ''} ${isOpen ? 'is-open' : ''}`}>
+            {expandable ? (
+              <button type="button" className="legend-row" aria-expanded={isOpen}
+                onClick={() => setOpen((current) => (current === slice.label ? null : slice.label))}>
+                {row}
+              </button>
+            ) : (
+              <span className="legend-row">{row}</span>
+            )}
+
+            {isOpen && (
+              <ul className="legend-details">
+                {details.map((detail) => (
+                  <li key={detail.id}>
+                    <span className="detail-title">{detail.title}</span>
+                    {detail.sub && <span className="detail-sub">{detail.sub}</span>}
+                    <span className="detail-value">{format(detail.value)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        )
+      })}
     </ul>
   )
 }

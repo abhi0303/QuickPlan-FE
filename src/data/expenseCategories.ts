@@ -11,6 +11,7 @@ import {
   PiggyBank,
   Plane,
   ReceiptText,
+  Shirt,
   ShoppingBag,
   ShoppingBasket,
   SquareParking,
@@ -18,6 +19,7 @@ import {
   UtensilsCrossed,
   Wallet,
   Wine,
+  Wrench,
 } from 'lucide-react'
 
 /**
@@ -53,6 +55,11 @@ export const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   { label: 'Stay', icon: BedDouble, tone: 'tone-stay', color: 'var(--primary)' },
   { label: 'Activities', icon: Ticket, tone: 'tone-activities', color: '#14b8a6' },
   { label: 'Shopping', icon: ShoppingBag, tone: 'tone-shopping', color: 'var(--rose)' },
+  // Paying somebody to keep the household running: pressing and washing, and
+  // the tap, the geyser, the electrician. Kept out of Bills because a bill
+  // arrives whether or not anything happened.
+  { label: 'Laundry', icon: Shirt, tone: 'tone-laundry', color: '#0891b2' },
+  { label: 'Repairs', icon: Wrench, tone: 'tone-repairs', color: '#78716c' },
   // The commitments cluster: money that leaves on a date somebody else chose.
   // Rent earns its own entry rather than falling under Bills — it is the
   // largest line most people have, and the API already sends it as a category.
