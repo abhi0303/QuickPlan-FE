@@ -44,6 +44,18 @@ export function GroupAnalyticsPage() {
 
   const empty = analytics.count === 0
 
+  /** What a slice is made of — the same question this donut has always invited. */
+  function detailsFor(label: string) {
+    return expenses
+      .filter((expense) => (expense.category?.trim() || 'Uncategorised') === label)
+      .map((expense) => ({
+        id: expense.id,
+        title: expense.title,
+        sub: `${expense.iPaid ? 'You' : expense.paidBy?.name?.split(' ')[0] ?? 'Someone'} paid · ${format(parseISO(expense.date), 'd MMM')}`,
+        value: expense.totalAmount,
+      }))
+  }
+
   return (
     <section className="analytics-page">
       <Link to={`/groups/${id}`} className="back-link">
@@ -221,7 +233,7 @@ export function GroupAnalyticsPage() {
                   caption="total"
                   format={money}
                 />
-                <ChartLegend slices={analytics.byCategory} format={money} />
+                <ChartLegend slices={analytics.byCategory} format={money} detailsFor={detailsFor} />
               </div>
             </section>
 
