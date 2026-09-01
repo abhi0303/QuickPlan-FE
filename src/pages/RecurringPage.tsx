@@ -1,14 +1,17 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import {
-  ArrowLeft, CircleAlert, CircleHelp, Pause, Pencil, Play, Plus, Repeat, SkipForward, Trash2, Zap,
+  ArrowLeft, CircleAlert, CircleHelp, Lightbulb, Pause, Pencil, Play, Plus, Repeat, SkipForward,
+  Trash2, X, Zap,
 } from 'lucide-react'
 import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { RecurringHelp } from '../components/recurring/RecurringHelp'
 import { RecurringModal } from '../components/recurring/RecurringModal'
 import { categoryLook } from '../data/expenseCategories'
+import { usePersonalExpenses } from '../hooks/usePersonalExpenses'
 import { useRecurring } from '../hooks/useRecurring'
+import { detectRecurring } from '../services/recurringSuggestions'
 import { cadenceLabel } from '../services/recurring'
 import type { Recurring } from '../services/recurring'
 import './RecurringPage.scss'
@@ -23,6 +26,12 @@ import './RecurringPage.scss'
  */
 
 const money = (value: number) => `₹${Math.round(value).toLocaleString('en-IN')}`
+
+/** 1st, 2nd, 3rd — the 11th–13th are the exceptions. */
+function ordinal(day: number) {
+  if (day >= 11 && day <= 13) return 'th'
+  return ['th', 'st', 'nd', 'rd'][day % 10] ?? 'th'
+}
 
 /** "in 3 days" beats a date you have to subtract from today yourself. */
 function nextLabel(iso: string) {
@@ -43,6 +52,19 @@ export function RecurringPage() {
   const [editing, setEditing] = useState<Recurring | null>(null)
   const [pendingStop, setPendingStop] = useState<Recurring | null>(null)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [draft, setDraft] = useState<{ title: string, amount: number, category?: string | null, dayOfMonth?: number } | null>(null)
+  const [ignored, setIgnored] = useState<string[]>([])
+
+  /*
+   * The same bill, the same day, three months running. The history already
+   * knows which expenses those are — the only thing missing was somebody
+   * remembering to set the schedule up.
+   */
+  const { expenses } = usePersonalExpenses()
+  const suggestions = useMemo(
+    () => detectRecurring(expenses, items).filter((row) => !ignored.includes(row.key)),
+    [expenses, items, ignored],
+  )
 
   const active = items.filter((item) => !item.pausedAt)
   const monthly = active
@@ -83,6 +105,33 @@ export function RecurringPage() {
           <p>{error}</p>
           <button className="text-button" onClick={retry}>Try again</button>
         </div>
+      )}
+
+      {!loading && !error && suggestions.length > 0 && (
+        <section className="rec-suggestions">
+          <h2><Lightbulb size={15} /> You keep paying these</h2>
+          {suggestions.slice(0, 3).map((row) => (
+            <div className="rec-suggestion" key={row.key}>
+              <div>
+                <strong>{row.title} · {money(row.amount)}</strong>
+                <small>
+                  Around the {row.dayOfMonth}{ordinal(row.dayOfMonth)} for {row.months.length} months
+                  running. Schedule it and stop typing it in.
+                </small>
+              </div>
+              <div className="rec-suggestion-actions">
+                <button className="text-button" onClick={() => setIgnored((current) => [...current, row.key])}>
+                  <X size={14} /> Not this
+                </button>
+                <button className="quick-add solid" onClick={() => setDraft({
+                  title: row.title, amount: row.amount, category: row.category, dayOfMonth: row.dayOfMonth,
+                })}>
+                  Schedule it
+                </button>
+              </div>
+            </div>
+          ))}
+        </section>
       )}
 
       {!loading && !error && items.length === 0 && (
@@ -155,9 +204,10 @@ export function RecurringPage() {
       <RecurringHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <RecurringModal
-        open={adding || editing !== null}
+        open={adding || editing !== null || draft !== null}
         item={editing}
-        onClose={() => { setAdding(false); setEditing(null) }}
+        draft={draft}
+        onClose={() => { setAdding(false); setEditing(null); setDraft(null) }}
         onSave={create}
         onEdit={async (id, patch) => {
           const target = items.find((row) => row.id === id)

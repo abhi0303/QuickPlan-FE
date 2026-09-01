@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { getApiErrorMessage } from '../services/api'
-import { byDateDesc, deleteExpense, listPersonalExpenses } from '../services/expenses'
+import { byDateDesc, deleteExpense, listAllPersonalExpenses } from '../services/expenses'
 import type { Expense, ExpenseFilters } from '../services/expenses'
 import { pendingCreates } from '../services/offline/queue'
 import { useAppStore } from '../store/useAppStore'
@@ -26,10 +26,10 @@ export function usePersonalExpenses(filters: ExpenseFilters = {}) {
   const cache = useCachedList<Expense[]>('expenses:personal')
 
   // an inline object literal would be a new value every render
-  const { from, to, category, limit } = filters
+  const { from, to, category } = filters
   const query = useCallback(
-    (): ExpenseFilters => ({ from, to, category, limit }),
-    [from, to, category, limit],
+    (): Omit<ExpenseFilters, 'limit' | 'offset'> => ({ from, to, category }),
+    [from, to, category],
   )
 
   useEffect(() => {
@@ -42,7 +42,12 @@ export function usePersonalExpenses(filters: ExpenseFilters = {}) {
       }
     })
 
-    listPersonalExpenses(query())
+    /*
+     * The whole ledger, not the first page. Searching and filtering only mean
+     * something over everything that was recorded, and the analysis page
+     * already walks the same pages — the cache makes the second visit free.
+     */
+    listAllPersonalExpenses(query())
       .then((page) => {
         if (cancelled) return
         setExpenses(page.items)

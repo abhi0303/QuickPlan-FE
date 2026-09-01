@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Calculator, ChartPie, ChevronRight, CircleAlert, Repeat, TrendingUp, Wallet } from 'lucide-react'
+import {
+  Calculator, ChartPie, ChevronRight, CircleAlert, Repeat, Search, TrendingUp, Wallet, X,
+} from 'lucide-react'
 import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ExpenseRow } from './ExpenseRow'
 import { PersonalExpenseModal } from './PersonalExpenseModal'
 import { BudgetStrip } from '../budgets/BudgetStrip'
+import { applyFilters, EMPTY_FILTERS, isFiltered, RANGE_LABEL, RANGES } from './ledgerFilter'
 import { usePersonalExpenses } from '../../hooks/usePersonalExpenses'
 import { useBudgets } from '../../hooks/useBudgets'
 import { useAppStore } from '../../store/useAppStore'
@@ -51,9 +54,23 @@ export function PersonalLedger() {
   const setAdding = useAppStore((state) => state.setMoneyComposerOpen)
   const [editing, setEditing] = useState<Expense | null>(null)
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null)
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
 
   // leaving the page with the dialog open would otherwise reopen it on return
   useEffect(() => () => setAdding(false), [setAdding])
+
+  const searching = isFiltered(filters)
+  const visible = useMemo(() => applyFilters(expenses, filters), [expenses, filters])
+  const shownTotal = useMemo(
+    () => visible.reduce((sum, expense) => sum + expense.totalAmount, 0),
+    [visible],
+  )
+
+  /** Categories that actually appear, so the filter never offers an empty one. */
+  const usedCategories = useMemo(
+    () => [...new Set(expenses.map((expense) => expense.category?.trim() || 'Uncategorised'))].sort(),
+    [expenses],
+  )
 
   const thisMonth = useMemo(() => {
     const from = startOfMonth(new Date()).getTime()
@@ -65,7 +82,7 @@ export function PersonalLedger() {
   /** Consecutive runs of the same day, in the order the list already has. */
   const days = useMemo(() => {
     const out: { key: string; label: string; total: number; items: Expense[] }[] = []
-    for (const expense of expenses) {
+    for (const expense of visible) {
       const key = dayKey(expense.date)
       const last = out[out.length - 1]
       if (last?.key === key) {
@@ -76,7 +93,7 @@ export function PersonalLedger() {
       }
     }
     return out
-  }, [expenses])
+  }, [visible])
 
   return (
     <>
@@ -148,6 +165,54 @@ export function PersonalLedger() {
           <span className="empty-wallet"><Wallet size={30} /></span>
           <p>Nothing recorded yet. Your own spending lives here — a coffee needs no group.</p>
           <button className="text-button" onClick={() => setAdding(true)}>Add your first expense</button>
+        </div>
+      )}
+
+      {!loading && !error && expenses.length > 0 && (
+        <div className="ledger-filter">
+          <label className="ledger-search">
+            <Search size={16} />
+            <input
+              value={filters.query}
+              onChange={(event) => setFilters((current) => ({ ...current, query: event.target.value }))}
+              placeholder="Find an expense — a word, or the amount"
+              aria-label="Search your expenses"
+            />
+            {filters.query && (
+              <button type="button" aria-label="Clear search"
+                onClick={() => setFilters((current) => ({ ...current, query: '' }))}>
+                <X size={14} />
+              </button>
+            )}
+          </label>
+
+          <select value={filters.category} aria-label="Category"
+            onChange={(event) => setFilters((current) => ({ ...current, category: event.target.value }))}>
+            <option value="">Every category</option>
+            {usedCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+          </select>
+
+          <select value={filters.range} aria-label="Time"
+            onChange={(event) => setFilters((current) => ({ ...current, range: event.target.value as typeof RANGES[number] }))}>
+            {RANGES.map((range) => <option key={range} value={range}>{RANGE_LABEL[range]}</option>)}
+          </select>
+        </div>
+      )}
+
+      {/* What the filter is showing, so a short list never looks like a short
+          ledger — and one tap back to everything. */}
+      {!loading && !error && searching && (
+        <p className="ledger-result">
+          <strong>{visible.length}</strong> of {expenses.length} expense{expenses.length === 1 ? '' : 's'}
+          {visible.length > 0 && <> · {money(shownTotal)}</>}
+          <button className="text-button" onClick={() => setFilters(EMPTY_FILTERS)}>Clear</button>
+        </p>
+      )}
+
+      {!loading && !error && searching && visible.length === 0 && (
+        <div className="groups-empty">
+          <span className="empty-wallet"><Search size={30} /></span>
+          <p>Nothing matches that. Try a shorter word, or a wider date range.</p>
         </div>
       )}
 
