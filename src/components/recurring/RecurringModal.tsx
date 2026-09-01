@@ -46,27 +46,33 @@ type Props = {
   open: boolean
   /** Present when editing. The cadence of a running schedule cannot be changed. */
   item?: Recurring | null
+  /** Prefilled from a repeat the app spotted in the history. */
+  draft?: { title: string, amount: number, category?: string | null, dayOfMonth?: number } | null
   onClose: () => void
   onSave: (payload: CreateRecurringPayload) => Promise<unknown>
   onEdit: (id: string, patch: { title?: string, amount?: number, category?: string, endsOn?: string }) => Promise<unknown>
 }
 
-export function RecurringModal({ open, item, ...rest }: Props) {
+export function RecurringModal({ open, item, draft, ...rest }: Props) {
   if (!open) return null
-  return <RecurringDialog key={item?.id ?? 'new'} item={item} {...rest} />
+  return <RecurringDialog key={item?.id ?? draft?.title ?? 'new'} item={item} draft={draft} {...rest} />
 }
 
 type DialogProps = Omit<Props, 'open'>
 
-function RecurringDialog({ item, onClose, onSave, onEdit }: DialogProps) {
+function RecurringDialog({ item, draft, onClose, onSave, onEdit }: DialogProps) {
   const editing = Boolean(item)
   const today = new Date()
 
-  const [title, setTitle] = useState(item?.title ?? '')
-  const [amount, setAmount] = useState(item ? String(item.amount) : '')
-  const [category, setCategory] = useState(item?.category ?? '')
+  const [title, setTitle] = useState(item?.title ?? draft?.title ?? '')
+  const [amount, setAmount] = useState(
+    item ? String(item.amount) : draft ? String(Math.round(draft.amount)) : '',
+  )
+  const [category, setCategory] = useState(item?.category ?? draft?.category ?? '')
   const [cadence, setCadence] = useState<Cadence>(item?.cadence ?? 'MONTHLY')
-  const [dayOfMonth, setDayOfMonth] = useState(String(item?.dayOfMonth ?? today.getDate()))
+  const [dayOfMonth, setDayOfMonth] = useState(
+    String(item?.dayOfMonth ?? draft?.dayOfMonth ?? today.getDate()),
+  )
   const [weekday, setWeekday] = useState(String(item?.weekday ?? today.getDay()))
   const [endsOn, setEndsOn] = useState(item?.endsOn ? item.endsOn.slice(0, 10) : '')
   // when the first one falls. Everything after it is counted from here, which
