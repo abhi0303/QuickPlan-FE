@@ -82,6 +82,13 @@ export function AppShell() {
     || (pathname === '/expenses' && moneyTab === 'personal')
   const moneyLabel = moneyAction(pathname, moneyTab)
 
+  /*
+   * The money sub-pages either carry their own primary button in the header or
+   * are there to be read. A floating Quick Add on top of them is one more thing
+   * covering the figures, so it stays on the pages that are about capturing.
+   */
+  const showFab = !pathname.startsWith('/expenses/')
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -171,14 +178,16 @@ export function AppShell() {
 
       {/* with no voice button on this page the FAB takes its lower, easier to
           reach slot rather than floating over the middle of the content */}
-      <button
-        className={`fab ${showVoiceButton ? '' : 'in-voice-slot'}`}
-        aria-label={moneyLabel ?? 'Quick add'}
-        title={moneyLabel ?? 'Quick add'}
-        onClick={() => (moneyLabel ? setMoneyComposerOpen(true) : setQuickAddOpen(true))}
-      >
-        <Plus size={26} strokeWidth={2.5} />
-      </button>
+      {showFab && (
+        <button
+          className={`fab ${showVoiceButton ? '' : 'in-voice-slot'}`}
+          aria-label={moneyLabel ?? 'Quick add'}
+          title={moneyLabel ?? 'Quick add'}
+          onClick={() => (moneyLabel ? setMoneyComposerOpen(true) : setQuickAddOpen(true))}
+        >
+          <Plus size={26} strokeWidth={2.5} />
+        </button>
+      )}
 
       {showVoiceButton && <SpeakButton floating />}
 

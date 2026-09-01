@@ -57,6 +57,22 @@ type AppStore = {
    */
   declinedConversions: string[]
   /**
+   * What is in the account today, and the day the salary lands — the two things
+   * the forecast needs that the API does not hold.
+   *
+   * Kept on the device on purpose. A bank balance is the most sensitive number
+   * a user could type here, it is only ever used to draw one line, and it goes
+   * stale in a day. Nothing is gained by sending it anywhere.
+   */
+  forecastBalance: number | null
+  /**
+   * When that figure was true. It is an anchor, not a fact about now — the
+   * forecast rolls it forward from here, so it stays right without being
+   * retyped every month.
+   */
+  forecastBalanceAt: string | null
+  incomeDay: number
+  /**
    * Open tasks today, published by the dashboard for the shell's nav badge.
    * Null until the dashboard has loaded once — the shell shows nothing rather
    * than a number it made up.
@@ -93,6 +109,8 @@ type AppStore = {
   bumpTasksVersion: () => void
   bumpExpensesVersion: () => void
   declineConversion: (groupId: string) => void
+  setForecastBalance: (balance: number | null) => void
+  setIncomeDay: (day: number) => void
   publishOpenToday: (openToday: number | null) => void
   setGamification: (state: GamificationState | null, catalogue: MissionCatalogue | null) => void
   setGamificationStatus: (loading: boolean, error: string) => void
@@ -122,6 +140,9 @@ export const useAppStore = create<AppStore>()(
       tasksVersion: 0,
       expensesVersion: 0,
       declinedConversions: [],
+      forecastBalance: null,
+      forecastBalanceAt: null,
+      incomeDay: 1,
       openToday: null,
       gamification: null,
       missionCatalogue: null,
@@ -152,6 +173,11 @@ export const useAppStore = create<AppStore>()(
       declineConversion: (groupId) => set((state) => ({
         declinedConversions: [...state.declinedConversions, groupId],
       })),
+      setForecastBalance: (forecastBalance) => set({
+        forecastBalance,
+        forecastBalanceAt: forecastBalance === null ? null : new Date().toISOString(),
+      }),
+      setIncomeDay: (incomeDay) => set({ incomeDay }),
       publishOpenToday: (openToday) => set({ openToday }),
       setGamification: (gamification, missionCatalogue) =>
         set((state) => ({ gamification, missionCatalogue: missionCatalogue ?? state.missionCatalogue })),
@@ -178,12 +204,15 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         theme: state.theme, ringtone: state.ringtone, session: state.session, seenLevel: state.seenLevel,
         declinedConversions: state.declinedConversions,
+        forecastBalance: state.forecastBalance, forecastBalanceAt: state.forecastBalanceAt,
+        incomeDay: state.incomeDay,
       }),
       // v0 stored a session without a token; those can no longer authenticate.
       migrate: (persisted) => {
         const state = persisted as {
           theme?: Theme; ringtone?: string; session?: Session | null; seenLevel?: number | null
           declinedConversions?: string[]
+          forecastBalance?: number | null; forecastBalanceAt?: string | null; incomeDay?: number
         } | undefined
         const session = state?.session?.token ? state.session : null
         return {
@@ -192,6 +221,9 @@ export const useAppStore = create<AppStore>()(
           session,
           seenLevel: state?.seenLevel ?? null,
           declinedConversions: state?.declinedConversions ?? [],
+          forecastBalance: state?.forecastBalance ?? null,
+          forecastBalanceAt: state?.forecastBalanceAt ?? null,
+          incomeDay: state?.incomeDay ?? 1,
         }
       },
     },

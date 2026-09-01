@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Calculator, ChartPie, ChevronRight, CircleAlert, Repeat, Search, TrendingUp, Wallet, X,
+  Calculator, CalendarClock, ChartPie, ChevronRight, CircleAlert, Repeat, Search, TrendingUp,
+  Wallet, X,
 } from 'lucide-react'
 import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
@@ -131,6 +132,15 @@ export function PersonalLedger() {
             <div>
               <strong>Recurring</strong>
               <small>Rent, EMIs and subscriptions record themselves.</small>
+            </div>
+            <ChevronRight size={18} />
+          </Link>
+
+          <Link to="/expenses/forecast" className="ledger-analysis">
+            <span className="analysis-icon fore"><CalendarClock size={18} /></span>
+            <div>
+              <strong>What's coming</strong>
+              <small>Which day you'll be short, once the EMIs and bills land.</small>
             </div>
             <ChevronRight size={18} />
           </Link>
