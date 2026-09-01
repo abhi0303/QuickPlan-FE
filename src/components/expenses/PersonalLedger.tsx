@@ -145,7 +145,7 @@ export function PersonalLedger() {
             <ChevronRight size={18} />
           </Link>
 
-          <Link to="/expenses/planner" className="ledger-analysis wide">
+          <Link to="/expenses/planner" className="ledger-analysis">
             <span className="analysis-icon plan"><Calculator size={18} /></span>
             <div>
               <strong>Budget planner</strong>

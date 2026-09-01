@@ -88,11 +88,13 @@
 }
 
 /* The ways out of the ledger, placed where the totals are — that is where the
-   questions "is that a lot?" and "what is coming next?" get asked. */
+   questions "is that a lot?" and "what is coming next?" get asked. Four of
+   them, in an even grid: none is more important than the others, and a card
+   spanning the row just left a hole beside the one before it. */
 .ledger-links {
     display: grid;
     gap: 12px;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-bottom: 18px;
 }
 
@@ -124,9 +126,6 @@
 .analysis-icon.plan { background: var(--tangerine-soft); color: var(--tangerine); }
 .analysis-icon.fore { background: var(--rose-soft); color: var(--rose); }
 
-/* the planner answers a bigger question than the other two, so it takes the
-   full width underneath them rather than being a third of a row */
-.ledger-analysis.wide { grid-column: 1 / -1; }
 
 .analysis-icon {
     align-items: center;
