@@ -182,14 +182,25 @@ has been stored that should have been derived.
 
 - **The forecast opens from the right number.** Its balance currently counts
   personal expenses only; with this it counts everything that moved.
-- **The ledger gains a toggle** — *"include group activity"* — showing the
-  movements inline, each marked with its group. Off by default, because the
-  personal ledger is still where personal spending is read.
+- **The ledger shows the movements inline, on by default**, each marked with its
+  group. The point of the feature is that the personal record is complete: pay
+  ₹4,000 for a dinner and it belongs in your own ledger that evening, because
+  that is when the money went.
 - **A settlement received reads as money in**, in the app's green rather than as
   a negative expense. It is the only inbound row in Money and should look it.
+  Its title names the person — "Rishi paid you", "Paid Rishi" — with the note
+  underneath, because "₹1,000" beside nobody is unreadable a month later.
+- **The ledger's totals therefore mean cash, not spending**, and should say so:
+  *"what moved, not what it cost you"*. That is the honest label once a ₹4,000
+  dinner you split four ways is sitting in the list.
 - **Budgets and the analysis do not change.** They are about spending, and
-  spending is still `myShare`. Worth stating in the UI once: *"your share, not
-  what you fronted."*
+  spending is still `myShare` — otherwise a dinner you fronted would eat four
+  times its share of a food budget. Worth stating in the UI once: *"your share,
+  not what you fronted."*
+
+That split is the part to hold on to. The same dinner is ₹4,000 in the ledger
+and ₹900 in the analysis, and both are right, because they are answers to
+different questions.
 
 ---
 
