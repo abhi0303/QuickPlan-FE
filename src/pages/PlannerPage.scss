@@ -40,7 +40,10 @@
     border-radius: var(--r-lg);
     display: grid;
     gap: 10px;
-    grid-template-columns: repeat(4, 1fr);
+    /* four steps, or five once money comes back — laid out by however many
+       there are rather than by a number written down here */
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
     margin-bottom: 16px;
     padding: 16px 14px 12px;
 }
@@ -94,6 +97,7 @@
 .fall-step.is-income { --fall: var(--periwinkle); }
 .fall-step.is-committed { --fall: #6366f1; }
 .fall-step.is-estimated { --fall: var(--tangerine); }
+.fall-step.is-received { --fall: var(--periwinkle); }
 .fall-step.is-save { --fall: var(--primary); }
 .fall-step.is-short { --fall: var(--rose); }
 .fall-step.is-short .fall-value { color: var(--rose); }
@@ -161,6 +165,9 @@
 
 /* Money already spent has nothing to switch: you cannot opt out of it. */
 .plan-row.is-static .plan-copy { flex: 1; min-width: 0; }
+
+/* Money arriving is the only inbound row here and should read as one. */
+.plan-row.is-credit .plan-amount { color: var(--primary-strong); }
 
 /* The share of the month, as a line under the name — the comparison is the
    reason to read the list at all. */

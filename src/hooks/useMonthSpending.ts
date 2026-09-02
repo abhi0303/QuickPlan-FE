@@ -1,72 +1,77 @@
-import { useCallback, useEffect, useState } from 'react'
-import { differenceInCalendarDays, endOfMonth, format, startOfMonth } from 'date-fns'
-import { getApiErrorMessage } from '../services/api'
-import { listAllPersonalExpenses } from '../services/expenses'
-import type { Expense } from '../services/expenses'
-import { useAppStore } from '../store/useAppStore'
+import { useMemo } from 'react'
+import { differenceInCalendarDays, endOfMonth, parseISO, startOfMonth } from 'date-fns'
+import { useCashFlow } from './useCashFlow'
+import type { Movement } from '../services/cashflow'
 
 /**
- * What you have actually spent this month, by category.
+ * What has actually moved this month, by category.
  *
- * Not an estimate and not a forecast — the real expenses, added up. An average
- * of past months is the wrong answer for somebody who wants to know where this
- * month is going, and it is no answer at all for somebody who has been using
- * the app for a fortnight.
+ * Cash rather than spending, and for the same reason the ledger is: a ₹4,000
+ * dinner you fronted left the account this month whoever it was for, and a
+ * settlement arriving put money back. A planner that counted only personal
+ * expenses would tell somebody who uses groups that they have money they have
+ * already spent.
  *
- * Only personal expenses count: a group expense is somebody else's list until
- * it is settled, and the group half of Money already tracks it.
+ * Budgets and the analysis stay share-based — see docs/cash-flow.md §2.
  */
 
 export type CategorySpend = {
   category: string
   total: number
   count: number
-  /** The single largest expense in it, for "where did that go?". */
-  largest: Expense | null
+  /** The single largest movement in it, for "where did that go?". */
+  largest: Movement | null
 }
 
+/** Settlements have no category of their own, and lumping them under one is honest. */
+const SETTLED = 'Settled up'
+
 export function useMonthSpending() {
-  const [categories, setCategories] = useState<CategorySpend[]>([])
-  const [total, setTotal] = useState(0)
-  const [count, setCount] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [version, setVersion] = useState(0)
-  const expensesVersion = useAppStore((state) => state.expensesVersion)
+  const { items, loading, error, reload } = useCashFlow()
 
   const now = new Date()
   const from = startOfMonth(now)
   const to = endOfMonth(now)
-  const fromKey = format(from, 'yyyy-MM-dd')
-  const toKey = format(to, 'yyyy-MM-dd')
 
-  useEffect(() => {
-    let cancelled = false
+  const month = useMemo(() => {
+    const inMonth = items.filter((movement) => {
+      const at = parseISO(movement.at)
+      return !Number.isNaN(at.getTime()) && at >= from && at <= to
+    })
 
-    listAllPersonalExpenses({ from: fromKey, to: toKey })
-      .then((page) => {
-        if (cancelled) return
-        setCategories(groupByCategory(page.items))
-        setTotal(page.items.reduce((sum, expense) => sum + expense.totalAmount, 0))
-        setCount(page.items.length)
-        setError('')
-      })
-      .catch((fetchError) => {
-        if (!cancelled) setError(getApiErrorMessage(fetchError, 'Could not load this month’s spending.'))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+    const buckets = new Map<string, CategorySpend>()
+    let received = 0
 
-    return () => { cancelled = true }
-  }, [fromKey, toKey, version, expensesVersion])
+    for (const movement of inMonth) {
+      if (movement.direction === 'IN') {
+        received += movement.amount
+        continue
+      }
 
-  const reload = useCallback(() => setVersion((token) => token + 1), [])
+      const key = movement.kind === 'SETTLEMENT_PAID'
+        ? SETTLED
+        : movement.category?.trim() || 'Uncategorised'
+
+      const bucket = buckets.get(key) ?? { category: key, total: 0, count: 0, largest: null }
+      bucket.total += movement.amount
+      bucket.count += 1
+      if (!bucket.largest || movement.amount > bucket.largest.amount) bucket.largest = movement
+      buckets.set(key, bucket)
+    }
+
+    const categories = [...buckets.values()].sort((a, b) => b.total - a.total)
+    return {
+      categories,
+      total: categories.reduce((sum, row) => sum + row.total, 0),
+      received,
+      count: inMonth.length,
+    }
+    // `from`/`to` are derived from today and stable within a render pass
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items])
 
   return {
-    categories,
-    total,
-    count,
+    ...month,
     loading,
     error,
     reload,
@@ -78,20 +83,4 @@ export function useMonthSpending() {
       daysTotal: differenceInCalendarDays(to, from) + 1,
     },
   }
-}
-
-/** Biggest first — the point of the list is to find where the money went. */
-function groupByCategory(expenses: Expense[]): CategorySpend[] {
-  const buckets = new Map<string, CategorySpend>()
-
-  for (const expense of expenses) {
-    const key = expense.category?.trim() || 'Uncategorised'
-    const bucket = buckets.get(key) ?? { category: key, total: 0, count: 0, largest: null }
-    bucket.total += expense.totalAmount
-    bucket.count += 1
-    if (!bucket.largest || expense.totalAmount > bucket.largest.totalAmount) bucket.largest = expense
-    buckets.set(key, bucket)
-  }
-
-  return [...buckets.values()].sort((a, b) => b.total - a.total)
 }

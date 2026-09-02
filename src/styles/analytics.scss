@@ -96,7 +96,9 @@
 .analytics-tiles {
     display: grid;
     gap: 14px;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    /* four of these, and the sidebar leaves about 840px to put them in — 210
+       fitted three and wrapped the fourth onto a row of its own */
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
     margin-bottom: 18px;
 }
 
