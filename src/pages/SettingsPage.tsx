@@ -1,4 +1,6 @@
-import { BellRing, Compass, Globe, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun } from 'lucide-react'
+import {
+  BellRing, Compass, Globe, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun, SunMoon,
+} from 'lucide-react'
 import { PushToggle } from '../components/common/PushToggle'
 import { SyncPanel } from '../components/offline/SyncPanel'
 import { useAppStore } from '../store/useAppStore'
@@ -7,6 +9,8 @@ import './SettingsPage.scss'
 export function SettingsPage() {
   const theme = useAppStore((state) => state.theme)
   const setTheme = useAppStore((state) => state.setTheme)
+  const showThemeToggle = useAppStore((state) => state.showThemeToggle)
+  const setShowThemeToggle = useAppStore((state) => state.setShowThemeToggle)
   const signOut = useAppStore((state) => state.signOut)
   const requestTour = useAppStore((state) => state.requestTour)
 
@@ -35,6 +39,26 @@ export function SettingsPage() {
               <Moon size={16} /> Dark
             </button>
           </div>
+        </div>
+
+        {/* the header is tightest where it matters most, so anyone who picks a
+            theme once can take the switch back out of it */}
+        <div className="setting-row">
+          <div className="setting-label">
+            <span className="setting-icon"><SunMoon size={20} /></span>
+            <div>
+              <strong>Theme switch in the header</strong>
+              <small>A one-tap light and dark toggle beside the bell</small>
+            </div>
+          </div>
+          <label className="setting-toggle">
+            <input
+              type="checkbox"
+              checked={showThemeToggle}
+              onChange={(event) => setShowThemeToggle(event.target.checked)}
+            />
+            <span />
+          </label>
         </div>
 
         <div className="setting-row">

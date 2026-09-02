@@ -77,6 +77,8 @@ type AppStore = {
    */
   forecastBalanceAt: string | null
   incomeDay: number
+  /** Whether the header carries a light/dark switch, or Settings owns it alone. */
+  showThemeToggle: boolean
   /**
    * Open tasks today, published by the dashboard for the shell's nav badge.
    * Null until the dashboard has loaded once — the shell shows nothing rather
@@ -117,6 +119,7 @@ type AppStore = {
   declineConversion: (groupId: string) => void
   setForecastBalance: (balance: number | null) => void
   setIncomeDay: (day: number) => void
+  setShowThemeToggle: (show: boolean) => void
   publishOpenToday: (openToday: number | null) => void
   setGamification: (state: GamificationState | null, catalogue: MissionCatalogue | null) => void
   setGamificationStatus: (loading: boolean, error: string) => void
@@ -150,6 +153,7 @@ export const useAppStore = create<AppStore>()(
       forecastBalance: null,
       forecastBalanceAt: null,
       incomeDay: 1,
+      showThemeToggle: true,
       openToday: null,
       gamification: null,
       missionCatalogue: null,
@@ -192,6 +196,7 @@ export const useAppStore = create<AppStore>()(
         forecastBalanceAt: forecastBalance === null ? null : new Date().toISOString(),
       }),
       setIncomeDay: (incomeDay) => set({ incomeDay }),
+      setShowThemeToggle: (showThemeToggle) => set({ showThemeToggle }),
       publishOpenToday: (openToday) => set({ openToday }),
       setGamification: (gamification, missionCatalogue) =>
         set((state) => ({ gamification, missionCatalogue: missionCatalogue ?? state.missionCatalogue })),
@@ -219,7 +224,7 @@ export const useAppStore = create<AppStore>()(
         theme: state.theme, ringtone: state.ringtone, session: state.session, seenLevel: state.seenLevel,
         declinedConversions: state.declinedConversions,
         forecastBalance: state.forecastBalance, forecastBalanceAt: state.forecastBalanceAt,
-        incomeDay: state.incomeDay,
+        incomeDay: state.incomeDay, showThemeToggle: state.showThemeToggle,
       }),
       // v0 stored a session without a token; those can no longer authenticate.
       migrate: (persisted) => {
@@ -227,6 +232,7 @@ export const useAppStore = create<AppStore>()(
           theme?: Theme; ringtone?: string; session?: Session | null; seenLevel?: number | null
           declinedConversions?: string[]
           forecastBalance?: number | null; forecastBalanceAt?: string | null; incomeDay?: number
+          showThemeToggle?: boolean
         } | undefined
         const session = state?.session?.token ? state.session : null
         return {
@@ -238,6 +244,7 @@ export const useAppStore = create<AppStore>()(
           forecastBalance: state?.forecastBalance ?? null,
           forecastBalanceAt: state?.forecastBalanceAt ?? null,
           incomeDay: state?.incomeDay ?? 1,
+          showThemeToggle: state?.showThemeToggle ?? true,
         }
       },
     },
