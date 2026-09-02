@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Calculator, CalendarClock, ChartPie, ChevronRight, CircleAlert, Repeat, Search, TrendingUp,
-  Wallet, X,
+  Calculator, CalendarClock, ChartPie, ChevronRight, CircleAlert, HandCoins, Repeat, Search,
+  TrendingUp, Wallet, X,
 } from 'lucide-react'
 import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import { ConfirmDialog } from '../common/ConfirmDialog'
@@ -10,10 +10,13 @@ import { ExpenseRow } from './ExpenseRow'
 import { PersonalExpenseModal } from './PersonalExpenseModal'
 import { BudgetStrip } from '../budgets/BudgetStrip'
 import { applyFilters, EMPTY_FILTERS, isFiltered, RANGE_LABEL, RANGES } from './ledgerFilter'
+import { MovementRow } from './MovementRow'
+import { useCashFlow } from '../../hooks/useCashFlow'
 import { usePersonalExpenses } from '../../hooks/usePersonalExpenses'
 import { useBudgets } from '../../hooks/useBudgets'
 import { useAppStore } from '../../store/useAppStore'
 import type { Expense } from '../../services/expenses'
+import type { Movement } from '../../services/cashflow'
 import './PersonalLedger.scss'
 
 /**
@@ -49,6 +52,13 @@ function dayLabel(key: string) {
 export function PersonalLedger() {
   const { expenses, spent, loading, error, busyId, retry, reload, remove } = usePersonalExpenses()
   const { status: budgetStatus } = useBudgets()
+  /*
+   * Group money is part of the personal record: pay ₹4,000 for a dinner and the
+   * account is ₹4,000 lighter that evening, whoever it was for. Settlements
+   * appear as they happen — money in when somebody pays you back, money out
+   * when you clear a share. See docs/cash-flow.md.
+   */
+  const cash = useCashFlow()
 
   // the dialog lives in the store so the app shell's mobile FAB can open it
   const adding = useAppStore((state) => state.moneyComposerOpen)
@@ -73,28 +83,66 @@ export function PersonalLedger() {
     [expenses],
   )
 
-  const thisMonth = useMemo(() => {
+  /*
+   * Cash, not spending: the list holds a ₹4,000 dinner you fronted, so a total
+   * that counted only your ₹1,000 share would not match the rows above it.
+   */
+  const month = useMemo(() => {
     const from = startOfMonth(new Date()).getTime()
-    return expenses
-      .filter((expense) => new Date(expense.date).getTime() >= from)
+    const since = (at: string) => new Date(at).getTime() >= from
+
+    const own = expenses
+      .filter((expense) => since(expense.date))
       .reduce((sum, expense) => sum + expense.totalAmount, 0)
-  }, [expenses])
+
+    const group = cash.items
+      .filter((movement) => movement.kind !== 'PERSONAL_EXPENSE' && since(movement.at))
+      .reduce((totals, movement) => (movement.direction === 'IN'
+        ? { ...totals, in: totals.in + movement.amount }
+        : { ...totals, out: totals.out + movement.amount }), { out: 0, in: 0 })
+
+    return { out: own + group.out, in: group.in }
+  }, [expenses, cash.items])
+
+  /**
+   * One timeline of everything, newest first.
+   *
+   * A personal expense and a group movement are different rows but the same
+   * day, and splitting them into two lists would make the day's total a lie.
+   */
+  const entries = useMemo(() => {
+    const own = visible.map((expense) => ({
+      key: `e-${expense.id}`, at: expense.date, expense, movement: null as Movement | null,
+    }))
+
+    // group movements are not searchable text, so a filtered view drops them
+    const group = searching ? [] : cash.items
+      .filter((movement) => movement.kind !== 'PERSONAL_EXPENSE')
+      .map((movement) => ({ key: `m-${movement.id}`, at: movement.at, expense: null, movement }))
+
+    return [...own, ...group].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+  }, [visible, cash.items, searching])
 
   /** Consecutive runs of the same day, in the order the list already has. */
   const days = useMemo(() => {
-    const out: { key: string; label: string; total: number; items: Expense[] }[] = []
-    for (const expense of visible) {
-      const key = dayKey(expense.date)
+    const out: { key: string; label: string; total: number; items: typeof entries }[] = []
+    for (const entry of entries) {
+      const key = dayKey(entry.at)
+      // money arriving lifts the day's total rather than adding to it
+      const delta = entry.expense
+        ? entry.expense.totalAmount
+        : entry.movement?.direction === 'IN' ? -entry.movement.amount : entry.movement?.amount ?? 0
+
       const last = out[out.length - 1]
       if (last?.key === key) {
-        last.items.push(expense)
-        last.total += expense.totalAmount
+        last.items.push(entry)
+        last.total += delta
       } else {
-        out.push({ key, label: dayLabel(key), total: expense.totalAmount, items: [expense] })
+        out.push({ key, label: dayLabel(key), total: delta, items: [entry] })
       }
     }
     return out
-  }, [visible])
+  }, [entries])
 
   return (
     <>
@@ -104,12 +152,36 @@ export function PersonalLedger() {
               so the group side's green-for-owed and red-for-owing would say
               something untrue here. Only the headline figure is tinted. */}
           <div className="balance-card up">
-            <span>This month</span>
-            <strong>{money(thisMonth)}</strong>
+            <span>Out this month</span>
+            <strong>{money(month.out)}</strong>
           </div>
-          <div className="balance-card">
-            <span>All recorded</span>
-            <strong>{money(spent)}</strong>
+          {/* only worth a card when money has actually come back */}
+          {month.in > 0 ? (
+            <div className="balance-card">
+              <span>Back in this month</span>
+              <strong>{money(month.in)}</strong>
+            </div>
+          ) : (
+            <div className="balance-card">
+              <span>All recorded</span>
+              <strong>{money(spent)}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Money of yours sitting with other people. It is not spending and it is
+          not a balance — it is the thing a group app never tells you. */}
+      {cash.outstanding && cash.outstanding.total > 0.5 && (
+        <div className="ledger-outstanding">
+          <span className="analysis-icon out"><HandCoins size={18} /></span>
+          <div>
+            <strong>{money(cash.outstanding.total)} is out with other people</strong>
+            <small>
+              {cash.outstanding.people.slice(0, 3).map((person) => person.name.split(' ')[0]).join(', ')}
+              {cash.outstanding.people.length > 3 && ` and ${cash.outstanding.people.length - 3} more`}
+              {' '}owe you from group expenses you paid.
+            </small>
           </div>
         </div>
       )}
@@ -235,26 +307,28 @@ export function PersonalLedger() {
                 <span className="ledger-total"><small>total</small> {money(day.total)}</span>
               </header>
               <div className="expense-list">
-                {day.items.map((expense) => (
+                {day.items.map((entry) => (entry.expense ? (
                   <ExpenseRow
-                    key={expense.id}
-                    expense={expense}
+                    key={entry.key}
+                    expense={entry.expense}
                     // it is your own ledger; there is nobody else it could belong to
                     canEdit
-                    busy={busyId === expense.id}
+                    busy={busyId === entry.expense.id}
                     // the day heading above already says which day this is
                     timeOnly
                     onEdit={setEditing}
                     onDelete={setPendingDelete}
                   />
-                ))}
+                ) : (
+                  <MovementRow key={entry.key} movement={entry.movement as Movement} />
+                )))}
               </div>
             </section>
           ))}
 
           <p className="ledger-foot">
             <TrendingUp size={14} />
-            {expenses.length} expense{expenses.length === 1 ? '' : 's'} recorded
+            {entries.length} entr{entries.length === 1 ? 'y' : 'ies'} · what moved, not what it cost you
           </p>
         </div>
       )}

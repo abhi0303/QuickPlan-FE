@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { differenceInCalendarDays, getDaysInMonth, parseISO, setDate, startOfDay, subDays, subMonths } from 'date-fns'
 import { buildForecast, rollForward } from '../services/forecast'
+import { useCashFlow } from './useCashFlow'
 import { usePersonalExpenses } from './usePersonalExpenses'
 import { usePlanner } from './usePlanner'
 import { useRecurring } from './useRecurring'
@@ -17,16 +18,24 @@ export function useForecast(days = 60) {
   const { items: schedules, loading: schedulesLoading, error: schedulesError } = useRecurring()
   const { plan, loading: planLoading } = usePlanner()
   const { expenses, loading: expensesLoading } = usePersonalExpenses()
+  /*
+   * The balance has to count everything that moved, not just personal
+   * expenses: a ₹4,000 dinner you fronted really did leave the account, and a
+   * settlement coming back really did arrive. See docs/cash-flow.md.
+   */
+  const { items: movements } = useCashFlow()
 
   const balance = useAppStore((state) => state.forecastBalance)
   const balanceAt = useAppStore((state) => state.forecastBalanceAt)
   const incomeDay = useAppStore((state) => state.incomeDay)
 
   /*
-   * What a normal day costs, from the last month of real expenses — and
-   * *excluding* anything a schedule created, since those are already counted
-   * as charges on their own dates. Counting them twice would forecast a
-   * shortfall that is not there.
+   * What a normal day costs, from the last month of personal expenses.
+   *
+   * Deliberately not cash flow: a ₹4,000 dinner you fronted is lumpy and mostly
+   * comes back, and averaging it into a daily rate would forecast a shortfall
+   * that is not there. Scheduled charges are excluded for the same reason —
+   * they are already counted on their own dates.
    */
   const dailySpend = useMemo(() => {
     const since = subDays(new Date(), RATE_WINDOW)
@@ -63,14 +72,14 @@ export function useForecast(days = 60) {
     const thisMonth = payDay(today)
     const cycleStart = thisMonth <= today ? thisMonth : payDay(subMonths(today, 1))
 
-    const spent = expenses.reduce((sum, expense) => {
-      const at = parseISO(expense.date)
+    const moved = movements.reduce((sum, movement) => {
+      const at = parseISO(movement.at)
       if (Number.isNaN(at.getTime()) || at < cycleStart) return sum
-      return sum + expense.totalAmount
+      return sum + (movement.direction === 'IN' ? -movement.amount : movement.amount)
     }, 0)
 
-    return plan.monthlyIncome - spent
-  }, [plan, expenses, incomeDay])
+    return plan.monthlyIncome - moved
+  }, [plan, movements, incomeDay])
 
   /**
    * A figure the user gave is carried forward rather than frozen: paydays since
@@ -87,9 +96,13 @@ export function useForecast(days = 60) {
       anchorAt,
       monthlyIncome: plan?.monthlyIncome ?? 0,
       incomeDay,
-      expenses,
+      // signed, so a settlement arriving adds rather than subtracts
+      expenses: movements.map((movement) => ({
+        date: movement.at,
+        totalAmount: movement.direction === 'IN' ? -movement.amount : movement.amount,
+      })),
     })
-  }, [balance, balanceAt, plan?.monthlyIncome, incomeDay, expenses])
+  }, [balance, balanceAt, plan?.monthlyIncome, incomeDay, movements])
 
   const opening = tracked ?? derived
 

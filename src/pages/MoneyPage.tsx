@@ -62,7 +62,7 @@ export function MoneyPage() {
           <h1>Money</h1>
           <p className="muted">
             {active === 'personal'
-              ? 'Your own spending — no group, no split, nobody to settle with.'
+              ? 'Everything that moved your money — your own spending, and what you paid or got back in groups.'
               : 'Shared costs live in groups — everyone sees the same expenses and balances.'}
           </p>
         </div>

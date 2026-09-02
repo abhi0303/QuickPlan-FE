@@ -232,3 +232,34 @@
 
     .ledger-search { grid-column: 1 / -1; }
 }
+
+.analysis-icon.out { background: var(--tangerine-soft); color: var(--tangerine); }
+
+/* Not a link anywhere yet — it states a fact the group pages cannot, that some
+   of your money is currently somebody else's problem. */
+.ledger-outstanding {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    color: inherit;
+    cursor: default;
+    display: flex;
+    gap: 13px;
+    margin-bottom: 18px;
+    padding: 13px 16px;
+    text-decoration: none;
+}
+
+.ledger-outstanding strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -.2px;
+}
+
+.ledger-outstanding small {
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 500;
+}
