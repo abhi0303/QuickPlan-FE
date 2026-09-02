@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { differenceInSeconds, format, isToday, isYesterday, parseISO } from 'date-fns'
 import {
@@ -79,9 +81,32 @@ function dayGroup(iso: string) {
   return 'Earlier'
 }
 
+/**
+ * Everything the open state needs to know about where the bell is: where the
+ * panel hangs from it on a wide screen (just under it, right edges flush), and
+ * the circle the scrim leaves unblurred over it. Measured rather than anchored
+ * in CSS because the panel is portalled out of the header — see the note
+ * beside the portal below.
+ */
+function anchorFor(button: HTMLElement | null) {
+  if (!button) return null
+  const rect = button.getBoundingClientRect()
+  return {
+    top: Math.round(rect.bottom + 10),
+    right: Math.round(window.innerWidth - rect.right),
+    holeX: Math.round(rect.left + rect.width / 2),
+    holeY: Math.round(rect.top + rect.height / 2),
+    // wide enough to clear the unread badge, which overhangs the corner
+    holeR: Math.round(Math.max(rect.width, rect.height) / 2 + 9),
+  }
+}
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [anchor, setAnchor] = useState<ReturnType<typeof anchorFor>>(null)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const {
@@ -93,16 +118,24 @@ export function NotificationBell() {
     if (!open) return
 
     function onPointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
+      const target = event.target as Node
+      // the panel lives outside this subtree now, so it has to be asked too
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
+      setOpen(false)
     }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') setOpen(false)
     }
+    function onResize() {
+      setAnchor(anchorFor(buttonRef.current))
+    }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
+    window.addEventListener('resize', onResize)
     return () => {
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('resize', onResize)
     }
   }, [open])
 
@@ -124,6 +157,7 @@ export function NotificationBell() {
   /** The feed is only fetched when someone actually looks at it. */
   function toggle() {
     const next = !open
+    if (next) setAnchor(anchorFor(buttonRef.current))
     setOpen(next)
     if (next) refresh()
   }
@@ -145,6 +179,7 @@ export function NotificationBell() {
   return (
     <div className="notif" ref={rootRef}>
       <button
+        ref={buttonRef}
         className={`icon-button ${unreadCount > 0 ? 'has-unread' : ''}`}
         onClick={toggle}
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
@@ -154,8 +189,50 @@ export function NotificationBell() {
         {unreadCount > 0 && <span className="notif-count">{unreadCount > 99 ? '99+' : unreadCount}</span>}
       </button>
 
-      {open && (
-        <div className="notif-panel" role="dialog" aria-label="Notifications">
+      {/*
+        * The panel is a dialog in everything but name, so it gets a dialog's
+        * backdrop: the list is dense and the page behind it competes. Tapping
+        * the scrim closes, which is what people try first.
+        *
+        * Both are portalled, because the header is a stacking context. A scrim
+        * left inside it could only dim the header; a scrim outside it but a
+        * panel still within cannot cover the header without burying the panel
+        * too — which is why the header used to sit there as an undimmed white
+        * stripe. Out here the scrim covers everything and the panel alone
+        * stands clear of it, at the cost of positioning it from a measurement.
+        *
+        * The bell keeps its place in the header and stays lit through a hole
+        * cut in the scrim, rather than being lifted out too: moving it would
+        * empty its slot and shuffle the row of header buttons. A click on the
+        * hole lands on the scrim and closes the panel — which is what clicking
+        * the bell does anyway.
+        */}
+      {open && createPortal(
+        <div
+          className="notif-scrim"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+          style={anchor
+            ? {
+              '--hole-x': `${anchor.holeX}px`,
+              '--hole-y': `${anchor.holeY}px`,
+              '--hole-r': `${anchor.holeR}px`,
+            } as CSSProperties
+            : undefined}
+        />,
+        document.body,
+      )}
+
+      {open && createPortal(
+        <div
+          className="notif-panel"
+          ref={panelRef}
+          role="dialog"
+          aria-label="Notifications"
+          style={anchor
+            ? { '--notif-top': `${anchor.top}px`, '--notif-right': `${anchor.right}px` } as CSSProperties
+            : undefined}
+        >
           <header className="notif-head">
             <h2>Notifications {unreadCount > 0 && <span className="notif-pill">{unreadCount}</span>}</h2>
             {unreadCount > 0 && (
@@ -234,7 +311,8 @@ export function NotificationBell() {
               )}
             </div>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )
