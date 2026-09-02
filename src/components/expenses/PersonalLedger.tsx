@@ -70,6 +70,14 @@ export function PersonalLedger() {
   // leaving the page with the dialog open would otherwise reopen it on return
   useEffect(() => () => setAdding(false), [setAdding])
 
+  /*
+   * Group money counts as having something here. Gating the summaries, the
+   * links and the empty state on personal expenses alone told somebody who
+   * only ever pays for group dinners that they had recorded nothing — directly
+   * above a list of what they had recorded.
+   */
+  const anything = expenses.length > 0 || cash.items.length > 0
+
   const searching = isFiltered(filters)
   const visible = useMemo(() => applyFilters(expenses, filters), [expenses, filters])
   const shownTotal = useMemo(
@@ -146,7 +154,7 @@ export function PersonalLedger() {
 
   return (
     <>
-      {!loading && !error && expenses.length > 0 && (
+      {!loading && !error && anything && (
         <div className="balance-summary">
           {/* Neither number is good or bad news — this is just what you spent —
               so the group side's green-for-owed and red-for-owing would say
@@ -188,7 +196,7 @@ export function PersonalLedger() {
 
       <BudgetStrip status={budgetStatus} />
 
-      {!loading && !error && expenses.length > 0 && (
+      {!loading && !error && anything && (
         <div className="ledger-links">
           <Link to="/expenses/analysis" className="ledger-analysis">
             <span className="analysis-icon"><ChartPie size={18} /></span>
@@ -242,7 +250,7 @@ export function PersonalLedger() {
         </div>
       )}
 
-      {!loading && !error && expenses.length === 0 && (
+      {!loading && !error && !anything && (
         <div className="groups-empty">
           <span className="empty-wallet"><Wallet size={30} /></span>
           <p>Nothing recorded yet. Your own spending lives here — a coffee needs no group.</p>
@@ -250,7 +258,7 @@ export function PersonalLedger() {
         </div>
       )}
 
-      {!loading && !error && expenses.length > 0 && (
+      {!loading && !error && anything && (
         <div className="ledger-filter">
           <label className="ledger-search">
             <Search size={16} />
@@ -285,7 +293,7 @@ export function PersonalLedger() {
           ledger — and one tap back to everything. */}
       {!loading && !error && searching && (
         <p className="ledger-result">
-          <strong>{visible.length}</strong> of {expenses.length} expense{expenses.length === 1 ? '' : 's'}
+          <strong>{visible.length}</strong> of {expenses.length} own expense{expenses.length === 1 ? '' : 's'}
           {visible.length > 0 && <> · {money(shownTotal)}</>}
           <button className="text-button" onClick={() => setFilters(EMPTY_FILTERS)}>Clear</button>
         </p>
