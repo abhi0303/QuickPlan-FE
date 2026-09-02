@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Suspense, useEffect } from 'react'
+import { NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import {
   AlarmClock,
   CircleCheckBig,
@@ -25,6 +25,7 @@ import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
 import { EditTaskModal } from '../tasks/EditTaskModal'
+import { RouteLoading } from '../common/RouteLoading'
 import { SpeakButton } from '../common/SpeakButton'
 import { useGamification } from '../../hooks/useGamification'
 import { useOffline } from '../../hooks/useOffline'
@@ -82,6 +83,12 @@ export function AppShell() {
   useOffline()
   const game = useAppStore((state) => state.gamification)
   const { pathname } = useLocation()
+  const navigationType = useNavigationType()
+
+  useEffect(() => {
+    if (navigationType === 'POP') return
+    window.scrollTo(0, 0)
+  }, [pathname, navigationType])
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
     || (pathname === '/expenses' && moneyTab === 'personal')
   const moneyLabel = moneyAction(pathname, moneyTab)
@@ -184,8 +191,19 @@ export function AppShell() {
           </div>
         </header>
 
+        {/*
+          * The boundary lives here, not around the router.
+          *
+          * A page's code arrives in its own chunk, so switching tabs suspends.
+          * Suspending against the outer boundary blanked the whole app — nav
+          * included — which read as nothing having happened, and people pressed
+          * the tab again. Keeping the shell up means the tab you pressed is
+          * already highlighted while its page is still on its way.
+          */}
         <div className="page-container">
-          <Outlet />
+          <Suspense fallback={<RouteLoading />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 
