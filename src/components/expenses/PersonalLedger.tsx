@@ -13,6 +13,8 @@ import { applyFilters, EMPTY_FILTERS, isFiltered, RANGE_LABEL, RANGES } from './
 import { MovementRow } from './MovementRow'
 import { useCashFlow } from '../../hooks/useCashFlow'
 import { usePersonalExpenses } from '../../hooks/usePersonalExpenses'
+import { usePlanner } from '../../hooks/usePlanner'
+import { useRecurring } from '../../hooks/useRecurring'
 import { useBudgets } from '../../hooks/useBudgets'
 import { useAppStore } from '../../store/useAppStore'
 import type { Expense } from '../../services/expenses'
@@ -59,6 +61,16 @@ export function PersonalLedger() {
    * when you clear a share. See docs/cash-flow.md.
    */
   const cash = useCashFlow()
+
+  /*
+   * The forecast needs something to forecast. Schedules give it dates — rent on
+   * the 5th, an EMI on the 10th — and income gives it paydays; either alone
+   * makes the page answer something. With neither it is an empty chart under a
+   * card promising to say which day you will be short.
+   */
+  const { items: schedules } = useRecurring()
+  const { plan } = usePlanner()
+  const canForecast = schedules.some((item) => !item.pausedAt) || (plan?.monthlyIncome ?? 0) > 0
 
   // the dialog lives in the store so the app shell's mobile FAB can open it
   const adding = useAppStore((state) => state.moneyComposerOpen)
@@ -216,16 +228,19 @@ export function PersonalLedger() {
             <ChevronRight size={18} />
           </Link>
 
-          <Link to="/expenses/forecast" className="ledger-analysis">
-            <span className="analysis-icon fore"><CalendarClock size={18} /></span>
-            <div>
-              <strong>What's coming</strong>
-              <small>Which day you'll be short, once the EMIs and bills land.</small>
-            </div>
-            <ChevronRight size={18} />
-          </Link>
+          {canForecast && (
+            <Link to="/expenses/forecast" className="ledger-analysis">
+              <span className="analysis-icon fore"><CalendarClock size={18} /></span>
+              <div>
+                <strong>What's coming</strong>
+                <small>Which day you'll be short, once the EMIs and bills land.</small>
+              </div>
+              <ChevronRight size={18} />
+            </Link>
+          )}
 
-          <Link to="/expenses/planner" className="ledger-analysis">
+          {/* three cards leave a gap beside the last one, so it takes the row */}
+          <Link to="/expenses/planner" className={`ledger-analysis ${canForecast ? '' : 'wide'}`}>
             <span className="analysis-icon plan"><Calculator size={18} /></span>
             <div>
               <strong>Budget planner</strong>
