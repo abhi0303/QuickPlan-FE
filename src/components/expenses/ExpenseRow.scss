@@ -119,6 +119,14 @@
 /* The one control here that is worth finding without hunting for it. */
 .expense-settle { color: var(--primary); opacity: .75; }
 .expense-settle:hover { background: var(--primary-soft); color: var(--primary-strong); }
+
+/* Money arriving rather than leaving — the same action from the other end. */
+.expense-settle.is-in { color: var(--periwinkle); }
+
+.expense-settle.is-in:hover {
+    background: var(--periwinkle-soft);
+    color: var(--periwinkle);
+}
 .expense-edit:hover { background: var(--primary-soft); color: var(--primary-strong); }
 .expense-delete:hover { background: var(--rose-soft); color: var(--rose); }
 

@@ -263,3 +263,7 @@
     font-size: 12.5px;
     font-weight: 500;
 }
+
+/* An odd number of cards would leave a gap beside the last one, so it takes
+   the whole row instead. */
+.ledger-analysis.wide { grid-column: 1 / -1; }

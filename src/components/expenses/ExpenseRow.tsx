@@ -1,5 +1,5 @@
 import { format, isToday, parseISO } from 'date-fns'
-import { HandCoins, Pencil, Trash2 } from 'lucide-react'
+import { ArrowDownLeft, HandCoins, Pencil, Trash2 } from 'lucide-react'
 import { categoryLook } from '../../data/expenseCategories'
 import { isPersonal } from '../../services/expenses'
 import { isTempId } from '../../services/offline/queue'
@@ -31,15 +31,20 @@ type Props = {
   /** For a list already grouped by day: repeating the date would say nothing. */
   timeOnly?: boolean
   /**
-   * Offered when somebody else fronted this one and you still owe your share of
-   * it. Absent on a personal expense and on anything you paid for yourself.
+   * Offered from whichever side has something to record — you clearing what you
+   * owe, or marking that somebody paid you back. Absent on a personal expense
+   * and wherever the balance is already square.
    */
   onSettle?: (expense: Expense) => void
+  /** True when the action records money arriving rather than leaving. */
+  settleIncoming?: boolean
   onEdit: (expense: Expense) => void
   onDelete: (expense: Expense) => void
 }
 
-export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, onDelete, onSettle }: Props) {
+export function ExpenseRow({
+  expense, canEdit, busy, timeOnly = false, onEdit, onDelete, onSettle, settleIncoming = false,
+}: Props) {
   const look = categoryLook(expense.category)
   const CategoryIcon = look.icon
   const personal = isPersonal(expense)
@@ -78,10 +83,15 @@ export function ExpenseRow({ expense, canEdit, busy, timeOnly = false, onEdit, o
           expense, so the columns stay aligned down the list */}
       <div className="expense-actions">
         {onSettle && (
-          <button className="expense-settle" onClick={() => onSettle(expense)}
-            aria-label={`Record a payment for ${expense.title}`}
-            title={`Pay your share of ${expense.title}`}>
-            <HandCoins size={15} />
+          <button className={`expense-settle ${settleIncoming ? 'is-in' : ''}`}
+            onClick={() => onSettle(expense)}
+            aria-label={settleIncoming
+              ? `Record money received for ${expense.title}`
+              : `Record a payment for ${expense.title}`}
+            title={settleIncoming
+              ? `Somebody paid you back for ${expense.title}`
+              : `Pay your share of ${expense.title}`}>
+            {settleIncoming ? <ArrowDownLeft size={15} /> : <HandCoins size={15} />}
           </button>
         )}
         {canEdit && (

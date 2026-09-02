@@ -169,10 +169,43 @@ export function GroupDetailPage() {
     if (owed <= 0.005) return
 
     setSettleSeed({
-      toUserId: expense.paidById,
-      toName: expense.paidBy?.name ?? 'them',
+      mode: 'pay',
+      people: [{ userId: expense.paidById, name: expense.paidBy?.name ?? 'them', owed }],
+      personId: expense.paidById,
       amount: settleableAmount(expense.myShare ?? 0, owed),
-      owed,
+      note: expense.title,
+    })
+  }
+
+  /** People who owe me, from the same server-computed suggestions. */
+  const owedToMe = (balances?.suggestedSettlements ?? []).filter((s) => s.toUserId === me)
+
+  /*
+   * The other end of the same settlement.
+   *
+   * Whoever fronted an expense is usually the one who knows the money came
+   * back — so they can record it rather than waiting for the other person to.
+   * The API takes `fromUserId` for exactly this; it only defaults to the caller.
+   */
+  function receiveForExpense(expense: Expense) {
+    if (!expense.iPaid) return
+    const people = owedToMe
+      .map((suggestion) => ({
+        userId: suggestion.fromUserId,
+        name: suggestion.fromName,
+        owed: suggestion.amount,
+      }))
+      .filter((person) => person.owed > 0.005)
+    if (people.length === 0) return
+
+    const first = people[0]
+    // their share of this expense, never more than they still owe
+    const theirShare = expense.shares.find((share) => share.userId === first.userId)?.amount ?? 0
+    setSettleSeed({
+      mode: 'receive',
+      people,
+      personId: first.userId,
+      amount: settleableAmount(theirShare, first.owed),
       note: expense.title,
     })
   }
@@ -251,10 +284,10 @@ export function GroupDetailPage() {
                 className="friend-add"
                 disabled={busyId === suggestion.toUserId}
                 onClick={() => setSettleSeed({
-                  toUserId: suggestion.toUserId,
-                  toName: suggestion.toName,
+                  mode: 'pay',
+                  people: [{ userId: suggestion.toUserId, name: suggestion.toName, owed: suggestion.amount }],
+                  personId: suggestion.toUserId,
                   amount: suggestion.amount,
-                  owed: suggestion.amount,
                 })}
               >
                 {busyId === suggestion.toUserId
@@ -288,13 +321,16 @@ export function GroupDetailPage() {
                   onEdit={setEditing}
                   onDelete={setPendingDelete}
                   // only where somebody else fronted it and you owe your share
-                  // offered only while something is actually owed to the payer:
-                  // a square balance has nothing left to settle
-                  onSettle={!expense.iPaid && expense.paidById
-                    && (expense.myShare ?? 0) > 0.005
-                    && owedTo(expense.paidById) > 0.005
-                    ? settleExpense
-                    : undefined}
+                  /* Offered from whichever side has something to record: you
+                     clearing what you owe the payer, or — when you fronted it —
+                     marking that somebody has paid you back. */
+                  onSettle={expense.iPaid
+                    ? (owedToMe.length > 0 ? receiveForExpense : undefined)
+                    : expense.paidById && (expense.myShare ?? 0) > 0.005
+                      && owedTo(expense.paidById) > 0.005
+                      ? settleExpense
+                      : undefined}
+                  settleIncoming={expense.iPaid}
                 />
               ))}
             </div>
@@ -372,8 +408,8 @@ export function GroupDetailPage() {
       />
 
       <SettleModal
-        seed={settleSeed}
-        busy={busyId === settleSeed?.toUserId}
+        seed={settleSeed ? { ...settleSeed, meId: me } : null}
+        busy={busyId === settleSeed?.personId}
         onClose={() => setSettleSeed(null)}
         onConfirm={async (payload) => {
           // left open on failure, so the amount that was typed is not lost
