@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
-import { ArrowLeft, CircleAlert, IndianRupee, Lightbulb, Lock, Pencil, Wallet, X } from 'lucide-react'
+import {
+  ArrowDownLeft, ArrowLeft, CircleAlert, IndianRupee, Lightbulb, Lock, Pencil, Wallet, X,
+} from 'lucide-react'
 import { categoryLook } from '../data/expenseCategories'
 import { useMonthSpending } from '../hooks/useMonthSpending'
 import { usePlanner } from '../hooks/usePlanner'
@@ -83,7 +85,7 @@ export function PlannerPage() {
    * screen. See docs/budget-planner.md — the basis belongs server-side
    * eventually, and that is a one-parameter change to GET /api/planner.
    */
-  const left = plan.monthlyIncome - plan.committed.total - month.total
+  const left = plan.monthlyIncome - plan.committed.total - month.total + month.received
   const short = left < 0
   const suggestions = plan.suggestions.filter((item) => !dismissed.includes(item.id))
   const targetGap = plan.savingsTarget !== null ? left - plan.savingsTarget : null
@@ -91,7 +93,7 @@ export function PlannerPage() {
   const { daysElapsed, daysTotal } = month.period
   // spending to date, carried forward at the same rate
   const projected = daysElapsed > 0 ? (month.total / daysElapsed) * daysTotal : 0
-  const projectedLeft = plan.monthlyIncome - plan.committed.total - projected
+  const projectedLeft = plan.monthlyIncome - plan.committed.total - projected + month.received
   const midMonth = daysElapsed > 2 && daysElapsed < daysTotal
 
   return (
@@ -124,7 +126,7 @@ export function PlannerPage() {
         )}
       </section>
 
-      <Waterfall plan={plan} spent={month.total} />
+      <Waterfall plan={plan} spent={month.total} received={month.received} />
 
       <section className="panel planner-income">
         <div>
@@ -186,12 +188,13 @@ export function PlannerPage() {
 
       <section className="panel">
         <div className="panel-heading">
-          <h2>Spent so far this month</h2>
+          <h2>Out so far this month</h2>
           <span className="planner-total">{money(month.total)}</span>
         </div>
         <p className="muted">
-          {format(month.period.from, 'd MMM')} – {format(new Date(), 'd MMM')} · your own expenses,
-          grouped so you can see where it went.
+          {format(month.period.from, 'd MMM')} – {format(new Date(), 'd MMM')} · everything that left
+          the account, including what you fronted in groups.
+          {month.received > 0 && <> {money(month.received)} came back.</>}
         </p>
 
         {month.error && (
@@ -212,7 +215,7 @@ export function PlannerPage() {
                   <strong>{row.category}</strong>
                   <small>
                     {row.count} expense{row.count === 1 ? '' : 's'} · {sharePercent(share)} of the month
-                    {row.largest && row.count > 1 && <> · biggest {money(row.largest.totalAmount)}</>}
+                    {row.largest && row.count > 1 && <> · biggest {money(row.largest.amount)}</>}
                   </small>
                   <span className="plan-bar"><i style={{ width: `${Math.max(2, share)}%`, background: look.color }} /></span>
                 </div>
@@ -221,9 +224,20 @@ export function PlannerPage() {
             )
           })}
 
-          {!month.loading && month.categories.length === 0 && (
+          {month.received > 0 && (
+            <div className="plan-row is-static is-credit">
+              <span className="delta-icon tone-stay"><ArrowDownLeft size={15} /></span>
+              <div className="plan-copy">
+                <strong>Came back to you</strong>
+                <small>Settlements from group expenses you paid for</small>
+              </div>
+              <strong className="plan-amount">+{money(month.received)}</strong>
+            </div>
+          )}
+
+          {!month.loading && month.categories.length === 0 && month.received === 0 && (
             <p className="plan-empty">
-              Nothing spent yet this month. Anything you record in{' '}
+              Nothing has moved yet this month. Anything you record in{' '}
               <Link to="/expenses">Money</Link> lands here.
             </p>
           )}
@@ -259,38 +273,42 @@ export function PlannerPage() {
 }
 
 /**
- * Income at the left, the two subtractions stepping down, savings standing at
- * the right.
+ * Income at the left, each step landing where the one before it ended, savings
+ * standing at the right.
  *
- * The middle two bars float: each starts where the one before it ended, so the
- * picture is the subtraction rather than four unrelated columns. That is the
- * whole reason this is not a pie — a pie cannot show something being taken away.
+ * Bars span between two running values rather than growing from the floor, so a
+ * step can go *up* as well as down — which is what money coming back from a
+ * group does, and a chart that could only subtract would have to hide it.
  */
-function Waterfall({ plan, spent }: { plan: Plan, spent: number }) {
-  const income = Math.max(plan.monthlyIncome, 1)
-  const pct = (value: number) => (Math.abs(value) / income) * 100
-  const clamp = (value: number) => Math.max(0, Math.min(100, value))
-
-  const committed = pct(plan.committed.total)
-  const estimated = pct(spent)
-  const canSave = plan.monthlyIncome - plan.committed.total - spent
-  const left = pct(canSave)
+function Waterfall({ plan, spent, received }: { plan: Plan, spent: number, received: number }) {
+  const income = plan.monthlyIncome
+  const afterCommitted = income - plan.committed.total
+  const afterSpent = afterCommitted - spent
+  const left = afterSpent + received
 
   const steps = [
-    { key: 'income', label: 'Income', value: plan.monthlyIncome, tone: 'income', bottom: 0, height: 100 },
-    // hangs from the top of the income bar
-    { key: 'committed', label: 'Committed', value: plan.committed.total, tone: 'committed', bottom: 100 - committed, height: committed },
-    // and this one from the bottom of that
-    { key: 'estimated', label: 'Spent', value: spent, tone: 'estimated', bottom: 100 - committed - estimated, height: estimated },
+    { key: 'income', label: 'Income', value: income, from: 0, to: income, tone: 'income' },
+    { key: 'committed', label: 'Committed', value: plan.committed.total, from: afterCommitted, to: income, tone: 'committed' },
+    { key: 'spent', label: 'Out', value: spent, from: afterSpent, to: afterCommitted, tone: 'estimated' },
+    ...(received > 0
+      ? [{ key: 'received', label: 'Back in', value: received, from: afterSpent, to: left, tone: 'received' }]
+      : []),
     {
-      key: 'save',
-      label: canSave < 0 ? 'Short' : 'Left',
-      value: canSave,
-      tone: canSave < 0 ? 'short' : 'save',
-      bottom: 0,
-      height: left,
+      key: 'left',
+      label: left < 0 ? 'Short' : 'Left',
+      value: left,
+      from: Math.min(0, left),
+      to: Math.max(0, left),
+      tone: left < 0 ? 'short' : 'save',
     },
   ]
+
+  const bounds = steps.flatMap((step) => [step.from, step.to]).concat(0)
+  const min = Math.min(...bounds)
+  const max = Math.max(...bounds)
+  const span = max - min || 1
+
+  const pct = (value: number) => ((value - min) / span) * 100
 
   return (
     <div className="waterfall" aria-hidden="true">
@@ -298,7 +316,10 @@ function Waterfall({ plan, spent }: { plan: Plan, spent: number }) {
         <div className={`fall-step is-${step.tone}`} key={step.key}>
           <span className="fall-value">{money(step.value)}</span>
           <span className="fall-track">
-            <i style={{ bottom: `${clamp(step.bottom)}%`, height: `${Math.max(2, clamp(step.height))}%` }} />
+            <i style={{
+              bottom: `${pct(step.from)}%`,
+              height: `${Math.max(2, pct(step.to) - pct(step.from))}%`,
+            }} />
           </span>
           <span className="fall-label">{step.label}</span>
         </div>
