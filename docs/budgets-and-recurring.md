@@ -75,8 +75,8 @@ GET    /api/budgets/status?period=2026-08
     "projected": 27776, "status": "ON_TRACK"
   },
   "categories": [
-    { "budgetId": "b1", "category": "Food", "amount": 8000, "spent": 6280,
-      "remaining": 1720, "percentage": 78.5, "projected": 7787,
+    { "budgetId": "b1", "category": "Food", "amount": 8000, "spent": 6900,
+      "remaining": 1100, "percentage": 86.3, "projected": 8556,
       "status": "WARNING" },
     { "budgetId": "b2", "category": "Fuel", "amount": 3000, "spent": 3480,
       "remaining": -480, "percentage": 116, "projected": 4315,
@@ -91,6 +91,14 @@ GET    /api/budgets/status?period=2026-08
   not. Please compute it server-side so the client cannot disagree.
 - **`status`**: `ON_TRACK` under 80%, `WARNING` 80–100%, `EXCEEDED` over.
   Thresholds server-side for the same reason.
+
+  **Measured on `spent`, not on `projected`.** Status says where you *are*,
+  which is a fact and does not move around; the projection says where you are
+  *heading*, and on the 3rd of the month one large purchase projects to
+  `EXCEEDED` while 12% of the budget is gone. A status that cries wolf in the
+  first week is a status people learn to ignore. The forward-looking warning is
+  the projection, shown beside the figure — "₹6,900 of ₹8,000, heading for
+  ₹8,556" — where it reads as a forecast rather than a verdict.
 - **`unbudgeted`** shows categories with real spending and no budget — that list
   is how someone discovers the budget they should have set.
 
