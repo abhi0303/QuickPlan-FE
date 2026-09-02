@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
 import {
@@ -6,7 +7,10 @@ import {
 } from 'lucide-react'
 import { BarList, ChartLegend, ColumnChart, DonutChart } from '../components/charts/Charts'
 import { categoryLook } from '../data/expenseCategories'
-import { LEVEL_LABEL, LEVELS, usePersonalAnalytics } from '../hooks/usePersonalAnalytics'
+import {
+  ANALYSIS_SOURCES, LEVEL_LABEL, LEVELS, SOURCE_LABEL, usePersonalAnalytics,
+} from '../hooks/usePersonalAnalytics'
+import type { AnalysisSource } from '../hooks/usePersonalAnalytics'
 import { sharePercent } from '../utils/share'
 import '../styles/analytics.scss'
 import './PersonalAnalyticsPage.scss'
@@ -32,10 +36,12 @@ function deltaLabel(delta: number, share: number, previous: number) {
 }
 
 export function PersonalAnalyticsPage() {
+  // matches the ledger and the planner by default: what actually moved
+  const [source, setSource] = useState<AnalysisSource>('cash')
   const {
-    analytics, expenses, loading, error, truncated, retry,
+    analytics, expenses, received, loading, error, truncated, retry,
     level, heading, trail, goTo, shift, jumpToNow, drillInto, canDrill, isNow, hasHistory,
-  } = usePersonalAnalytics()
+  } = usePersonalAnalytics(source)
 
   if (error) {
     return (
@@ -75,11 +81,24 @@ export function PersonalAnalyticsPage() {
         <div>
           <p className="eyebrow">Personal analysis</p>
           <h1>Where your money went</h1>
-          <p className="muted">Your own spending over time, by category, and against what you spent before.</p>
+          <p className="muted">
+            {source === 'cash'
+              ? 'Everything that left your account — your own expenses, what you fronted in groups, and what you settled.'
+              : 'Your own expenses alone, over time and against what you spent before.'}
+          </p>
         </div>
       </div>
 
       <div className="range-row">
+        <div className="segmented">
+          {ANALYSIS_SOURCES.map((option) => (
+            <button key={option} type="button" className={source === option ? 'active' : ''}
+              onClick={() => setSource(option)}>
+              {SOURCE_LABEL[option]}
+            </button>
+          ))}
+        </div>
+
         <div className="segmented">
           {LEVELS.map((option) => (
             <button key={option} type="button" className={level === option ? 'active' : ''}
@@ -172,6 +191,13 @@ export function PersonalAnalyticsPage() {
                       {deltaLabel(analytics.delta, analytics.deltaShare, analytics.previousSpent)}
                       {analytics.previousSpent > 0 && <em> vs {previousLabel}</em>}
                     </span>
+                    {/* not a category and not spending, so it is said rather
+                        than drawn into the donut */}
+                    {received > 0 && (
+                      <span className="a-sub down">
+                        <TrendingDown size={13} /> {money(received)} came back from groups
+                      </span>
+                    )}
                   </div>
                 </div>
 

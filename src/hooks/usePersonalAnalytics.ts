@@ -5,6 +5,8 @@ import {
 import { getApiErrorMessage } from '../services/api'
 import { listAllPersonalExpenses } from '../services/expenses'
 import type { Expense } from '../services/expenses'
+import type { Movement } from '../services/cashflow'
+import { useCashFlow } from './useCashFlow'
 import { useAppStore } from '../store/useAppStore'
 import {
   buildColumns, byCategory, dateOf, headingOf, LEVELS, previousWindow, step,
@@ -63,8 +65,53 @@ export type PersonalAnalytics = {
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-export function usePersonalAnalytics() {
-  const [expenses, setExpenses] = useState<Expense[]>([])
+/**
+ * Which question the page is answering.
+ *
+ * `cash` is everything that left the account, matching the ledger and the
+ * planner — a dinner you fronted at its full amount, and a settlement you paid.
+ * `personal` is your own expenses alone, which is the narrower reading of
+ * "where does my money go".
+ */
+export const ANALYSIS_SOURCES = ['cash', 'personal'] as const
+export type AnalysisSource = (typeof ANALYSIS_SOURCES)[number]
+
+export const SOURCE_LABEL: Record<AnalysisSource, string> = {
+  cash: 'Everything that moved',
+  personal: 'Just my own',
+}
+
+/** Settlements have no category of their own, and lumping them is honest. */
+const SETTLED = 'Settled up'
+
+/**
+ * A movement, in the shape the windowing and charts already understand.
+ *
+ * Money coming *in* is deliberately not turned into one: a settlement arriving
+ * is not spending in a category, and putting it in the donut would be nonsense.
+ * Its total is reported separately.
+ */
+function asExpense(movement: Movement): Expense {
+  return {
+    id: movement.id,
+    scope: movement.groupId ? 'GROUP' : 'PERSONAL',
+    groupId: movement.groupId ?? null,
+    title: movement.title,
+    totalAmount: movement.amount,
+    currency: 'INR',
+    paidById: null,
+    createdById: '',
+    splitType: null,
+    category: movement.kind === 'SETTLEMENT_PAID' ? SETTLED : movement.category ?? null,
+    date: movement.at,
+    shares: [],
+    myShare: movement.myShare ?? movement.amount,
+  }
+}
+
+export function usePersonalAnalytics(source: AnalysisSource = 'cash') {
+  const [own, setOwn] = useState<Expense[]>([])
+  const { items: movements, loading: cashLoading } = useCashFlow()
   const [truncated, setTruncated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -82,7 +129,7 @@ export function usePersonalAnalytics() {
     listAllPersonalExpenses()
       .then((all) => {
         if (cancelled) return
-        setExpenses(all.items)
+        setOwn(all.items)
         setTruncated(all.truncated)
         setError('')
       })
@@ -96,12 +143,27 @@ export function usePersonalAnalytics() {
     return () => { cancelled = true }
   }, [retryToken, expensesVersion])
 
+  const expenses = source === 'cash'
+    ? movements.filter((movement) => movement.direction === 'OUT').map(asExpense)
+    : own
+
   const today = new Date()
   const { from, to } = windowFor(level, anchor)
   const inRange = withinWindow(expenses, from, to)
 
   const previous = previousWindow(level, anchor)
   const inPrevious = withinWindow(expenses, previous.from, previous.to)
+
+  /** Money that came back inside the window — stated, never charted. */
+  const received = source === 'cash'
+    ? movements
+      .filter((movement) => movement.direction === 'IN')
+      .filter((movement) => {
+        const at = dateOf(asExpense(movement))
+        return at !== null && at >= from && at <= to
+      })
+      .reduce((sum, movement) => sum + movement.amount, 0)
+    : 0
 
   const spent = inRange.reduce((sum, expense) => sum + expense.totalAmount, 0)
   const previousSpent = inPrevious.reduce((sum, expense) => sum + expense.totalAmount, 0)
@@ -199,7 +261,8 @@ export function usePersonalAnalytics() {
     /** The window's own expenses, for the list underneath the charts. */
     expenses: inRange,
     window: { from, to },
-    loading,
+    received,
+    loading: loading || (source === 'cash' && cashLoading),
     error,
     truncated,
     retry,
