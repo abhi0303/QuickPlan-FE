@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { getApiErrorMessage } from '../services/api'
+import { useAppStore } from '../store/useAppStore'
 import { createGroup, deleteGroup, listGroups } from '../services/groups'
 import type { CreateGroupPayload, Group } from '../services/groups'
 import { useCachedList } from './useCachedList'
@@ -12,6 +13,8 @@ export function useGroups() {
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
   const [version, setVersion] = useState(0)
+  // the header's refresh asks every list to fetch again
+  const dataVersion = useAppStore((state) => state.dataVersion)
 
   useEffect(() => {
     let cancelled = false
@@ -25,7 +28,7 @@ export function useGroups() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version])
+  }, [version, dataVersion])
 
   function refresh() { setVersion((v) => v + 1) }
 

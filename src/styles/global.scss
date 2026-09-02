@@ -1296,6 +1296,13 @@ select {
     width: 42px;
 }
 
+/* Busy, not broken: the icon keeps spinning, so the button must not look
+   greyed out the way a disabled control usually does. */
+.icon-button.is-busy {
+    color: var(--primary);
+    opacity: 1;
+}
+
 .icon-button:hover {
     background: var(--primary-soft);
     color: var(--primary-strong);
