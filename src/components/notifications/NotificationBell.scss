@@ -20,6 +20,26 @@
     top: -2px;
 }
 
+/* Matches the modal backdrop, a touch lighter: this is a panel to glance at,
+   not a form to fill in. Everything goes under it — the header included, so
+   the page dims as one piece instead of leaving a bright band across the top —
+   and the panel alone stands over it. */
+.notif-scrim {
+    animation: fadeIn .18s ease;
+    backdrop-filter: blur(5px);
+    background: rgba(8, 28, 23, .38);
+    inset: 0;
+    /* the bell is left uncovered, so it reads as the thing that is open. With
+       no hole measured the radius is 0 and the mask is solid. */
+    -webkit-mask-image: radial-gradient(circle var(--hole-r, 0px) at var(--hole-x, -1px) var(--hole-y, -1px), transparent 94%, #000 100%);
+    mask-image: radial-gradient(circle var(--hole-r, 0px) at var(--hole-x, -1px) var(--hole-y, -1px), transparent 94%, #000 100%);
+    position: fixed;
+    /* over the header (37), the tab bar and the floating buttons — a dimmed
+       page should not still be offering its buttons — and under a real
+       modal's backdrop (40), which has to be able to cover this in turn */
+    z-index: 38;
+}
+
 .notif-panel {
     animation: notifIn .18s cubic-bezier(.2, .8, .3, 1);
     background: var(--surface);
@@ -29,11 +49,13 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: absolute;
-    right: 0;
-    top: calc(100% + 10px);
+    position: fixed;
+    /* set from the bell's measured rect; the fallbacks are only ever used if
+       the panel is opened by something other than a click on the bell */
+    right: var(--notif-right, 16px);
+    top: var(--notif-top, 60px);
     width: 372px;
-    z-index: 40;
+    z-index: 39;
 }
 
 @keyframes notifIn {

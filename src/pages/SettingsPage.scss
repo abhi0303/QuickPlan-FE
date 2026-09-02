@@ -36,3 +36,45 @@
     background: var(--rose-soft);
     border-color: var(--rose);
 }
+
+/* A plain on/off for a setting that is a yes or a no. The segmented control
+   above it is for choosing between things; this is for keeping one. */
+.setting-toggle {
+    cursor: pointer;
+    flex: none;
+    position: relative;
+}
+
+.setting-toggle input {
+    height: 100%;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+}
+
+.setting-toggle > span {
+    background: var(--surface-alt);
+    border-radius: var(--r-pill);
+    display: block;
+    height: 26px;
+    transition: background .18s ease;
+    width: 46px;
+}
+
+.setting-toggle > span::after {
+    background: var(--surface);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    content: '';
+    height: 20px;
+    left: 3px;
+    position: absolute;
+    top: 3px;
+    transition: transform .18s ease;
+    width: 20px;
+}
+
+.setting-toggle input:checked + span { background: var(--primary); }
+.setting-toggle input:checked + span::after { transform: translateX(20px); }

@@ -137,6 +137,87 @@
     width: 32px;
 }
 
+/*
+ * One size, set once, named explicitly.
+ *
+ * A generic `> *` lost to `.avatar.sm` and tied with `.rank-chip`, so which
+ * rule won came down to which stylesheet the bundler happened to emit first —
+ * and the three circles came out at three sizes. These beat both, and
+ * border-box means a border does not make a circle bigger than its neighbour.
+ */
+/* The bell hands the row a wrapper, not its button, so the wrapper is what
+   has to be the same circle as the rest. */
+.topbar-actions > .notif,
+.topbar-actions > .notif > .icon-button,
+.topbar-actions > .rank-chip,
+.topbar-actions > .icon-button,
+.topbar-actions > .avatar {
+    align-items: center;
+    box-sizing: border-box;
+    flex: none;
+    height: 34px;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    position: relative;
+    width: 34px;
+}
+
+/*
+ * Deliberately no `display` above: each of these already has its own, and
+ * setting one here outranked the rule that hides the settings gear on a phone
+ * — which put it straight back into the header it had been taken out of.
+ * Only the bell's wrapper, a plain div, needs telling.
+ */
+.topbar-actions > .notif { display: flex; }
+
+.topbar-actions > .avatar { font-size: 13.5px; }
+
+/* the panel hangs off the wrapper and must not be clipped by its 34px */
+.topbar-actions > .notif { overflow: visible; }
+
+/* The bell gets the same disc the medallion sits on, so the row reads as three
+   of a kind rather than an icon between two circles. */
+.topbar-actions .icon-button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.topbar-actions .icon-button:hover {
+    background: var(--surface-alt);
+    color: var(--text);
+}
+
+.topbar-actions .icon-button svg { height: 17px; width: 17px; }
+
+/* 32px is smaller than a thumb; the hit area is not. */
+.topbar-actions > *::before {
+    content: '';
+    inset: -6px;
+    position: absolute;
+}
+
+/* One badge, wherever it appears: same size, same corner, same ring. Only the
+   colour differs, because only the meaning does. */
+.topbar-actions .notif-count,
+.topbar-actions .chip-level {
+    align-items: center;
+    border: 2px solid var(--bg);
+    border-radius: var(--r-pill);
+    bottom: auto;
+    color: #fff;
+    display: flex;
+    font-size: 9px;
+    font-weight: 800;
+    height: 17px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 17px;
+    padding: 0 3px;
+    right: -5px;
+    top: -5px;
+}
+
 .sign-out {
     align-items: center;
     border-radius: var(--r-sm);
@@ -173,13 +254,23 @@
     padding: calc(18px + env(safe-area-inset-top, 0px)) 4.5% 18px;
     position: sticky;
     top: 0;
-    z-index: 4;
+    /* above the tab bar, the floating buttons and the notification scrim, so
+       that when the scrim dims the page the header it opened from stays lit */
+    z-index: 37;
 }
 
 .topbar-brand {
     display: none;
 }
 
+/*
+ * Three controls, one set.
+ *
+ * They were a 30px medallion, a 42px icon button and a 32px avatar, each with
+ * its own badge — near-misses, which read as sloppier than deliberate
+ * differences. They now share a footprint, a disc and a badge, and differ only
+ * in what fills them.
+ */
 .topbar-actions {
     align-items: center;
     display: flex;
@@ -242,6 +333,15 @@
     background: var(--primary);
 }
 
+/* Tucked below the fold while the page is read downwards, back on the way up.
+   Kept out of the tab order while away, so it cannot be focused invisibly. */
+.fab.is-tucked,
+.speak-fab.is-tucked {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(150%);
+}
+
 .fab {
     align-items: center;
     background: var(--gradient);
@@ -254,7 +354,7 @@
     justify-content: center;
     position: fixed;
     right: 20px;
-    transition: transform .18s ease;
+    transition: transform .22s cubic-bezier(.2, .8, .3, 1), opacity .18s ease;
     width: 58px;
     z-index: 6;
 }

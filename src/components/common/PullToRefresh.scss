@@ -1,0 +1,45 @@
+/* Sits above everything and follows the finger down from behind the header. */
+.pull-refresh {
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow);
+    display: flex;
+    height: 38px;
+    justify-content: center;
+    left: 50%;
+    position: fixed;
+    top: calc(-14px + env(safe-area-inset-top, 0px));
+    width: 38px;
+    z-index: 30;
+}
+
+.pull-mark {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    justify-content: center;
+    transition: color .18s ease;
+}
+
+/* Far enough that letting go would refresh — said with colour rather than
+   copy, because the arrow has already turned a full circle to say it. */
+.pull-refresh.is-ready .pull-mark { color: var(--primary); }
+
+.pull-refresh.is-refreshing {
+    transition: transform .2s ease;
+}
+
+.pull-refresh.is-refreshing .pull-mark {
+    animation: spin .9s linear infinite;
+    color: var(--primary);
+}
+
+/* Springs back rather than snapping, once the finger is gone. */
+.pull-refresh.is-idle { transition: transform .25s ease, opacity .25s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+
+    .pull-refresh.is-refreshing .pull-mark { animation-duration: 2.4s; }
+}

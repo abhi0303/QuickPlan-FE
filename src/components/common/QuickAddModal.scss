@@ -215,3 +215,14 @@
 }
 
 .smart-note.money button:hover { background: var(--primary-strong); }
+
+/* The body holds everything between the title and the buttons — the smart
+   field, the tabs and the fields — so all of it scrolls together and the
+   dialog never grows past the viewport. */
+.quick-add-modal .modal-body {
+    gap: 0;
+}
+
+.quick-add-modal .modal-body > * + * {
+    margin-top: 18px;
+}

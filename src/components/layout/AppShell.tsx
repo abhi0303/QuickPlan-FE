@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Suspense, useEffect } from 'react'
+import { NavLink, Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import {
   AlarmClock,
   CircleCheckBig,
@@ -7,7 +7,6 @@ import {
   LogOut,
   Moon,
   Plus,
-  RotateCw,
   Settings,
   Sparkles,
   Sun,
@@ -25,9 +24,13 @@ import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
 import { EditTaskModal } from '../tasks/EditTaskModal'
+import { PullToRefresh } from '../common/PullToRefresh'
+import { RouteLoading } from '../common/RouteLoading'
 import { SpeakButton } from '../common/SpeakButton'
 import { useGamification } from '../../hooks/useGamification'
 import { useOffline } from '../../hooks/useOffline'
+import { useHideOnScroll } from '../../hooks/useHideOnScroll'
+import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { useRefresh } from '../../hooks/useRefresh'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
@@ -76,12 +79,27 @@ export function AppShell() {
   // fetched once here and published to the store, so the sidebar card and the
   // dashboard panel cost one request between them
   const { levelUp, acknowledgeLevelUp } = useGamification()
-  // an installed app has no reload button of its own
-  const { refresh, refreshing } = useRefresh()
+  /*
+   * An installed app has no reload button of its own. On a phone that is the
+   * pull-down gesture people already try; on a desktop the browser's own
+   * reload is right there, so nothing is added to the header for it.
+   */
+  const { refresh } = useRefresh()
+  // they sit where a list keeps its own controls, so they step aside while it
+  // is being read downwards
+  const tucked = useHideOnScroll()
+  const pull = usePullToRefresh(refresh)
   // starts the outbox: it flushes on open, on reconnect, and on Background Sync
   useOffline()
   const game = useAppStore((state) => state.gamification)
+  const showThemeToggle = useAppStore((state) => state.showThemeToggle)
   const { pathname } = useLocation()
+  const navigationType = useNavigationType()
+
+  useEffect(() => {
+    if (navigationType === 'POP') return
+    window.scrollTo(0, 0)
+  }, [pathname, navigationType])
   const showVoiceButton = VOICE_ROUTES.includes(pathname)
     || (pathname === '/expenses' && moneyTab === 'personal')
   const moneyLabel = moneyAction(pathname, moneyTab)
@@ -108,6 +126,7 @@ export function AppShell() {
 
   return (
     <div className="app-shell">
+      <PullToRefresh distance={pull.distance} state={pull.state} />
       <aside className="sidebar">
         <div className="brand">
           <span className="brand-mark"><Sparkles size={19} strokeWidth={2.4} /></span>
@@ -144,10 +163,12 @@ export function AppShell() {
 
       <main className="main-content">
         <header className="topbar">
-          <div className="brand topbar-brand">
+          {/* the mark alone: on a phone the name was taking a third of the
+              header to say what the icon already says. It goes home, which is
+              what a logo in a corner is for. */}
+          <NavLink to="/" className="brand topbar-brand" aria-label="Home" end>
             <span className="brand-mark sm"><Sparkles size={15} strokeWidth={2.4} /></span>
-            <span>Quickplan</span>
-          </div>
+          </NavLink>
 
           {/* Global search is hidden until there is an API to back it: no
               search endpoint exists yet (see docs/push-notifications.md's
@@ -157,23 +178,17 @@ export function AppShell() {
           <div className="topbar-actions">
             {/* mobile only: the sidebar's rank card is not there to show it */}
             {game && <RankChip state={game} />}
-            <button
-              className={`icon-button ${refreshing ? 'is-busy' : ''}`}
-              onClick={refresh}
-              disabled={refreshing}
-              aria-label="Refresh"
-              title="Refresh — fetches everything again, and restarts if there is a new version"
-            >
-              <RotateCw size={18} className={refreshing ? 'spin' : ''} />
-            </button>
-            <button
-              className="icon-button"
-              onClick={toggleTheme}
-              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-              title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-            >
-              {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
-            </button>
+            {/* kept out of the header by anyone who sets their theme once */}
+            {showThemeToggle && (
+              <button
+                className="icon-button"
+                onClick={toggleTheme}
+                aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
+              </button>
+            )}
             <NotificationBell />
             <NavLink to="/settings" className="icon-button settings-button" aria-label="Settings">
               <Settings size={19} />
@@ -184,8 +199,19 @@ export function AppShell() {
           </div>
         </header>
 
+        {/*
+          * The boundary lives here, not around the router.
+          *
+          * A page's code arrives in its own chunk, so switching tabs suspends.
+          * Suspending against the outer boundary blanked the whole app — nav
+          * included — which read as nothing having happened, and people pressed
+          * the tab again. Keeping the shell up means the tab you pressed is
+          * already highlighted while its page is still on its way.
+          */}
         <div className="page-container">
-          <Outlet />
+          <Suspense fallback={<RouteLoading />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 
@@ -193,7 +219,7 @@ export function AppShell() {
           reach slot rather than floating over the middle of the content */}
       {showFab && (
         <button
-          className={`fab ${showVoiceButton ? '' : 'in-voice-slot'}`}
+          className={`fab ${showVoiceButton ? '' : 'in-voice-slot'} ${tucked ? 'is-tucked' : ''}`}
           aria-label={moneyLabel ?? 'Quick add'}
           title={moneyLabel ?? 'Quick add'}
           onClick={() => (moneyLabel ? setMoneyComposerOpen(true) : setQuickAddOpen(true))}
@@ -202,7 +228,7 @@ export function AppShell() {
         </button>
       )}
 
-      {showVoiceButton && <SpeakButton floating />}
+      {showVoiceButton && <SpeakButton floating tucked={tucked} />}
 
       {levelUp && (
         <LevelUpOverlay

@@ -60,8 +60,13 @@ export function useRefresh() {
         }
       }
 
+      /*
+       * No toast when it simply worked. A refresh that succeeded has already
+       * told you — the lists redraw, the pull indicator spins and lets go —
+       * and a message on every pull is one more thing to dismiss. The update
+       * case above still speaks, because a reload needs explaining.
+       */
       refreshAll()
-      toast.success('Up to date')
     } catch {
       // a failed update check is not worth an error: the refetch still ran
       refreshAll()

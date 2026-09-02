@@ -1,0 +1,62 @@
+.route-loading {
+    align-items: center;
+    display: flex;
+    /* tall enough that the loader sits where the page's own content would,
+       rather than jumping when the real thing arrives */
+    min-height: 48vh;
+    justify-content: center;
+    position: relative;
+}
+
+/* Along the top of the content area, in the app's own gradient. It travels
+   rather than filling: the wait has no measurable progress, and a bar that
+   pretends otherwise is a lie people learn to distrust. */
+.route-bar {
+    animation: routeBar 1.1s ease-in-out infinite;
+    background: var(--gradient);
+    border-radius: var(--r-pill);
+    height: 3px;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    top: -6px;
+    width: 40%;
+    /* nothing at all for the first fifth of a second, so a fast chunk never
+       flashes a bar at somebody */
+    animation-delay: .2s;
+}
+
+@keyframes routeBar {
+
+    0% {
+        margin-left: 0;
+        opacity: 1;
+        width: 12%;
+    }
+
+    50% { width: 42%; }
+
+    100% {
+        margin-left: 100%;
+        opacity: 1;
+        transform: translateX(-100%);
+        width: 12%;
+    }
+}
+
+/* The orb fades in a beat later than the bar, so a quick page shows neither. */
+.route-loading .loader {
+    animation: routeFade .4s ease both;
+    animation-delay: .35s;
+    opacity: 0;
+}
+
+@keyframes routeFade {
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .route-bar { animation: none; opacity: .6; width: 100%; }
+    .route-loading .loader { animation: none; opacity: 1; }
+}

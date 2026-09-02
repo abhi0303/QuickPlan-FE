@@ -35,7 +35,7 @@ export function RankChip({ state }: { state: GamificationState }) {
     >
       {/* the badge art already carries a ring; a second one around it read as
           clutter, so progress stays on the card and this stays the medallion */}
-      <img src={rankIconUrl(state.level)} width="30" height="30" alt="" />
+      <img src={rankIconUrl(state.level)} width="22" height="22" alt="" />
       <span className="chip-level">{state.level}</span>
     </button>
   )

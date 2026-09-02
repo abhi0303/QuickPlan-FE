@@ -12,6 +12,8 @@ type Props = {
   label?: string
   /** Round floating action button instead of an inline pill. */
   floating?: boolean
+  /** Out of the way while the page is being scrolled down. */
+  tucked?: boolean
 }
 
 /**
@@ -46,7 +48,7 @@ function Dots() {
   return <span className="listening-dots"><i /><i /><i /></span>
 }
 
-export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
+export function SpeakButton({ label = 'Speak it', floating = false, tucked = false }: Props) {
   const openQuickAddWithText = useAppStore((state) => state.openQuickAddWithText)
   const setQuickAddOpen = useAppStore((state) => state.setQuickAddOpen)
 
@@ -207,7 +209,8 @@ export function SpeakButton({ label = 'Speak it', floating = false }: Props) {
 
   const trigger = floating ? (
     <button
-      className={`speak-fab ${active ? 'is-active' : ''}`}
+      // never tucked away mid-sentence
+      className={`speak-fab ${active ? 'is-active' : ''} ${tucked && !active ? 'is-tucked' : ''}`}
       onClick={handleClick}
       aria-label={active ? 'Stop listening' : label}
       title={label}
