@@ -16,7 +16,7 @@ import { useUnlocked } from '../hooks/useUnlocked'
 import type { Expense, MemberBalance } from '../services/expenses'
 import { useAppStore } from '../store/useAppStore'
 import { downloadFile, slug, toCsv } from '../services/exportFile'
-import { listAllGroupExpenses } from '../services/expenses'
+import { listAllGroupExpenses, settleableAmount } from '../services/expenses'
 import { avatarStyle } from '../utils/avatar'
 import { ExpenseRow } from '../components/expenses/ExpenseRow'
 import './GroupDetailPage.scss'
@@ -156,16 +156,23 @@ export function GroupDetailPage() {
    *
    * A settlement is a payment between two people — the API has no concept of an
    * expense being paid off — so this prefills "pay them what my share of this
-   * was" and names it in the note. The amount stays editable, because paying
-   * part of what you owe is the normal case and was impossible before.
+   * was" and names it in the note.
+   *
+   * Capped at what is still owed, which is the bug this once had: the share is
+   * what the expense cost you, not what is left after you have already paid
+   * some of it. Pay ₹50 off a ₹250 share and the row would still offer ₹250,
+   * and taking it a second time left the other person owing *you* money.
    */
   function settleExpense(expense: Expense) {
     if (!expense.paidById || expense.iPaid) return
+    const owed = owedTo(expense.paidById)
+    if (owed <= 0.005) return
+
     setSettleSeed({
       toUserId: expense.paidById,
       toName: expense.paidBy?.name ?? 'them',
-      amount: expense.myShare ?? 0,
-      owed: owedTo(expense.paidById),
+      amount: settleableAmount(expense.myShare ?? 0, owed),
+      owed,
       note: expense.title,
     })
   }
@@ -281,7 +288,11 @@ export function GroupDetailPage() {
                   onEdit={setEditing}
                   onDelete={setPendingDelete}
                   // only where somebody else fronted it and you owe your share
-                  onSettle={!expense.iPaid && expense.paidById && (expense.myShare ?? 0) > 0.005
+                  // offered only while something is actually owed to the payer:
+                  // a square balance has nothing left to settle
+                  onSettle={!expense.iPaid && expense.paidById
+                    && (expense.myShare ?? 0) > 0.005
+                    && owedTo(expense.paidById) > 0.005
                     ? settleExpense
                     : undefined}
                 />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byDateDesc, isPersonal } from './expenses'
+import { byDateDesc, isPersonal, settleableAmount } from './expenses'
 import type { Expense } from './expenses'
 
 const expense = (id: string, date: string): Expense => ({
@@ -74,5 +74,41 @@ describe('personal or group', () => {
    */
   it('does not let the fallback override an explicit scope', () => {
     expect(isPersonal({ ...expense('e', '2026-08-25T10:00:00.000Z'), scope: 'GROUP', groupId: null })).toBe(false)
+  })
+})
+
+/**
+ * The bug this exists for: a ₹250 share with ₹50 already paid still offered
+ * ₹250, and taking that a second time left the other person owing money.
+ */
+describe('what is left to settle', () => {
+  it('offers the share when nothing has been paid yet', () => {
+    expect(settleableAmount(250, 250)).toBe(250)
+  })
+
+  it('never offers more than is still owed', () => {
+    expect(settleableAmount(250, 200)).toBe(200)
+  })
+
+  it('offers nothing once the balance is square', () => {
+    expect(settleableAmount(250, 0)).toBe(0)
+  })
+
+  // they already owe you: settling is not the thing to do here
+  it('offers nothing when the balance has swung the other way', () => {
+    expect(settleableAmount(250, -300)).toBe(0)
+  })
+
+  it('caps at the share when more is owed across other expenses', () => {
+    expect(settleableAmount(250, 900)).toBe(250)
+  })
+
+  it('does not return a negative share', () => {
+    expect(settleableAmount(-10, 200)).toBe(0)
+  })
+
+  it('survives a missing figure rather than returning NaN', () => {
+    expect(settleableAmount(Number.NaN, 200)).toBe(0)
+    expect(settleableAmount(250, Number.NaN)).toBe(0)
   })
 })

@@ -289,6 +289,21 @@ export async function deleteExpense(id: string): Promise<void> {
   await api.delete(`/api/expenses/${id}`)
 }
 
+/**
+ * What to offer when settling a single expense.
+ *
+ * Your share is what the expense cost you; it is not what is left once you have
+ * paid some of it off. Offering the share again after a part payment is how a
+ * cleared debt ends up owing money in the other direction — so the offer is
+ * capped at whatever the balances say is still outstanding, and is nothing at
+ * all when the two of you are square.
+ */
+export function settleableAmount(share: number, owedToPayer: number): number {
+  if (!Number.isFinite(share) || !Number.isFinite(owedToPayer)) return 0
+  if (owedToPayer <= 0) return 0
+  return Math.min(Math.max(share, 0), owedToPayer)
+}
+
 /* ------------------------------------------------------------- balances -- */
 
 export type MemberBalance = {

@@ -68,6 +68,14 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     if (value <= 0) return setError('Enter an amount greater than zero.')
+    /*
+     * This dialog clears a debt; it is not for lending. Letting somebody pay
+     * more than they owe is how a settled balance ends up owing them money —
+     * which is exactly what happened when the prefill was wrong.
+     */
+    if (seed.owed > 0.005 && value > seed.owed + 0.005) {
+      return setError(`You only owe ${seed.toName.split(' ')[0]} ${money(seed.owed)}.`)
+    }
 
     const at = day ? new Date(`${day}T${time || '12:00'}`) : null
     onConfirm({
@@ -114,6 +122,7 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
             <span className="control adorned">
               <IndianRupee size={17} />
               <input id="settle-amount" ref={amountRef} type="number" min="0" step="any" inputMode="decimal"
+                max={seed.owed > 0.005 ? seed.owed : undefined}
                 value={amount} onChange={(e) => { setAmount(e.target.value); setError('') }}
                 disabled={busy} />
             </span>
@@ -139,9 +148,7 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
               <p className="field-hint">
                 {leftOver > 0.005
                   ? `${money(leftOver)} would still be owed after this.`
-                  : leftOver < -0.005
-                    ? `That is ${money(-leftOver)} more than you owe them — they would owe you the difference.`
-                    : 'That clears what you owe them.'}
+                  : 'That clears what you owe them.'}
               </p>
             )}
           </div>
