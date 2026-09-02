@@ -29,6 +29,7 @@ import { RouteLoading } from '../common/RouteLoading'
 import { SpeakButton } from '../common/SpeakButton'
 import { useGamification } from '../../hooks/useGamification'
 import { useOffline } from '../../hooks/useOffline'
+import { useHideOnScroll } from '../../hooks/useHideOnScroll'
 import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { useRefresh } from '../../hooks/useRefresh'
 import { useTheme } from '../../hooks/useTheme'
@@ -84,6 +85,9 @@ export function AppShell() {
    * reload is right there, so nothing is added to the header for it.
    */
   const { refresh } = useRefresh()
+  // they sit where a list keeps its own controls, so they step aside while it
+  // is being read downwards
+  const tucked = useHideOnScroll()
   const pull = usePullToRefresh(refresh)
   // starts the outbox: it flushes on open, on reconnect, and on Background Sync
   useOffline()
@@ -215,7 +219,7 @@ export function AppShell() {
           reach slot rather than floating over the middle of the content */}
       {showFab && (
         <button
-          className={`fab ${showVoiceButton ? '' : 'in-voice-slot'}`}
+          className={`fab ${showVoiceButton ? '' : 'in-voice-slot'} ${tucked ? 'is-tucked' : ''}`}
           aria-label={moneyLabel ?? 'Quick add'}
           title={moneyLabel ?? 'Quick add'}
           onClick={() => (moneyLabel ? setMoneyComposerOpen(true) : setQuickAddOpen(true))}
@@ -224,7 +228,7 @@ export function AppShell() {
         </button>
       )}
 
-      {showVoiceButton && <SpeakButton floating />}
+      {showVoiceButton && <SpeakButton floating tucked={tucked} />}
 
       {levelUp && (
         <LevelUpOverlay

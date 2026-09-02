@@ -250,7 +250,8 @@ function QuickAddDialog() {
 
   return (
     <div className="modal-backdrop" onMouseDown={() => setOpen(false)}>
-      <div className="modal" role="dialog" aria-modal="true" aria-labelledby="quick-add-title" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="modal quick-add-modal is-framed" role="dialog" aria-modal="true"
+        aria-labelledby="quick-add-title" onMouseDown={(e) => e.stopPropagation()}>
         <header className="modal-head">
           <div>
             <h2 id="quick-add-title">Quick add</h2>
@@ -259,6 +260,10 @@ function QuickAddDialog() {
           <button className="modal-close" onClick={() => setOpen(false)} aria-label="Close"><X size={18} /></button>
         </header>
 
+        {/* The form starts here rather than at the fields, so the whole dialog
+            has one scrolling body between a fixed header and fixed buttons. */}
+        <form onSubmit={handleSubmit}>
+        <div className="modal-body">
         <div className="smart-row">
           <label className="smart-field" htmlFor="smart-input">
             <WandSparkles size={18} />
@@ -266,6 +271,8 @@ function QuickAddDialog() {
               id="smart-input"
               value={speech.listening && speech.interim ? speech.interim : smartText}
               onChange={(event) => { setSmartText(event.target.value); applySmart(event.target.value) }}
+              // inside the form now: Enter here means "parse it", not "save it"
+              onKeyDown={(event) => { if (event.key === 'Enter') event.preventDefault() }}
               placeholder={speech.listening ? 'Listening...' : 'Try "I paid 500 for pizza"'}
               disabled={saving}
               autoComplete="off"
@@ -314,7 +321,6 @@ function QuickAddDialog() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit}>
           <div className="field">
                 <label className="field-label" htmlFor="task-title">
                   {isReminder ? 'Remind me to' : isExpense ? 'What was it for?' : 'What needs doing?'}
@@ -415,6 +421,7 @@ function QuickAddDialog() {
               )}
 
           {error && <p className="form-error" role="alert"><CircleAlert size={16} /> {error}</p>}
+          </div>
 
           <footer className="modal-actions">
             <button type="button" className="voice-ghost" onClick={() => setOpen(false)} disabled={saving}>Cancel</button>
