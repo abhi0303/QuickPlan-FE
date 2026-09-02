@@ -19,18 +19,26 @@ import './SettleModal.scss'
 
 const money = (value: number) => `₹${value.toFixed(2)}`
 
+export type SettlePerson = { userId: string, name: string, owed: number }
+
 export type SettleSeed = {
-  toUserId: string
-  toName: string
+  /**
+   * Who moved the money. `pay` is you clearing what you owe; `receive` is
+   * recording that somebody has paid you — the same settlement seen from the
+   * other end, which the person who fronted the expense is often the one to
+   * know about.
+   */
+  mode: 'pay' | 'receive'
+  /** One when paying; the people who owe you when receiving. */
+  people: SettlePerson[]
+  personId: string
   /** Prefilled amount — one expense's share, or everything owed. */
   amount: number
-  /** What the whole balance with this person is, for the "everything" shortcut. */
-  owed: number
   note?: string
 }
 
 type Props = {
-  seed: SettleSeed | null
+  seed: (SettleSeed & { meId: string }) | null
   busy?: boolean
   onClose: () => void
   onConfirm: (payload: CreateSettlementPayload) => void
@@ -38,10 +46,20 @@ type Props = {
 
 export function SettleModal({ seed, busy, onClose, onConfirm }: Props) {
   if (!seed) return null
-  return <SettleDialog key={`${seed.toUserId}-${seed.note ?? ''}`} seed={seed} busy={busy} onClose={onClose} onConfirm={onConfirm} />
+  return (
+    <SettleDialog
+      key={`${seed.mode}-${seed.personId}-${seed.note ?? ''}`}
+      seed={seed} busy={busy} onClose={onClose} onConfirm={onConfirm}
+    />
+  )
 }
 
-function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: SettleSeed }) {
+function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: SettleSeed & { meId: string } }) {
+  const receiving = seed.mode === 'receive'
+  const [personId, setPersonId] = useState(seed.personId)
+  const person = seed.people.find((row) => row.userId === personId) ?? seed.people[0]
+  const owed = person?.owed ?? 0
+
   const [amount, setAmount] = useState(String(seed.amount.toFixed(2)))
   const [note, setNote] = useState(seed.note ?? '')
   const [day, setDay] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -63,7 +81,7 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
   }, [onClose])
 
   const value = Number(amount) || 0
-  const leftOver = seed.owed - value
+  const leftOver = owed - value
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -73,13 +91,18 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
      * more than they owe is how a settled balance ends up owing them money —
      * which is exactly what happened when the prefill was wrong.
      */
-    if (seed.owed > 0.005 && value > seed.owed + 0.005) {
-      return setError(`You only owe ${seed.toName.split(' ')[0]} ${money(seed.owed)}.`)
+    if (owed > 0.005 && value > owed + 0.005) {
+      const who = person?.name.split(' ')[0] ?? 'they'
+      return setError(receiving
+        ? `${who} only owes you ${money(owed)}.`
+        : `You only owe ${who} ${money(owed)}.`)
     }
 
     const at = day ? new Date(`${day}T${time || '12:00'}`) : null
     onConfirm({
-      toUserId: seed.toUserId,
+      // receiving records the other person as the payer; the API defaults
+      // `fromUserId` to the caller, which is only right when you are paying
+      ...(receiving ? { fromUserId: personId, toUserId: seed.meId } : { toUserId: personId }),
       amount: value,
       note: note.trim() || undefined,
       settledAt: at && !Number.isNaN(at.getTime()) ? at.toISOString() : undefined,
@@ -92,8 +115,12 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
         onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-head">
           <div>
-            <h2 id="settle-title">Record a payment</h2>
-            <p className="muted">Pay off part of what you owe, or all of it.</p>
+            <h2 id="settle-title">{receiving ? 'Record money you received' : 'Record a payment'}</h2>
+            <p className="muted">
+              {receiving
+                ? 'They paid you back — part of what they owe, or all of it.'
+                : 'Pay off part of what you owe, or all of it.'}
+            </p>
           </div>
           <button className="modal-close" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </header>
@@ -101,14 +128,16 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
         {/* who you are paying is context for the whole dialog, so it stays
             with the header rather than scrolling away from the amount */}
         <div className="settle-who">
-          <span className="friend-avatar" style={avatarStyle(seed.toName)}>
-            {seed.toName.charAt(0).toUpperCase()}
+          <span className="friend-avatar" style={avatarStyle(person?.name ?? '')}>
+            {(person?.name ?? '?').charAt(0).toUpperCase()}
           </span>
           <div>
-            <strong>Paying {seed.toName}</strong>
+            <strong>{receiving ? `${person?.name ?? 'They'} paid you` : `Paying ${person?.name ?? ''}`}</strong>
             <small>
-              {seed.owed > 0.005
-                ? `You owe them ${money(seed.owed)} in this group`
+              {owed > 0.005
+                ? receiving
+                  ? `They owe you ${money(owed)} in this group`
+                  : `You owe them ${money(owed)} in this group`
                 : 'Your balance with them is already square'}
             </small>
           </div>
@@ -117,38 +146,58 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
         <form onSubmit={handleSubmit}>
           {/* only the fields scroll; the title and the buttons stay put */}
           <div className="modal-body">
+          {/* more than one person can owe you for the same expense */}
+          {receiving && seed.people.length > 1 && (
+            <div className="field">
+              <label className="field-label" htmlFor="settle-who">Who paid you?</label>
+              <select id="settle-who" value={personId} disabled={busy}
+                onChange={(event) => {
+                  setPersonId(event.target.value)
+                  const next = seed.people.find((row) => row.userId === event.target.value)
+                  if (next) setAmount(next.owed.toFixed(2))
+                  setError('')
+                }}>
+                {seed.people.map((row) => (
+                  <option key={row.userId} value={row.userId}>{row.name} · {money(row.owed)}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="field">
-            <label className="field-label" htmlFor="settle-amount">How much are you paying?</label>
+            <label className="field-label" htmlFor="settle-amount">
+              {receiving ? 'How much did they pay you?' : 'How much are you paying?'}
+            </label>
             <span className="control adorned">
               <IndianRupee size={17} />
               <input id="settle-amount" ref={amountRef} type="number" min="0" step="any" inputMode="decimal"
-                max={seed.owed > 0.005 ? seed.owed : undefined}
+                max={owed > 0.005 ? owed : undefined}
                 value={amount} onChange={(e) => { setAmount(e.target.value); setError('') }}
                 disabled={busy} />
             </span>
 
-            {seed.owed > 0.005 && (
+            {owed > 0.005 && (
               <div className="chip-row">
-                {Math.abs(seed.amount - seed.owed) > 0.005 && (
+                {Math.abs(seed.amount - owed) > 0.005 && (
                   <button type="button" className="chip" disabled={busy}
                     onClick={() => setAmount(seed.amount.toFixed(2))}>
                     This expense · {money(seed.amount)}
                   </button>
                 )}
                 <button type="button" className="chip" disabled={busy}
-                  onClick={() => setAmount(seed.owed.toFixed(2))}>
-                  Everything · {money(seed.owed)}
+                  onClick={() => setAmount(owed.toFixed(2))}>
+                  Everything · {money(owed)}
                 </button>
               </div>
             )}
 
             {/* A part payment is the normal case here, so say what is left
                 rather than treating it as an error. */}
-            {value > 0 && seed.owed > 0.005 && (
+            {value > 0 && owed > 0.005 && (
               <p className="field-hint">
                 {leftOver > 0.005
                   ? `${money(leftOver)} would still be owed after this.`
-                  : 'That clears what you owe them.'}
+                  : receiving ? 'That clears what they owe you.' : 'That clears what you owe them.'}
               </p>
             )}
           </div>
@@ -191,7 +240,7 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
             <button className="modal-submit" disabled={busy}>
               {busy
                 ? <><LoaderCircle size={18} className="spin" /> Recording...</>
-                : <><HandCoins size={18} /> Record payment</>}
+                : <><HandCoins size={18} /> {receiving ? 'Record it' : 'Record payment'}</>}
             </button>
           </footer>
         </form>
