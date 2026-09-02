@@ -7,6 +7,7 @@ import {
   LogOut,
   Moon,
   Plus,
+  RotateCw,
   Settings,
   Sparkles,
   Sun,
@@ -27,6 +28,7 @@ import { EditTaskModal } from '../tasks/EditTaskModal'
 import { SpeakButton } from '../common/SpeakButton'
 import { useGamification } from '../../hooks/useGamification'
 import { useOffline } from '../../hooks/useOffline'
+import { useRefresh } from '../../hooks/useRefresh'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
 import type { MoneyTab } from '../../store/useAppStore'
@@ -74,6 +76,8 @@ export function AppShell() {
   // fetched once here and published to the store, so the sidebar card and the
   // dashboard panel cost one request between them
   const { levelUp, acknowledgeLevelUp } = useGamification()
+  // an installed app has no reload button of its own
+  const { refresh, refreshing } = useRefresh()
   // starts the outbox: it flushes on open, on reconnect, and on Background Sync
   useOffline()
   const game = useAppStore((state) => state.gamification)
@@ -153,6 +157,15 @@ export function AppShell() {
           <div className="topbar-actions">
             {/* mobile only: the sidebar's rank card is not there to show it */}
             {game && <RankChip state={game} />}
+            <button
+              className={`icon-button ${refreshing ? 'is-busy' : ''}`}
+              onClick={refresh}
+              disabled={refreshing}
+              aria-label="Refresh"
+              title="Refresh — fetches everything again, and restarts if there is a new version"
+            >
+              <RotateCw size={18} className={refreshing ? 'spin' : ''} />
+            </button>
             <button
               className="icon-button"
               onClick={toggleTheme}

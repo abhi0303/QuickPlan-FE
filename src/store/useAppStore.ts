@@ -52,6 +52,11 @@ type AppStore = {
   /** The same, for money — Quick Add can now record an expense from anywhere. */
   expensesVersion: number
   /**
+   * Bumped by the header's refresh, and watched by the lists that have no
+   * mutation counter of their own. One place to say "fetch it all again".
+   */
+  dataVersion: number
+  /**
    * One-member groups the user has been offered a conversion for and said no
    * to. Persisted, because "ask once" has to survive a reload to mean anything.
    */
@@ -108,6 +113,7 @@ type AppStore = {
   openQuickAddWithText: (text: string) => void
   bumpTasksVersion: () => void
   bumpExpensesVersion: () => void
+  refreshAll: () => void
   declineConversion: (groupId: string) => void
   setForecastBalance: (balance: number | null) => void
   setIncomeDay: (day: number) => void
@@ -139,6 +145,7 @@ export const useAppStore = create<AppStore>()(
       moneyTab: null,
       tasksVersion: 0,
       expensesVersion: 0,
+      dataVersion: 0,
       declinedConversions: [],
       forecastBalance: null,
       forecastBalanceAt: null,
@@ -170,6 +177,13 @@ export const useAppStore = create<AppStore>()(
       setMoneyTab: (moneyTab) => set({ moneyTab }),
       bumpTasksVersion: () => set((state) => ({ tasksVersion: state.tasksVersion + 1 })),
       bumpExpensesVersion: () => set((state) => ({ expensesVersion: state.expensesVersion + 1 })),
+      /** Everything the app can refetch, refetched. */
+      refreshAll: () => set((state) => ({
+        dataVersion: state.dataVersion + 1,
+        tasksVersion: state.tasksVersion + 1,
+        expensesVersion: state.expensesVersion + 1,
+        gamificationTick: state.gamificationTick + 1,
+      })),
       declineConversion: (groupId) => set((state) => ({
         declinedConversions: [...state.declinedConversions, groupId],
       })),

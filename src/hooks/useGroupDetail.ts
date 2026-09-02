@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { getApiErrorMessage } from '../services/api'
+import { useAppStore } from '../store/useAppStore'
 import {
   createSettlement, deleteExpense, getGroupBalances, listGroupExpenses, listSettlements,
 } from '../services/expenses'
@@ -23,6 +24,8 @@ export function useGroupDetail(groupId: string) {
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
   const [version, setVersion] = useState(0)
+  // the header's refresh asks every list to fetch again
+  const dataVersion = useAppStore((state) => state.dataVersion)
 
   useEffect(() => {
     let cancelled = false
@@ -45,7 +48,7 @@ export function useGroupDetail(groupId: string) {
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [groupId, version])
+  }, [groupId, version, dataVersion])
 
   function refresh() { setVersion((v) => v + 1) }
 

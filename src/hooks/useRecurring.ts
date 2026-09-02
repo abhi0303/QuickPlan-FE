@@ -14,6 +14,8 @@ export function useRecurring() {
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState('')
   const [version, setVersion] = useState(0)
+  // the header's refresh asks every list to fetch again
+  const dataVersion = useAppStore((state) => state.dataVersion)
   const bumpExpenses = useAppStore((state) => state.bumpExpensesVersion)
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function useRecurring() {
       })
 
     return () => { cancelled = true }
-  }, [version])
+  }, [version, dataVersion])
 
   const reload = useCallback(() => setVersion((token) => token + 1), [])
 
