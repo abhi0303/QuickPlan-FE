@@ -32,6 +32,7 @@ import { useOffline } from '../../hooks/useOffline'
 import { useHideOnScroll } from '../../hooks/useHideOnScroll'
 import { usePullToRefresh } from '../../hooks/usePullToRefresh'
 import { useRefresh } from '../../hooks/useRefresh'
+import { useRoutePrefetch } from '../../hooks/useRoutePrefetch'
 import { useTheme } from '../../hooks/useTheme'
 import { useAppStore } from '../../store/useAppStore'
 import type { MoneyTab } from '../../store/useAppStore'
@@ -91,6 +92,8 @@ export function AppShell() {
   const pull = usePullToRefresh(refresh)
   // starts the outbox: it flushes on open, on reconnect, and on Background Sync
   useOffline()
+  // warms the other tabs while nothing else is happening
+  useRoutePrefetch()
   const game = useAppStore((state) => state.gamification)
   const showThemeToggle = useAppStore((state) => state.showThemeToggle)
   const { pathname } = useLocation()
