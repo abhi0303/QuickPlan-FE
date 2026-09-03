@@ -586,6 +586,25 @@ textarea.control {
     resize: vertical;
 }
 
+/* iOS zooms the page in whenever it focuses a field whose text is under 16px,
+   and it does not zoom back out afterwards — which is why tapping any field
+   leaves the whole app sitting off-centre until it is reloaded. 16px is the
+   whole fix, so no field on a touch device may be smaller than that, whatever
+   a component would rather have: this is a device constraint rather than a
+   design preference, and a component quietly overriding it would bring the
+   zoom back. Scoped to WebKit on a touch screen, so a desktop keeps the sizes
+   it was designed with and Android is untouched — it never zoomed. */
+@supports (-webkit-touch-callout: none) {
+
+    @media (pointer: coarse) {
+
+        input,
+        textarea {
+            font-size: 16px !important;
+        }
+    }
+}
+
 .control::placeholder {
     color: var(--muted);
 }
