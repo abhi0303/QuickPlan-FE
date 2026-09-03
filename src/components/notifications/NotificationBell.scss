@@ -413,7 +413,10 @@
         left: calc(10px + env(safe-area-inset-left, 0px));
         position: fixed;
         right: calc(10px + env(safe-area-inset-right, 0px));
-        top: calc(58px + env(safe-area-inset-top, 0px));
+        /* measured from the bell, because the header's height depends on the
+           device's safe area — a guess at it was landing on top of the bell on
+           an iPhone, where the header is taller than the guess allowed for */
+        top: var(--notif-top, calc(58px + env(safe-area-inset-top, 0px)));
         width: auto;
     }
 

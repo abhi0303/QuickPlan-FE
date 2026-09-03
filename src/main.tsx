@@ -3,6 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { registerServiceWorker } from './services/push'
+import { watchSafeArea } from './utils/safeArea'
+
+// before the first paint, so the header is never laid out twice
+watchSafeArea()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

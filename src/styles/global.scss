@@ -9,6 +9,15 @@
    ========================================================================== */
 
 :root {
+    /* The safe areas the layout should actually pay for, and the clearance a
+       system bar needs where it overlays the viewport and the platform reports
+       no inset for it at all. All three are overridden to 0 at runtime where
+       the viewport has already had the insets taken out of it — see
+       utils/safeArea.ts. --inset-floor carries its own value at each use, so
+       that setting it here can only ever remove clearance that is not needed. */
+    --inset-top: env(safe-area-inset-top, 0px);
+    --inset-bottom: env(safe-area-inset-bottom, 0px);
+
     /* surfaces */
     --bg: #f4faf7;
     --bg-tint: #e6f4ee;

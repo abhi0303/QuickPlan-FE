@@ -21,9 +21,10 @@
     position: absolute;
     top: -6px;
     width: 40%;
-    /* nothing at all for the first fifth of a second, so a fast chunk never
-       flashes a bar at somebody */
-    animation-delay: .2s;
+    /* a moment of nothing, so a chunk that is already warm never flashes a bar
+       at somebody — but only a moment, because past that the wait is real and
+       a still screen reads as a tap that missed */
+    animation-delay: .12s;
 }
 
 @keyframes routeBar {
@@ -44,10 +45,13 @@
     }
 }
 
-/* The orb fades in a beat later than the bar, so a quick page shows neither. */
+/* The orb follows a beat after the bar, so a quick page shows neither. It
+   arrives quickly once it does arrive: a slow fade means that a wait of half a
+   second — which is most of them — ends before the orb is properly visible,
+   which is the same as having shown nothing at all. */
 .route-loading .loader {
-    animation: routeFade .4s ease both;
-    animation-delay: .35s;
+    animation: routeFade .18s ease both;
+    animation-delay: .2s;
     opacity: 0;
 }
 
