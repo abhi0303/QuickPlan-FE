@@ -424,6 +424,9 @@
     }
 
 .bottom-nav {
-        padding-bottom: max(calc(8px + var(--inset-bottom)), var(--inset-floor, 12px));
+        /* the floor stays a literal here: at 12px it is a comfortable gap
+           rather than clearance for a system bar, so there is nothing for the
+           viewport check to take away. Only the inset above it moves. */
+        padding-bottom: max(calc(8px + var(--inset-bottom)), 12px);
     }
 }
