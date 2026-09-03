@@ -251,7 +251,7 @@
     display: flex;
     gap: 14px;
     justify-content: space-between;
-    padding: calc(18px + env(safe-area-inset-top, 0px)) 4.5% 18px;
+    padding: calc(18px + var(--inset-top)) 4.5% 18px;
     position: sticky;
     top: 0;
     /* above the tab bar, the floating buttons and the notification scrim, so
@@ -297,7 +297,7 @@
     display: none;
     justify-content: space-around;
     left: 0;
-    padding: 8px calc(6px + env(safe-area-inset-right, 0px)) calc(8px + env(safe-area-inset-bottom, 0px)) calc(6px + env(safe-area-inset-left, 0px));
+    padding: 8px calc(6px + env(safe-area-inset-right, 0px)) calc(8px + var(--inset-bottom)) calc(6px + env(safe-area-inset-left, 0px));
     position: fixed;
     right: 0;
     z-index: 6;
@@ -375,7 +375,7 @@
 
 .topbar {
         gap: 10px;
-        padding: calc(14px + env(safe-area-inset-top, 0px)) calc(20px + env(safe-area-inset-right, 0px)) 14px calc(20px + env(safe-area-inset-left, 0px));
+        padding: calc(14px + var(--inset-top)) calc(20px + env(safe-area-inset-right, 0px)) 14px calc(20px + env(safe-area-inset-left, 0px));
     }
 
 .topbar-brand {
@@ -420,10 +420,10 @@
 (display-mode: fullscreen) and (max-width: 860px),
 (display-mode: minimal-ui) and (max-width: 860px) {
 .topbar {
-        padding-top: max(calc(14px + env(safe-area-inset-top, 0px)), 50px);
+        padding-top: max(calc(14px + var(--inset-top)), var(--inset-floor, 50px));
     }
 
 .bottom-nav {
-        padding-bottom: max(calc(8px + env(safe-area-inset-bottom, 0px)), 12px);
+        padding-bottom: max(calc(8px + var(--inset-bottom)), var(--inset-floor, 12px));
     }
 }

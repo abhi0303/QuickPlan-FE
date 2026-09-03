@@ -654,6 +654,6 @@
 (display-mode: fullscreen) and (max-width: 860px),
 (display-mode: minimal-ui) and (max-width: 860px) {
 .auth-page {
-        padding-top: max(calc(22px + env(safe-area-inset-top, 0px)), 58px);
+        padding-top: max(calc(22px + var(--inset-top)), var(--inset-floor, 58px));
     }
 }
