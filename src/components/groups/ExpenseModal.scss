@@ -59,4 +59,14 @@
 @media (max-width: 560px) {
     .expense-modal .field-pair { grid-template-columns: 1fr; }
     .split-value { width: 88px; }
+
+    /* The 16px floor that stops iOS zooming on focus needs more room than the
+       designed 14px did: a five-figure amount wants 92px and would otherwise
+       be typed into a field it does not fit. */
+    @supports (-webkit-touch-callout: none) {
+
+        @media (pointer: coarse) {
+            .split-value { width: 104px; }
+        }
+    }
 }
