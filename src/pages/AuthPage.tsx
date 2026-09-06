@@ -349,181 +349,181 @@ export function AuthPage() {
               </button>
             </div>
           ) : (
-          <form onSubmit={handleSubmit} noValidate>
-            {isSignup && (
-              <label htmlFor="name">
-                Your name
+            <form onSubmit={handleSubmit} noValidate>
+              {isSignup && (
+                <label htmlFor="name">
+                  Your name
+                  <input
+                    id="name"
+                    className={errorFor('name') ? 'invalid' : ''}
+                    value={values.name}
+                    onChange={(event) => setValue('name', event.target.value)}
+                    onBlur={() => markTouched('name')}
+                    placeholder="John Doe"
+                    autoComplete="name"
+                    aria-invalid={Boolean(errorFor('name'))}
+                    disabled={loading}
+                  />
+                  {errorFor('name') && <span className="field-error"><CircleAlert size={13} /> {errorFor('name')}</span>}
+                </label>
+              )}
+
+              <label htmlFor="email">
+                Email address
                 <input
-                  id="name"
-                  className={errorFor('name') ? 'invalid' : ''}
-                  value={values.name}
-                  onChange={(event) => setValue('name', event.target.value)}
-                  onBlur={() => markTouched('name')}
-                  placeholder="Abhishek Sharma"
-                  autoComplete="name"
-                  aria-invalid={Boolean(errorFor('name'))}
+                  id="email"
+                  type="email"
+                  inputMode="email"
+                  className={errorFor('email') ? 'invalid' : ''}
+                  value={values.email}
+                  onChange={(event) => setValue('email', event.target.value)}
+                  onBlur={() => markTouched('email')}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  aria-invalid={Boolean(errorFor('email'))}
                   disabled={loading}
                 />
-                {errorFor('name') && <span className="field-error"><CircleAlert size={13} /> {errorFor('name')}</span>}
+                {errorFor('email') && <span className="field-error"><CircleAlert size={13} /> {errorFor('email')}</span>}
               </label>
-            )}
 
-            <label htmlFor="email">
-              Email address
-              <input
-                id="email"
-                type="email"
-                inputMode="email"
-                className={errorFor('email') ? 'invalid' : ''}
-                value={values.email}
-                onChange={(event) => setValue('email', event.target.value)}
-                onBlur={() => markTouched('email')}
-                placeholder="you@example.com"
-                autoComplete="email"
-                aria-invalid={Boolean(errorFor('email'))}
-                disabled={loading}
-              />
-              {errorFor('email') && <span className="field-error"><CircleAlert size={13} /> {errorFor('email')}</span>}
-            </label>
-
-            {!isForgot && (
-            <label htmlFor="password">
-              <span className="field-top">
-                Password
-                {isSignup && <span className="field-hint">{PASSWORD_MIN_LENGTH}+ characters</span>}
-              </span>
-              <span className="input-with-action">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  className={errorFor('password') ? 'invalid' : ''}
-                  value={values.password}
-                  onChange={(event) => setValue('password', event.target.value)}
-                  onBlur={() => markTouched('password')}
-                  onKeyUp={trackCapsLock}
-                  placeholder={isSignup ? 'Create a password' : 'Enter your password'}
-                  autoComplete={isSignup ? 'new-password' : 'current-password'}
-                  aria-invalid={Boolean(errorFor('password'))}
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="input-action"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </span>
-
-              {capsLock && <span className="caps-hint"><TriangleAlert size={13} /> Caps Lock is on</span>}
-              {errorFor('password') && <span className="field-error"><CircleAlert size={13} /> {errorFor('password')}</span>}
-
-              {isSignup && values.password.length > 0 && (
-                <span className="strength" data-level={score}>
-                  <span className="strength-bars">
-                    {[1, 2, 3, 4].map((step) => <i key={step} className={step <= score ? 'on' : ''} />)}
+              {!isForgot && (
+                <label htmlFor="password">
+                  <span className="field-top">
+                    Password
+                    {isSignup && <span className="field-hint">{PASSWORD_MIN_LENGTH}+ characters</span>}
                   </span>
-                  <span className="strength-label">{STRENGTH_LABELS[score]} password</span>
-                </span>
+                  <span className="input-with-action">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      className={errorFor('password') ? 'invalid' : ''}
+                      value={values.password}
+                      onChange={(event) => setValue('password', event.target.value)}
+                      onBlur={() => markTouched('password')}
+                      onKeyUp={trackCapsLock}
+                      placeholder={isSignup ? 'Create a password' : 'Enter your password'}
+                      autoComplete={isSignup ? 'new-password' : 'current-password'}
+                      aria-invalid={Boolean(errorFor('password'))}
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      className="input-action"
+                      onClick={() => setShowPassword((visible) => !visible)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </span>
+
+                  {capsLock && <span className="caps-hint"><TriangleAlert size={13} /> Caps Lock is on</span>}
+                  {errorFor('password') && <span className="field-error"><CircleAlert size={13} /> {errorFor('password')}</span>}
+
+                  {isSignup && values.password.length > 0 && (
+                    <span className="strength" data-level={score}>
+                      <span className="strength-bars">
+                        {[1, 2, 3, 4].map((step) => <i key={step} className={step <= score ? 'on' : ''} />)}
+                      </span>
+                      <span className="strength-label">{STRENGTH_LABELS[score]} password</span>
+                    </span>
+                  )}
+
+                  {isSignup && (
+                    <span className="req-list">
+                      <span className={`req ${checks.length ? 'met' : ''}`}>
+                        {checks.length ? <CircleCheckBig size={13} /> : <Circle size={13} />} {PASSWORD_MIN_LENGTH}+ characters
+                      </span>
+                      <span className={`req ${checks.letter ? 'met' : ''}`}>
+                        {checks.letter ? <CircleCheckBig size={13} /> : <Circle size={13} />} A letter
+                      </span>
+                      <span className={`req ${checks.number ? 'met' : ''}`}>
+                        {checks.number ? <CircleCheckBig size={13} /> : <Circle size={13} />} A number
+                      </span>
+                      <span className={`req ${checks.symbol ? 'met' : ''}`}>
+                        {checks.symbol ? <CircleCheckBig size={13} /> : <Circle size={13} />} A symbol
+                      </span>
+                    </span>
+                  )}
+                </label>
+              )}
+
+              {!isSignup && !isForgot && (
+                <button type="button" className="text-button auth-forgot" onClick={() => switchMode('forgot')}>
+                  Forgot password?
+                </button>
               )}
 
               {isSignup && (
-                <span className="req-list">
-                  <span className={`req ${checks.length ? 'met' : ''}`}>
-                    {checks.length ? <CircleCheckBig size={13} /> : <Circle size={13} />} {PASSWORD_MIN_LENGTH}+ characters
+                <label htmlFor="confirmPassword">
+                  Confirm password
+                  <span className="input-with-action">
+                    <input
+                      id="confirmPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      className={`${errorFor('confirmPassword') ? 'invalid' : ''} ${confirmMatches ? 'has-check' : ''}`}
+                      value={values.confirmPassword}
+                      onChange={(event) => setValue('confirmPassword', event.target.value)}
+                      onBlur={() => markTouched('confirmPassword')}
+                      onKeyUp={trackCapsLock}
+                      placeholder="Re-enter your password"
+                      autoComplete="new-password"
+                      aria-invalid={Boolean(errorFor('confirmPassword'))}
+                      disabled={loading}
+                    />
+                    {confirmMatches && (
+                      <span className="input-ok" aria-label="Passwords match"><Check size={17} strokeWidth={3} /></span>
+                    )}
+                    <button
+                      type="button"
+                      className="input-action"
+                      onClick={() => setShowPassword((visible) => !visible)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </span>
-                  <span className={`req ${checks.letter ? 'met' : ''}`}>
-                    {checks.letter ? <CircleCheckBig size={13} /> : <Circle size={13} />} A letter
-                  </span>
-                  <span className={`req ${checks.number ? 'met' : ''}`}>
-                    {checks.number ? <CircleCheckBig size={13} /> : <Circle size={13} />} A number
-                  </span>
-                  <span className={`req ${checks.symbol ? 'met' : ''}`}>
-                    {checks.symbol ? <CircleCheckBig size={13} /> : <Circle size={13} />} A symbol
-                  </span>
-                </span>
-              )}
-            </label>
-            )}
-
-            {!isSignup && !isForgot && (
-              <button type="button" className="text-button auth-forgot" onClick={() => switchMode('forgot')}>
-                Forgot password?
-              </button>
-            )}
-
-            {isSignup && (
-              <label htmlFor="confirmPassword">
-                Confirm password
-                <span className="input-with-action">
-                  <input
-                    id="confirmPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    className={`${errorFor('confirmPassword') ? 'invalid' : ''} ${confirmMatches ? 'has-check' : ''}`}
-                    value={values.confirmPassword}
-                    onChange={(event) => setValue('confirmPassword', event.target.value)}
-                    onBlur={() => markTouched('confirmPassword')}
-                    onKeyUp={trackCapsLock}
-                    placeholder="Re-enter your password"
-                    autoComplete="new-password"
-                    aria-invalid={Boolean(errorFor('confirmPassword'))}
-                    disabled={loading}
-                  />
-                  {confirmMatches && (
-                    <span className="input-ok" aria-label="Passwords match"><Check size={17} strokeWidth={3} /></span>
+                  {errorFor('confirmPassword') && (
+                    <span className="field-error"><CircleAlert size={13} /> {errorFor('confirmPassword')}</span>
                   )}
-                  <button
-                    type="button"
-                    className="input-action"
-                    onClick={() => setShowPassword((visible) => !visible)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </span>
-                {errorFor('confirmPassword') && (
-                  <span className="field-error"><CircleAlert size={13} /> {errorFor('confirmPassword')}</span>
-                )}
-              </label>
-            )}
-
-            {serverError && (
-              <p className="form-error" role="alert">
-                <CircleAlert size={16} />
-                {serverError}
-              </p>
-            )}
-
-            {unverifiedEmail && (
-              <button
-                type="button"
-                className="text-button auth-resend"
-                onClick={() => handleResend(unverifiedEmail)}
-                disabled={resendWait > 0}
-              >
-                <Send size={14} /> {resendWait > 0 ? `Send a new link in ${resendWait}s` : 'Send a new confirmation link'}
-              </button>
-            )}
-
-            <button className="auth-submit" disabled={loading || lockout > 0}>
-              {loading ? (
-                <><LoaderCircle size={18} className="spin" /> {isSignup ? 'Creating your account...' : isForgot ? 'Sending the link...' : 'Signing you in...'}</>
-              ) : lockout > 0 ? (
-                <>Try again in {lockout}s</>
-              ) : (
-                <>{isSignup ? 'Create account' : isForgot ? 'Send reset link' : 'Sign in'} <ArrowRight size={18} /></>
+                </label>
               )}
-            </button>
 
-            {isForgot && (
-              <button type="button" className="text-button auth-back" onClick={() => switchMode('login')}>
-                Back to sign in
+              {serverError && (
+                <p className="form-error" role="alert">
+                  <CircleAlert size={16} />
+                  {serverError}
+                </p>
+              )}
+
+              {unverifiedEmail && (
+                <button
+                  type="button"
+                  className="text-button auth-resend"
+                  onClick={() => handleResend(unverifiedEmail)}
+                  disabled={resendWait > 0}
+                >
+                  <Send size={14} /> {resendWait > 0 ? `Send a new link in ${resendWait}s` : 'Send a new confirmation link'}
+                </button>
+              )}
+
+              <button className="auth-submit" disabled={loading || lockout > 0}>
+                {loading ? (
+                  <><LoaderCircle size={18} className="spin" /> {isSignup ? 'Creating your account...' : isForgot ? 'Sending the link...' : 'Signing you in...'}</>
+                ) : lockout > 0 ? (
+                  <>Try again in {lockout}s</>
+                ) : (
+                  <>{isSignup ? 'Create account' : isForgot ? 'Send reset link' : 'Sign in'} <ArrowRight size={18} /></>
+                )}
               </button>
-            )}
-          </form>
+
+              {isForgot && (
+                <button type="button" className="text-button auth-back" onClick={() => switchMode('login')}>
+                  Back to sign in
+                </button>
+              )}
+            </form>
           )}
 
           <p className="auth-terms">
