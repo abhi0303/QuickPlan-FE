@@ -5,6 +5,7 @@ import {
 import { PushToggle } from '../components/common/PushToggle'
 import { SyncPanel } from '../components/offline/SyncPanel'
 import { ChangePasswordModal } from '../components/settings/ChangePasswordModal'
+import { UpiRow } from '../components/settings/UpiRow'
 import { useAppStore } from '../store/useAppStore'
 import './SettingsPage.scss'
 
@@ -136,6 +137,8 @@ export function SettingsPage() {
       </div>
 
       <div className="settings-card">
+        <UpiRow />
+
         <div className="setting-row">
           <div className="setting-label">
             <span className="setting-icon"><KeyRound size={20} /></span>
