@@ -664,6 +664,167 @@ textarea.control {
     filter: invert(1);
 }
 
+/* ==========================================================================
+   password fields
+   ========================================================================== */
+
+/* Signing up and changing a password ask for the same thing in the same way —
+   a reveal toggle, a caps-lock warning, a strength meter and the rules under
+   it — so these belong to the auth page and the settings dialog equally, and
+   to neither one alone. */
+
+.input-with-action {
+    display: block;
+    position: relative;
+}
+
+/* room for the reveal button, and for the match tick beside it */
+
+.input-with-action input {
+    padding-right: 48px;
+}
+
+.input-with-action input.has-check {
+    padding-right: 78px;
+}
+
+.input-action {
+    align-items: center;
+    border-radius: var(--r-sm);
+    color: var(--muted);
+    display: flex;
+    height: 32px;
+    justify-content: center;
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+}
+
+.input-action:hover {
+    background: var(--surface-alt);
+    color: var(--primary);
+}
+
+.input-ok {
+    color: var(--primary);
+    display: flex;
+    position: absolute;
+    right: 46px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.control.invalid {
+    border-color: var(--rose);
+}
+
+.control.invalid:focus {
+    box-shadow: 0 0 0 4px var(--rose-soft);
+}
+
+.caps-hint {
+    align-items: center;
+    background: var(--tangerine-soft);
+    border-radius: var(--r-sm);
+    color: var(--tangerine);
+    display: flex;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 6px;
+    padding: 8px 10px;
+}
+
+.strength {
+    display: grid;
+    gap: 7px;
+}
+
+.strength-bars {
+    display: flex;
+    gap: 5px;
+}
+
+.strength-bars i {
+    background: var(--border);
+    border-radius: var(--r-pill);
+    flex: 1;
+    height: 5px;
+    transition: background .2s ease;
+}
+
+.strength-label {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.strength[data-level='1'] .strength-bars i.on {
+    background: var(--rose);
+}
+
+.strength[data-level='1'] .strength-label {
+    color: var(--rose);
+}
+
+.strength[data-level='2'] .strength-bars i.on {
+    background: var(--tangerine);
+}
+
+.strength[data-level='2'] .strength-label {
+    color: var(--tangerine);
+}
+
+.strength[data-level='3'] .strength-bars i.on {
+    background: var(--periwinkle);
+}
+
+.strength[data-level='3'] .strength-label {
+    color: var(--periwinkle);
+}
+
+.strength[data-level='4'] .strength-bars i.on {
+    background: var(--primary);
+}
+
+.strength[data-level='4'] .strength-label {
+    color: var(--primary-strong);
+}
+
+.req-list {
+    display: grid;
+    gap: 7px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.req {
+    align-items: center;
+    color: var(--muted);
+    display: flex;
+    font-size: 12px;
+    font-weight: 600;
+    gap: 6px;
+}
+
+.req svg {
+    color: var(--border-strong);
+}
+
+.req.met {
+    color: var(--primary-strong);
+}
+
+.req.met svg {
+    color: var(--primary);
+}
+
+@media (max-width: 420px) {
+
+    .req-list {
+        grid-template-columns: 1fr;
+    }
+}
+
 .chip {
     background: var(--surface-soft);
     border: 1px solid var(--border);

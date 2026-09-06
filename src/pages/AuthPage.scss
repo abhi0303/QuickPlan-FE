@@ -139,6 +139,70 @@
     max-width: 1080px;
 }
 
+/* The confirm-email and reset screens have no marketing column beside them:
+   one card, centred, so the eye lands on the one thing being asked for. */
+.auth-layout.is-single {
+    grid-template-columns: minmax(0, 460px);
+    justify-content: center;
+}
+
+.auth-notice {
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+    text-align: center;
+}
+
+.auth-notice p {
+    color: var(--text);
+    margin: 0;
+}
+
+.auth-notice small {
+    color: var(--muted);
+}
+
+.auth-notice-mark {
+    align-items: center;
+    background: var(--primary-soft);
+    border-radius: 50%;
+    color: var(--primary-strong);
+    display: flex;
+    height: 56px;
+    justify-content: center;
+    width: 56px;
+}
+
+.auth-notice-mark.is-warn {
+    background: color-mix(in srgb, var(--rose) 14%, transparent);
+    color: var(--rose);
+}
+
+.auth-notice .auth-submit,
+.auth-notice .auth-inline-field {
+    width: 100%;
+}
+
+.auth-inline-field {
+    display: grid;
+    gap: 8px;
+    text-align: left;
+}
+
+/* Sits under the password field, where somebody looks after mistyping it. */
+.auth-forgot {
+    justify-self: end;
+    margin-top: -6px;
+}
+
+.auth-resend {
+    justify-self: start;
+}
+
+.auth-back {
+    justify-self: center;
+}
+
 .auth-intro h1 {
     /* sized so "Your day, <widest word>." stays on one line in the ~510px column */
     font-size: clamp(34px, 4vw, 46px);
@@ -430,34 +494,6 @@
     opacity: .6;
 }
 
-.input-with-action {
-    display: block;
-    position: relative;
-}
-
-.input-with-action input {
-    padding-right: 48px;
-}
-
-.input-action {
-    align-items: center;
-    border-radius: var(--r-sm);
-    color: var(--muted);
-    display: flex;
-    height: 32px;
-    justify-content: center;
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 32px;
-}
-
-.input-action:hover {
-    background: var(--surface-alt);
-    color: var(--primary);
-}
-
 /* per-field state — .auth-card input is (0,1,1) so these qualify to (0,2,1) */
 
 .auth-card input.invalid {
@@ -468,7 +504,16 @@
     box-shadow: 0 0 0 4px var(--rose-soft);
 }
 
-.auth-card input.has-check {
+/* The reveal button, the match tick and their wrapper now live in
+   global.scss, but `.auth-card input`'s padding shorthand above matches its
+   rule at the same specificity — and this route's chunk is the one that loads
+   last. So the room they need is re-reserved here, higher. */
+
+.auth-card .input-with-action input {
+    padding-right: 48px;
+}
+
+.auth-card .input-with-action input.has-check {
     padding-right: 78px;
 }
 
@@ -477,115 +522,6 @@
     display: flex;
     gap: 10px;
     justify-content: space-between;
-}
-
-.input-ok {
-    color: var(--primary);
-    display: flex;
-    position: absolute;
-    right: 46px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-.caps-hint {
-    align-items: center;
-    background: var(--tangerine-soft);
-    border-radius: var(--r-sm);
-    color: var(--tangerine);
-    display: flex;
-    font-size: 12px;
-    font-weight: 600;
-    gap: 6px;
-    padding: 8px 10px;
-}
-
-.strength {
-    display: grid;
-    gap: 7px;
-}
-
-.strength-bars {
-    display: flex;
-    gap: 5px;
-}
-
-.strength-bars i {
-    background: var(--border);
-    border-radius: var(--r-pill);
-    flex: 1;
-    height: 5px;
-    transition: background .2s ease;
-}
-
-.strength-label {
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.strength[data-level='1'] .strength-bars i.on {
-    background: var(--rose);
-}
-
-.strength[data-level='1'] .strength-label {
-    color: var(--rose);
-}
-
-.strength[data-level='2'] .strength-bars i.on {
-    background: var(--tangerine);
-}
-
-.strength[data-level='2'] .strength-label {
-    color: var(--tangerine);
-}
-
-.strength[data-level='3'] .strength-bars i.on {
-    background: var(--periwinkle);
-}
-
-.strength[data-level='3'] .strength-label {
-    color: var(--periwinkle);
-}
-
-.strength[data-level='4'] .strength-bars i.on {
-    background: var(--primary);
-}
-
-.strength[data-level='4'] .strength-label {
-    color: var(--primary-strong);
-}
-
-.req-list {
-    display: grid;
-    gap: 7px;
-    grid-template-columns: 1fr 1fr;
-}
-
-.req {
-    align-items: center;
-    color: var(--muted);
-    display: flex;
-    font-size: 12px;
-    font-weight: 600;
-    gap: 6px;
-}
-
-.req svg {
-    color: var(--border-strong);
-}
-
-.req.met {
-    color: var(--primary-strong);
-}
-
-.req.met svg {
-    color: var(--primary);
-}
-
-@media (max-width: 420px) {
-.req-list {
-        grid-template-columns: 1fr;
-    }
 }
 
 .auth-submit {
@@ -601,6 +537,9 @@
     justify-content: center;
     margin-top: 6px;
     padding: 15px;
+    /* worn by a <Link> on the confirm and reset screens, which would otherwise
+       carry the browser's underline through the middle of the button */
+    text-decoration: none;
     transition: background .18s ease, transform .18s ease;
 }
 
