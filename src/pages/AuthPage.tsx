@@ -17,23 +17,34 @@ import {
   IndianRupee,
   ListTodo,
   LoaderCircle,
+  MailCheck,
   Mic,
   NotebookPen,
   PenLine,
   ShieldCheck,
   Sparkles,
+  Send,
   SquareCheckBig,
   StickyNote,
   TriangleAlert,
   Wallet,
 } from 'lucide-react'
-import { getApiErrorMessage } from '../services/api'
-import { login, register } from '../services/auth'
+import { getApiErrorMessage, getApiStatus, getRetryAfterSeconds } from '../services/api'
+import {
+  FORGOT_SENT_MESSAGE,
+  RESEND_COOLDOWN_SECONDS,
+  RESEND_SENT_MESSAGE,
+  forgotPassword,
+  login,
+  register,
+  resendVerification,
+} from '../services/auth'
+import { useCountdown } from '../hooks/useCountdown'
 import { useAppStore } from '../store/useAppStore'
 import { PASSWORD_MIN_LENGTH, STRENGTH_LABELS, passwordChecks, passwordScore } from '../utils/password'
 import './AuthPage.scss'
 
-type Mode = 'login' | 'signup'
+type Mode = 'login' | 'signup' | 'forgot'
 type Field = 'name' | 'email' | 'password' | 'confirmPassword'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -62,6 +73,15 @@ export function AuthPage() {
   const [capsLock, setCapsLock] = useState(false)
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
+  /* What is on screen instead of the form once a mail route has been asked to
+     send something. Both of those endpoints answer identically whether or not
+     the address is registered, so this panel says the same either way. */
+  const [notice, setNotice] = useState<{ title: string; message: string; email: string } | null>(null)
+  /* Set only by a 403 — a right password against an unconfirmed address, so
+     the address is known to exist and offering a new link gives nothing away. */
+  const [unverifiedEmail, setUnverifiedEmail] = useState('')
+  const [resendWait, startResendWait] = useCountdown()
+  const [lockout, startLockout] = useCountdown()
   const [wordIndex, setWordIndex] = useState(0)
   const signIn = useAppStore((state) => state.signIn)
   const navigate = useNavigate()
@@ -75,6 +95,7 @@ export function AuthPage() {
   }, [])
 
   const isSignup = mode === 'signup'
+  const isForgot = mode === 'forgot'
   const checks = passwordChecks(values.password)
   const score = passwordScore(values.password)
 
@@ -108,6 +129,8 @@ export function AuthPage() {
     setMode(next)
     setTouched({})
     setServerError('')
+    setNotice(null)
+    setUnverifiedEmail('')
     setCapsLock(false)
     setShowPassword(false)
     // keep name/email so switching tabs never costs the user typing
@@ -121,7 +144,9 @@ export function AuthPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const fields: Field[] = isSignup ? ['name', 'email', 'password', 'confirmPassword'] : ['email', 'password']
+    const fields: Field[] = isForgot
+      ? ['email']
+      : isSignup ? ['name', 'email', 'password', 'confirmPassword'] : ['email', 'password']
     setTouched(Object.fromEntries(fields.map((field) => [field, true])))
 
     const firstInvalid = fields.find((field) => errors[field])
@@ -130,19 +155,62 @@ export function AuthPage() {
       return
     }
 
+    const email = values.email.trim()
     setServerError('')
+    setUnverifiedEmail('')
     setLoading(true)
     try {
-      const session = isSignup
-        ? await register({ name: values.name.trim(), email: values.email.trim(), password: values.password })
-        : await login({ email: values.email.trim(), password: values.password })
+      if (isForgot) {
+        await forgotPassword(email)
+        setNotice({ title: 'Check your inbox', message: FORGOT_SENT_MESSAGE, email })
+        // the first mail has just gone out, so the server's own per-account
+        // cooldown is already running — the button has to reflect that
+        startResendWait(RESEND_COOLDOWN_SECONDS)
+        return
+      }
+
+      if (isSignup) {
+        const result = await register({ name: values.name.trim(), email, password: values.password })
+        if (!result.verified) {
+          setNotice({ title: 'Confirm your email', message: result.message, email: result.email })
+          startResendWait(RESEND_COOLDOWN_SECONDS)
+          return
+        }
+        signIn(result.session)
+        toast.success(`Welcome to Quickplan, ${result.session.name}!`)
+        navigate('/', { replace: true })
+        return
+      }
+
+      const session = await login({ email, password: values.password })
       signIn(session)
-      toast.success(isSignup ? `Welcome to Quickplan, ${session.name}!` : `Welcome back, ${session.name}!`)
+      toast.success(`Welcome back, ${session.name}!`)
       navigate('/', { replace: true })
     } catch (submitError) {
+      const status = getApiStatus(submitError)
       setServerError(getApiErrorMessage(submitError, 'Unable to continue right now. Please try again.'))
+      // 403 means the password was right and only the address is unconfirmed
+      if (status === 403) setUnverifiedEmail(email)
+      if (status === 429) startLockout(getRetryAfterSeconds(submitError, 300))
     } finally {
       setLoading(false)
+    }
+  }
+
+  /**
+   * Used by both the post-signup panel and the 403 on sign-in. The wait starts
+   * before the request rather than after it, so a second tap cannot get past
+   * the button while the first is still in flight.
+   */
+  async function handleResend(email: string) {
+    if (resendWait > 0 || loading) return
+    startResendWait(RESEND_COOLDOWN_SECONDS)
+    try {
+      await resendVerification(email)
+      toast.success(RESEND_SENT_MESSAGE)
+    } catch (resendError) {
+      if (getApiStatus(resendError) === 429) startResendWait(getRetryAfterSeconds(resendError, 900))
+      setServerError(getApiErrorMessage(resendError, 'Could not send that link right now. Please try again.'))
     }
   }
 
@@ -243,12 +311,44 @@ export function AuthPage() {
           </div>
 
           <div className="auth-card-heading">
-            <h2>{isSignup ? 'Create your account' : 'Welcome back'}</h2>
+            <h2>{notice ? notice.title : isForgot ? 'Reset your password' : isSignup ? 'Create your account' : 'Welcome back'}</h2>
             <p className="muted">
-              {isSignup ? 'Your personal planning space is one step away.' : 'Pick up right where you left off.'}
+              {notice
+                ? `We sent it to ${notice.email}.`
+                : isForgot
+                  ? 'Tell us your email address and we will send you a link.'
+                  : isSignup
+                    ? 'Your personal planning space is one step away.'
+                    : 'Pick up right where you left off.'}
             </p>
           </div>
 
+          {notice ? (
+            <div className="auth-notice">
+              <span className="auth-notice-mark"><MailCheck size={26} /></span>
+              <p>{notice.message}</p>
+              <small>Nothing arrived? Look in spam — it can land there the first time.</small>
+
+              {serverError && (
+                <p className="form-error" role="alert">
+                  <CircleAlert size={16} />
+                  {serverError}
+                </p>
+              )}
+
+              <button
+                type="button"
+                className="auth-submit"
+                onClick={() => handleResend(notice.email)}
+                disabled={resendWait > 0}
+              >
+                <Send size={17} /> {resendWait > 0 ? `Send again in ${resendWait}s` : 'Send the link again'}
+              </button>
+              <button type="button" className="text-button auth-back" onClick={() => switchMode('login')}>
+                Back to sign in
+              </button>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} noValidate>
             {isSignup && (
               <label htmlFor="name">
@@ -286,6 +386,7 @@ export function AuthPage() {
               {errorFor('email') && <span className="field-error"><CircleAlert size={13} /> {errorFor('email')}</span>}
             </label>
 
+            {!isForgot && (
             <label htmlFor="password">
               <span className="field-top">
                 Password
@@ -345,6 +446,13 @@ export function AuthPage() {
                 </span>
               )}
             </label>
+            )}
+
+            {!isSignup && !isForgot && (
+              <button type="button" className="text-button auth-forgot" onClick={() => switchMode('forgot')}>
+                Forgot password?
+              </button>
+            )}
 
             {isSignup && (
               <label htmlFor="confirmPassword">
@@ -389,14 +497,34 @@ export function AuthPage() {
               </p>
             )}
 
-            <button className="auth-submit" disabled={loading}>
+            {unverifiedEmail && (
+              <button
+                type="button"
+                className="text-button auth-resend"
+                onClick={() => handleResend(unverifiedEmail)}
+                disabled={resendWait > 0}
+              >
+                <Send size={14} /> {resendWait > 0 ? `Send a new link in ${resendWait}s` : 'Send a new confirmation link'}
+              </button>
+            )}
+
+            <button className="auth-submit" disabled={loading || lockout > 0}>
               {loading ? (
-                <><LoaderCircle size={18} className="spin" /> {isSignup ? 'Creating your account...' : 'Signing you in...'}</>
+                <><LoaderCircle size={18} className="spin" /> {isSignup ? 'Creating your account...' : isForgot ? 'Sending the link...' : 'Signing you in...'}</>
+              ) : lockout > 0 ? (
+                <>Try again in {lockout}s</>
               ) : (
-                <>{isSignup ? 'Create account' : 'Sign in'} <ArrowRight size={18} /></>
+                <>{isSignup ? 'Create account' : isForgot ? 'Send reset link' : 'Sign in'} <ArrowRight size={18} /></>
               )}
             </button>
+
+            {isForgot && (
+              <button type="button" className="text-button auth-back" onClick={() => switchMode('login')}>
+                Back to sign in
+              </button>
+            )}
           </form>
+          )}
 
           <p className="auth-terms">
             <ShieldCheck size={14} />

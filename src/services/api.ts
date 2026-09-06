@@ -63,6 +63,23 @@ api.interceptors.response.use(
   },
 )
 
+/** The status behind a failed call, where the server answered at all. */
+export function getApiStatus(error: unknown): number | undefined {
+  return axios.isAxiosError(error) ? error.response?.status : undefined
+}
+
+/**
+ * How long to wait after a 429, taken from the limiter's own Retry-After
+ * rather than guessed — it knows when the window actually reopens, and a
+ * guess that is short sends the caller straight back into the wall.
+ */
+export function getRetryAfterSeconds(error: unknown, fallback: number): number {
+  if (!axios.isAxiosError(error)) return fallback
+  const header = error.response?.headers?.['retry-after']
+  const seconds = Number(Array.isArray(header) ? header[0] : header)
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : fallback
+}
+
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     if (!error.response) return 'Cannot reach the server right now. Check your connection and try again.'

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { getApiErrorMessage } from '../../services/api'
 import { changePassword } from '../../services/auth'
+import { useAppStore } from '../../store/useAppStore'
 import { PASSWORD_MIN_LENGTH, STRENGTH_LABELS, passwordChecks, passwordScore } from '../../utils/password'
 import './ChangePasswordModal.scss'
 
@@ -40,6 +41,7 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
   const [serverError, setServerError] = useState('')
   const [saving, setSaving] = useState(false)
   const currentRef = useRef<HTMLInputElement>(null)
+  const signOut = useAppStore((state) => state.signOut)
 
   useEffect(() => {
     currentRef.current?.focus()
@@ -100,9 +102,14 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
     setServerError('')
     setSaving(true)
     try {
-      await changePassword({ currentPassword: values.currentPassword, password: values.password })
-      toast.success('Your password has been changed.')
+      const message = await changePassword({ currentPassword: values.currentPassword, password: values.password })
+      /* The server has just invalidated every token issued before now, this
+         device's included. Signing out here is the difference between landing
+         on the sign-in screen having been told why, and the next background
+         request failing with a 401 that reads as the app breaking. */
       onClose()
+      signOut()
+      toast.success(message)
     } catch (submitError) {
       setServerError(getApiErrorMessage(submitError, 'Could not change your password. Please try again.'))
     } finally {

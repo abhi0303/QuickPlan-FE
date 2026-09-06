@@ -22,6 +22,8 @@ const GroupAnalyticsPage = lazy(() => import('./pages/GroupAnalyticsPage').then(
 const TasksPage = lazy(() => import('./pages/TasksPage').then((module) => ({ default: module.TasksPage })))
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => ({ default: module.SettingsPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then((module) => ({ default: module.VerifyEmailPage })))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
 
 function App() {
   const session = useAppStore((state) => state.session)
@@ -63,6 +65,12 @@ function App() {
       <Suspense fallback={<Loader full label="Loading Quickplan..." />}>
         <Routes>
           <Route path="/auth" element={session ? <Navigate to="/" replace /> : <AuthPage />} />
+          {/* Both are opened from an email, by someone who is usually signed
+              out — and in the reset's case sometimes signed in on a session it
+              is about to invalidate. Neither may sit behind the guard, and
+              neither may bounce a signed-in visitor to the dashboard. */}
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route element={session ? <AppShell /> : <Navigate to="/auth" replace />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />
