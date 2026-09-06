@@ -62,6 +62,13 @@ type AppStore = {
    */
   declinedConversions: string[]
   /**
+   * UPI addresses people have been paid at, keyed by their user id. Kept on
+   * the payer's own device rather than asked for again every time — the API
+   * has no field for it yet, and a payee's address is theirs to publish, not
+   * ours to store for them.
+   */
+  upiIds: Record<string, string>
+  /**
    * What is in the account today, and the day the salary lands — the two things
    * the forecast needs that the API does not hold.
    *
@@ -129,6 +136,7 @@ type AppStore = {
   celebrate: () => void
   setEditingTask: (task: Task | null) => void
   setEditingReminder: (reminder: Reminder | null) => void
+  rememberUpiId: (userId: string, upiId: string) => void
   signIn: (session: Session) => void
   updateSession: (patch: Partial<Omit<Session, 'token'>>) => void
   signOut: () => void
@@ -150,6 +158,7 @@ export const useAppStore = create<AppStore>()(
       expensesVersion: 0,
       dataVersion: 0,
       declinedConversions: [],
+      upiIds: {},
       forecastBalance: null,
       forecastBalanceAt: null,
       incomeDay: 1,
@@ -208,6 +217,14 @@ export const useAppStore = create<AppStore>()(
       celebrate: () => set((state) => ({ celebrationId: state.celebrationId + 1 })),
       setEditingTask: (editingTask) => set({ editingTask }),
       setEditingReminder: (editingReminder) => set({ editingReminder }),
+      rememberUpiId: (userId, upiId) =>
+        set((state) => {
+          const next = { ...state.upiIds }
+          // an empty address forgets rather than storing a blank one
+          if (upiId) next[userId] = upiId
+          else delete next[userId]
+          return { upiIds: next }
+        }),
       signIn: (session) => set({ session, sidebarOpen: false }),
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
       signOut: () =>
@@ -222,7 +239,7 @@ export const useAppStore = create<AppStore>()(
       version: 1,
       partialize: (state) => ({
         theme: state.theme, ringtone: state.ringtone, session: state.session, seenLevel: state.seenLevel,
-        declinedConversions: state.declinedConversions,
+        declinedConversions: state.declinedConversions, upiIds: state.upiIds,
         forecastBalance: state.forecastBalance, forecastBalanceAt: state.forecastBalanceAt,
         incomeDay: state.incomeDay, showThemeToggle: state.showThemeToggle,
       }),
@@ -230,7 +247,7 @@ export const useAppStore = create<AppStore>()(
       migrate: (persisted) => {
         const state = persisted as {
           theme?: Theme; ringtone?: string; session?: Session | null; seenLevel?: number | null
-          declinedConversions?: string[]
+          declinedConversions?: string[]; upiIds?: Record<string, string>
           forecastBalance?: number | null; forecastBalanceAt?: string | null; incomeDay?: number
           showThemeToggle?: boolean
         } | undefined
@@ -241,6 +258,7 @@ export const useAppStore = create<AppStore>()(
           session,
           seenLevel: state?.seenLevel ?? null,
           declinedConversions: state?.declinedConversions ?? [],
+          upiIds: state?.upiIds ?? {},
           forecastBalance: state?.forecastBalance ?? null,
           forecastBalanceAt: state?.forecastBalanceAt ?? null,
           incomeDay: state?.incomeDay ?? 1,

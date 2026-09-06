@@ -8,6 +8,8 @@ export type GroupMember = {
   name: string
   email: string
   role: GroupRole
+  /** The UPI addresses they have saved, best first. Empty when they have none. */
+  upiIds?: string[]
 }
 
 export type Group = {
@@ -42,11 +44,19 @@ function normalizeMember(raw: unknown): GroupMember | null {
   const name = (nested.name ?? source.name) as string | undefined
   if (!id || !name) return null
 
+  const rawUpi = nested.upiIds ?? source.upiIds
+  const upiIds = Array.isArray(rawUpi)
+    ? rawUpi.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+    : []
+
   return {
     id,
     name,
     email: ((nested.email ?? source.email) as string | undefined) ?? '',
     role: source.role === 'OWNER' ? 'OWNER' : 'MEMBER',
+    // only present once that person has saved one; the two member shapes above
+    // put it in two different places
+    upiIds,
   }
 }
 

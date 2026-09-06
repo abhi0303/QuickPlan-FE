@@ -1,0 +1,115 @@
+/* Your UPI addresses, in the Settings account card. The row keeps a
+   switch-sized shape for its label, and the list takes the full width
+   underneath — a text field squeezed into the right-hand slot of a settings
+   row is unusable on a phone. */
+
+.setting-row.is-stacked {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 12px;
+}
+
+.upi-list {
+    display: grid;
+    gap: 8px;
+    justify-items: start;
+    width: 100%;
+}
+
+/* One line each: the address, what it is, and the way to remove it. The
+   default sits at the top wearing a label rather than a button, because there
+   is nothing to do to the one that is already chosen. */
+.upi-item {
+    align-items: center;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    display: flex;
+    gap: 8px;
+    max-width: 100%;
+    padding: 5px 6px 5px 4px;
+}
+
+.upi-item.is-default {
+    background: var(--primary-soft);
+    border-color: transparent;
+}
+
+.upi-value {
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    padding: 3px 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.upi-flag {
+    align-items: center;
+    color: var(--primary-strong);
+    display: flex;
+    flex: none;
+    font-size: 10.5px;
+    font-weight: 800;
+    gap: 4px;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.upi-mini {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-pill);
+    color: var(--text-soft);
+    flex: none;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 5px 10px;
+    transition: border-color .18s ease, color .18s ease;
+}
+
+.upi-mini:hover:not(:disabled) {
+    border-color: var(--primary);
+    color: var(--primary-strong);
+}
+
+.upi-mini:disabled { opacity: .5; }
+
+.upi-mini.is-icon {
+    align-items: center;
+    display: flex;
+    height: 26px;
+    justify-content: center;
+    padding: 0;
+    width: 26px;
+}
+
+.upi-add {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+}
+
+.upi-add .control { flex: 1 1 200px; }
+
+.setting-action.is-quiet {
+    background: none;
+    border-color: transparent;
+    color: var(--muted);
+}
+
+.setting-action.is-quiet:hover:not(:disabled) {
+    background: var(--surface-soft);
+    color: var(--text);
+}
+
+.upi-list .field-hint.is-warn {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}

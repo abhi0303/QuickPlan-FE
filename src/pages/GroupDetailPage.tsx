@@ -146,6 +146,11 @@ export function GroupDetailPage() {
     (expense) => !expense.iPaid && expense.paidById && (expense.myShare ?? 0) > 0.005,
   )
 
+  /** Their saved UPI addresses, if the group payload carries them. */
+  function upiFor(userId: string) {
+    return group?.members.find((member) => member.id === userId)?.upiIds ?? []
+  }
+
   /** What this group's balances say I still owe one person. */
   function owedTo(userId: string) {
     return mySettlements.find((suggestion) => suggestion.toUserId === userId)?.amount ?? 0
@@ -170,7 +175,12 @@ export function GroupDetailPage() {
 
     setSettleSeed({
       mode: 'pay',
-      people: [{ userId: expense.paidById, name: expense.paidBy?.name ?? 'them', owed }],
+      people: [{
+        userId: expense.paidById,
+        name: expense.paidBy?.name ?? 'them',
+        owed,
+        upiIds: upiFor(expense.paidById),
+      }],
       personId: expense.paidById,
       amount: settleableAmount(expense.myShare ?? 0, owed),
       note: expense.title,
@@ -285,7 +295,12 @@ export function GroupDetailPage() {
                 disabled={busyId === suggestion.toUserId}
                 onClick={() => setSettleSeed({
                   mode: 'pay',
-                  people: [{ userId: suggestion.toUserId, name: suggestion.toName, owed: suggestion.amount }],
+                  people: [{
+                    userId: suggestion.toUserId,
+                    name: suggestion.toName,
+                    owed: suggestion.amount,
+                    upiIds: upiFor(suggestion.toUserId),
+                  }],
                   personId: suggestion.toUserId,
                   amount: suggestion.amount,
                 })}

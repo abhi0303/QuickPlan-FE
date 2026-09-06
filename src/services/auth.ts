@@ -96,9 +96,28 @@ export async function resetPassword(payload: { token: string; password: string }
   return data.message
 }
 
-export async function fetchProfile(): Promise<{ id: string; name: string; email: string; settings?: UserSettings }> {
+export type Profile = {
+  id: string
+  name: string
+  email: string
+  /** The UPI addresses people can pay you at, best one first. */
+  upiIds?: string[] | null
+  settings?: UserSettings
+}
+
+export async function fetchProfile(): Promise<Profile> {
   const { data } = await api.get('/api/user/me')
   return data
+}
+
+/**
+ * Saving your own UPI addresses, so the people who owe you do not have to be
+ * told one every time. Order carries meaning: the first is what the pay screen
+ * offers before anybody chooses, so "make this the default" is a reorder
+ * rather than a flag. An empty list clears them all.
+ */
+export async function saveUpiIds(upiIds: string[]): Promise<void> {
+  await api.patch('/api/user/me', { upiIds })
 }
 
 /**
