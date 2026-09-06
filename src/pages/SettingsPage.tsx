@@ -1,12 +1,15 @@
+import { useState } from 'react'
 import {
-  BellRing, Compass, Globe, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun, SunMoon,
+  BellRing, Compass, Globe, KeyRound, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun, SunMoon,
 } from 'lucide-react'
 import { PushToggle } from '../components/common/PushToggle'
 import { SyncPanel } from '../components/offline/SyncPanel'
+import { ChangePasswordModal } from '../components/settings/ChangePasswordModal'
 import { useAppStore } from '../store/useAppStore'
 import './SettingsPage.scss'
 
 export function SettingsPage() {
+  const [changingPassword, setChangingPassword] = useState(false)
   const theme = useAppStore((state) => state.theme)
   const setTheme = useAppStore((state) => state.setTheme)
   const showThemeToggle = useAppStore((state) => state.showThemeToggle)
@@ -132,9 +135,26 @@ export function SettingsPage() {
         <SyncPanel />
       </div>
 
+      <div className="settings-card">
+        <div className="setting-row">
+          <div className="setting-label">
+            <span className="setting-icon"><KeyRound size={20} /></span>
+            <div>
+              <strong>Password</strong>
+              <small>Set a new password for signing in</small>
+            </div>
+          </div>
+          <button className="setting-action" onClick={() => setChangingPassword(true)}>
+            <KeyRound size={14} /> Change
+          </button>
+        </div>
+      </div>
+
       <button className="danger-row" onClick={signOut}>
         <LogOut size={18} /> Sign out of Quickplan
       </button>
+
+      <ChangePasswordModal open={changingPassword} onClose={() => setChangingPassword(false)} />
     </section>
   )
 }

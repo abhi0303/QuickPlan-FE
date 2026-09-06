@@ -31,3 +31,14 @@ export async function fetchProfile(): Promise<{ id: string; name: string; email:
   const { data } = await api.get('/api/user/me')
   return data
 }
+
+/**
+ * Changing the password from inside the app. The current one is asked for
+ * because the session alone is not proof the person holding it is the owner.
+ *
+ * A wrong current password comes back as a 401, which the api interceptor
+ * leaves alone on `/api/auth/` routes — mistyping it must not sign anyone out.
+ */
+export async function changePassword(payload: { currentPassword: string; password: string }): Promise<void> {
+  await api.patch('/api/auth/change-password', payload)
+}

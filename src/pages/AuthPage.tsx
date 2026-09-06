@@ -30,15 +30,13 @@ import {
 import { getApiErrorMessage } from '../services/api'
 import { login, register } from '../services/auth'
 import { useAppStore } from '../store/useAppStore'
+import { PASSWORD_MIN_LENGTH, STRENGTH_LABELS, passwordChecks, passwordScore } from '../utils/password'
 import './AuthPage.scss'
 
 type Mode = 'login' | 'signup'
 type Field = 'name' | 'email' | 'password' | 'confirmPassword'
 
-const PASSWORD_MIN_LENGTH = 8
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong']
 
 /* Decorative notes/tasks drifting behind the page. Positions are hand-placed
    to stay clear of the headline and the form card. */
@@ -55,24 +53,6 @@ const FLOATERS = [
 
 const HEADLINE_WORDS = ['planned.', 'sorted.', 'on track.']
 const WORD_INTERVAL_MS = 2400
-
-function passwordChecks(password: string) {
-  return {
-    length: password.length >= PASSWORD_MIN_LENGTH,
-    letter: /[a-zA-Z]/.test(password),
-    number: /\d/.test(password),
-    symbol: /[^a-zA-Z0-9]/.test(password),
-  }
-}
-
-function passwordScore(password: string) {
-  if (!password) return 0
-  const checks = passwordChecks(password)
-  const met = Object.values(checks).filter(Boolean).length
-  // a long password that ticks everything reads as strong; short ones cap at fair
-  if (!checks.length) return Math.min(met, 2)
-  return Math.max(1, met)
-}
 
 export function AuthPage() {
   const [mode, setMode] = useState<Mode>('login')
