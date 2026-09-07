@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   Calculator, CalendarClock, ChartPie, ChevronRight, CircleAlert, HandCoins, Repeat, Search,
   TrendingUp, Wallet, X,
@@ -17,6 +18,8 @@ import { usePlanner } from '../../hooks/usePlanner'
 import { useRecurring } from '../../hooks/useRecurring'
 import { useBudgets } from '../../hooks/useBudgets'
 import { useAppStore } from '../../store/useAppStore'
+import { getApiErrorMessage } from '../../services/api'
+import { deleteSettlement } from '../../services/expenses'
 import type { Expense } from '../../services/expenses'
 import type { Movement } from '../../services/cashflow'
 import './PersonalLedger.scss'
@@ -61,6 +64,11 @@ export function PersonalLedger() {
    * when you clear a share. See docs/cash-flow.md.
    */
   const cash = useCashFlow()
+  /* Undoing a settlement, not an expense. A settlement is a note two people
+     keep about money between them, and the one who recorded it by mistake is
+     usually looking at this ledger. Group expenses stay editable in the group. */
+  const [pendingUndo, setPendingUndo] = useState<Movement | null>(null)
+  const [undoing, setUndoing] = useState(false)
 
   /*
    * The forecast needs something to forecast. Schedules give it dates — rent on
@@ -343,7 +351,12 @@ export function PersonalLedger() {
                     onDelete={setPendingDelete}
                   />
                 ) : (
-                  <MovementRow key={entry.key} movement={entry.movement as Movement} />
+                  <MovementRow
+                    key={entry.key}
+                    movement={entry.movement as Movement}
+                    busy={undoing && pendingUndo?.id === (entry.movement as Movement).id}
+                    onUndo={setPendingUndo}
+                  />
                 )))}
               </div>
             </section>
@@ -361,6 +374,35 @@ export function PersonalLedger() {
         expense={editing}
         onClose={() => { setAdding(false); setEditing(null) }}
         onSaved={reload}
+      />
+
+      <ConfirmDialog
+        open={pendingUndo !== null}
+        busy={undoing}
+        title="Undo this payment?"
+        message={pendingUndo
+          ? `The ${money(pendingUndo.amount)} ${pendingUndo.direction === 'IN' ? 'from' : 'to'} `
+            + `${pendingUndo.counterparty?.name ?? 'them'} goes back to being owed. `
+            + 'Record it again if it really was paid.'
+          : ''}
+        confirmLabel="Undo it"
+        busyLabel="Undoing..."
+        onCancel={() => setPendingUndo(null)}
+        onConfirm={async () => {
+          if (!pendingUndo) return
+          setUndoing(true)
+          try {
+            await deleteSettlement(pendingUndo.id)
+            setPendingUndo(null)
+            // the balance it restores lives in the group, so both have to reload
+            await Promise.all([cash.reload(), reload()])
+            toast.success('Payment undone.')
+          } catch (undoError) {
+            toast.error(getApiErrorMessage(undoError, 'Could not undo that payment.'))
+          } finally {
+            setUndoing(false)
+          }
+        }}
       />
 
       <ConfirmDialog
