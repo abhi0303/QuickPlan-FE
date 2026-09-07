@@ -53,7 +53,7 @@ Authorization: Bearer <jwt>
 
 ```json
 {
-  "url": "https://quickplan-u2wx.onrender.com/api/reminders/9f2c…/calendar.ics?token=eyJhbGciOi…",
+  "url": "https://api.quickplan.co.in/api/reminders/9f2c…/calendar.ics?token=eyJhbGciOi…",
   "expiresAt": "2026-08-25T08:20:00.000Z"
 }
 ```
