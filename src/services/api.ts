@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAppStore } from '../store/useAppStore'
 
-const FALLBACK_BASE_URL = 'https://quickplan-u2wx.onrender.com'
+const FALLBACK_BASE_URL = 'https://api.quickplan.co.in'
 
 /**
  * CI injects VITE_API_BASE_URL from a repository variable, which is an empty

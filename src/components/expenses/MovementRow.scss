@@ -5,10 +5,14 @@
     border-bottom: 1px solid var(--border);
     column-gap: var(--expense-gap);
     display: grid;
+    /* The undo column keeps its width even on the rows that cannot be undone.
+       Each row is its own grid, so an `auto` column would collapse to nothing
+       there and the amounts would sit at two different distances from the
+       edge — in a column of figures that reads as a mistake. */
     grid-template-areas:
-        "icon title amount"
-        "icon meta  amount";
-    grid-template-columns: auto minmax(0, 1fr) auto;
+        "icon title amount undo"
+        "icon meta  amount undo";
+    grid-template-columns: auto minmax(0, 1fr) auto 30px;
     padding: 14px var(--expense-row-pad);
     row-gap: 3px;
 }
@@ -96,4 +100,35 @@
     .movement-icon { border-radius: 12px; height: 38px; width: 38px; }
     .movement-amount strong { font-size: 16px; }
     .movement-meta { font-size: 12px; }
+}
+
+/* Settlements only. Quiet until it is reached for, because undoing a payment
+   is rare and should not look like the row's main verb. */
+.movement-undo {
+    align-items: center;
+    grid-area: undo;
+    border-radius: 50%;
+    color: var(--muted);
+    display: flex;
+    flex: none;
+    height: 30px;
+    justify-content: center;
+    margin-left: 4px;
+    opacity: .55;
+    transition: background .18s ease, color .18s ease, opacity .18s ease;
+    width: 30px;
+}
+
+.movement-row:hover .movement-undo { opacity: 1; }
+
+.movement-undo:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--rose) 12%, transparent);
+    color: var(--rose);
+}
+
+.movement-undo:disabled { opacity: .3; }
+
+/* A tap target cannot depend on hovering. */
+@media (pointer: coarse) {
+    .movement-undo { opacity: 1; }
 }

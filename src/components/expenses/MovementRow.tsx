@@ -1,5 +1,5 @@
 import { format, isToday, parseISO } from 'date-fns'
-import { ArrowDownLeft, HandCoins, Users } from 'lucide-react'
+import { ArrowDownLeft, HandCoins, RotateCcw, Users } from 'lucide-react'
 import { categoryLook } from '../../data/expenseCategories'
 import type { Movement } from '../../services/cashflow'
 import './MovementRow.scss'
@@ -11,6 +11,11 @@ import './MovementRow.scss'
  * line in Money and has to look like one, and a group expense you fronted needs
  * to say that ₹4,000 left while ₹1,000 of it was yours — otherwise the number
  * looks like a spending figure and it is not.
+ *
+ * Only settlements can be undone here. A group expense belongs to the group
+ * and is edited there, by whoever can; a settlement is a note about money
+ * between two people, and the person who recorded it by mistake is the one
+ * looking at this row.
  */
 
 const money = (value: number) => `₹${value.toFixed(2)}`
@@ -21,7 +26,14 @@ function whenLabel(iso: string) {
   return isToday(at) ? format(at, 'h:mm a') : format(at, 'd MMM')
 }
 
-export function MovementRow({ movement }: { movement: Movement }) {
+type Props = {
+  movement: Movement
+  /** Only supplied for settlements; the row shows nothing without it. */
+  onUndo?: (movement: Movement) => void
+  busy?: boolean
+}
+
+export function MovementRow({ movement, onUndo, busy }: Props) {
   const incoming = movement.direction === 'IN'
   const settlement = movement.kind === 'SETTLEMENT_PAID' || movement.kind === 'SETTLEMENT_RECEIVED'
   const look = categoryLook(movement.category)
@@ -54,6 +66,18 @@ export function MovementRow({ movement }: { movement: Movement }) {
           <small>{money(movement.myShare)} yours</small>
         )}
       </div>
+
+      {settlement && onUndo && (
+        <button
+          className="movement-undo"
+          onClick={() => onUndo(movement)}
+          disabled={busy}
+          aria-label={`Undo ${title}`}
+          title="Undo this payment"
+        >
+          <RotateCcw size={15} />
+        </button>
+      )}
     </div>
   )
 }

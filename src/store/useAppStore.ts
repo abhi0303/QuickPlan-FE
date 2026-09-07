@@ -69,6 +69,17 @@ type AppStore = {
    */
   upiIds: Record<string, string>
   /**
+   * A payment handed off to a UPI app and not yet answered for.
+   *
+   * Persisted, because the phone leaving for GPay is exactly when Android is
+   * most likely to evict the page to save memory — and a payment that was
+   * actually made would then be forgotten, because the dialog that was going
+   * to ask about it no longer exists.
+   */
+  pendingUpiPayment: PendingUpiPayment | null
+  /** True while the settle dialog is up, which asks the question itself. */
+  settleDialogOpen: boolean
+  /**
    * What is in the account today, and the day the salary lands — the two things
    * the forecast needs that the API does not hold.
    *
@@ -137,9 +148,23 @@ type AppStore = {
   setEditingTask: (task: Task | null) => void
   setEditingReminder: (reminder: Reminder | null) => void
   rememberUpiId: (userId: string, upiId: string) => void
+  startUpiPayment: (payment: PendingUpiPayment) => void
+  clearUpiPayment: () => void
+  setSettleDialogOpen: (open: boolean) => void
   signIn: (session: Session) => void
   updateSession: (patch: Partial<Omit<Session, 'token'>>) => void
   signOut: () => void
+}
+
+/** Everything needed to record the settlement later, from anywhere in the app. */
+export type PendingUpiPayment = {
+  groupId: string
+  toUserId: string
+  toName: string
+  amount: number
+  note?: string
+  /** ISO. Used to stop asking about a payment nobody remembers making. */
+  startedAt: string
 }
 
 export const useAppStore = create<AppStore>()(
@@ -159,6 +184,8 @@ export const useAppStore = create<AppStore>()(
       dataVersion: 0,
       declinedConversions: [],
       upiIds: {},
+      pendingUpiPayment: null,
+      settleDialogOpen: false,
       forecastBalance: null,
       forecastBalanceAt: null,
       incomeDay: 1,
@@ -225,13 +252,16 @@ export const useAppStore = create<AppStore>()(
           else delete next[userId]
           return { upiIds: next }
         }),
+      startUpiPayment: (payment) => set({ pendingUpiPayment: payment }),
+      clearUpiPayment: () => set({ pendingUpiPayment: null }),
+      setSettleDialogOpen: (open) => set({ settleDialogOpen: open }),
       signIn: (session) => set({ session, sidebarOpen: false }),
       updateSession: (patch) => set((state) => (state.session ? { session: { ...state.session, ...patch } } : state)),
       signOut: () =>
         set({
           session: null, sidebarOpen: false, quickAddOpen: false, quickAddSeed: '', quickAddViaVoice: false,
           moneyComposerOpen: false, editingTask: null, editingReminder: null,
-          openToday: null, gamification: null, seenLevel: null,
+          openToday: null, gamification: null, seenLevel: null, pendingUpiPayment: null,
         }),
     }),
     {
@@ -240,6 +270,7 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         theme: state.theme, ringtone: state.ringtone, session: state.session, seenLevel: state.seenLevel,
         declinedConversions: state.declinedConversions, upiIds: state.upiIds,
+        pendingUpiPayment: state.pendingUpiPayment,
         forecastBalance: state.forecastBalance, forecastBalanceAt: state.forecastBalanceAt,
         incomeDay: state.incomeDay, showThemeToggle: state.showThemeToggle,
       }),
@@ -248,6 +279,7 @@ export const useAppStore = create<AppStore>()(
         const state = persisted as {
           theme?: Theme; ringtone?: string; session?: Session | null; seenLevel?: number | null
           declinedConversions?: string[]; upiIds?: Record<string, string>
+          pendingUpiPayment?: PendingUpiPayment | null
           forecastBalance?: number | null; forecastBalanceAt?: string | null; incomeDay?: number
           showThemeToggle?: boolean
         } | undefined
@@ -259,6 +291,7 @@ export const useAppStore = create<AppStore>()(
           seenLevel: state?.seenLevel ?? null,
           declinedConversions: state?.declinedConversions ?? [],
           upiIds: state?.upiIds ?? {},
+          pendingUpiPayment: state?.pendingUpiPayment ?? null,
           forecastBalance: state?.forecastBalance ?? null,
           forecastBalanceAt: state?.forecastBalanceAt ?? null,
           incomeDay: state?.incomeDay ?? 1,

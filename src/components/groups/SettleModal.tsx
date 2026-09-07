@@ -38,6 +38,8 @@ export type SettlePerson = {
 }
 
 export type SettleSeed = {
+  /** Needed to record the settlement from outside this dialog — see the store. */
+  groupId: string
   /**
    * Who moved the money. `pay` is you clearing what you owe; `receive` is
    * recording that somebody has paid you — the same settlement seen from the
@@ -91,6 +93,9 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
   const [viaUpi, setViaUpi] = useState(false)
   const rememberedUpi = useAppStore((state) => state.upiIds[personId] ?? '')
   const rememberUpiId = useAppStore((state) => state.rememberUpiId)
+  const startUpiPayment = useAppStore((state) => state.startUpiPayment)
+  const clearUpiPayment = useAppStore((state) => state.clearUpiPayment)
+  const setSettleDialogOpen = useAppStore((state) => state.setSettleDialogOpen)
   const [typedUpi, setTypedUpi] = useState('')
   /* Which of their addresses to pay. 'other' hands over to the text field,
      which is also where somebody with none of them saved starts. */
@@ -121,12 +126,14 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
     }
     document.addEventListener('keydown', onKeyDown)
     document.body.style.overflow = 'hidden'
+    setSettleDialogOpen(true)
     return () => {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
       window.clearTimeout(launchTimer.current)
+      setSettleDialogOpen(false)
     }
-  }, [onClose])
+  }, [onClose, setSettleDialogOpen])
 
   useEffect(() => {
     if (!awaitingReturn) return
@@ -170,6 +177,17 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
     setNothingOpened(false)
     setReturned(false)
     setAwaitingReturn(true)
+    /* Written before leaving, because the page may not be here to write it
+       afterwards — Android evicts backgrounded tabs, and a heavy UPI app is
+       exactly what makes it do so. */
+    startUpiPayment({
+      groupId: seed.groupId,
+      toUserId: personId,
+      toName: person?.name ?? '',
+      amount: value,
+      note: note.trim() || undefined,
+      startedAt: new Date().toISOString(),
+    })
     /* A link the phone can open takes the page into the background. Still
        being visible a couple of seconds later means no app took it — usually
        because none is installed. */
@@ -214,6 +232,7 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
     if (viaUpi && payeeIsValid && !known.includes(payee)) {
       rememberUpiId(personId, normalizeUpiId(payee))
     }
+    clearUpiPayment()
 
     const at = day ? new Date(`${day}T${time || '12:00'}`) : null
     onConfirm({
@@ -432,7 +451,8 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
                             ? <><LoaderCircle size={15} className="spin" /> Recording</>
                             : <>Yes, {money(value)} went through</>}
                         </button>
-                        <button type="button" className="pay-no" onClick={() => setReturned(false)} disabled={busy}>
+                        <button type="button" className="pay-no" disabled={busy}
+                          onClick={() => { setReturned(false); clearUpiPayment() }}>
                           Not yet
                         </button>
                       </div>
