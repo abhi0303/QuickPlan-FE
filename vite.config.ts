@@ -30,9 +30,14 @@ function githubPagesSpaFallback(): Plugin {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   plugins: [react(), githubPagesSpaFallback()],
-  base: mode === 'production' ? '/QuickPlan-FE/' : '/',
+  /* Served from the root of quickplan.co.in. It was '/QuickPlan-FE/' while the
+     site lived at abhi0303.github.io/QuickPlan-FE — a project page on a custom
+     domain is served from the domain root instead, and everything that follows
+     the base (the service worker's scope, the router's basename, the icons in
+     index.html) moves with this one line. */
+  base: '/',
 
   test: {
     // jsdom rather than node: several modules read `navigator` or `window`,
@@ -65,4 +70,4 @@ export default defineConfig(({ mode }) => ({
       thresholds: { statements: 78, branches: 66, functions: 85, lines: 83 },
     },
   },
-}))
+})
