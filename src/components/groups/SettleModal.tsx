@@ -99,6 +99,12 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
   /* Nothing reports back that a upi:// link went nowhere, so this is inferred
      from still being the visible page a moment after the tap. */
   const [nothingOpened, setNothingOpened] = useState(false)
+  /* Nothing reports a UPI payment back to a web page — that result only exists
+     for a native app that launched the intent for a result. What is knowable
+     here is that the phone left for the UPI app and came back, which is the
+     moment to ask the one question only the payer can answer. */
+  const [awaitingReturn, setAwaitingReturn] = useState(false)
+  const [returned, setReturned] = useState(false)
   // a fact about the device, read once — state rather than a ref because it
   // decides what renders
   const [launch] = useState(upiLaunchMode)
@@ -122,6 +128,26 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
     }
   }, [onClose])
 
+  useEffect(() => {
+    if (!awaitingReturn) return
+    let leftThePage = false
+
+    function onVisibility() {
+      if (document.visibilityState === 'hidden') {
+        leftThePage = true
+        return
+      }
+      // back on screen, and it did leave — so a UPI app had it
+      if (leftThePage) {
+        setReturned(true)
+        setAwaitingReturn(false)
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [awaitingReturn])
+
   const value = Number(amount) || 0
   const leftOver = owed - value
 
@@ -142,6 +168,8 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
   function handOff() {
     if (!canPay) return
     setNothingOpened(false)
+    setReturned(false)
+    setAwaitingReturn(true)
     /* A link the phone can open takes the page into the background. Still
        being visible a couple of seconds later means no app took it — usually
        because none is installed. */
@@ -393,6 +421,23 @@ function SettleDialog({ seed, busy, onClose, onConfirm }: Props & { seed: Settle
                   <p className="pay-line">
                     Paying <strong>{payee}</strong> · <strong>{money(value)}</strong>
                   </p>
+
+                  {returned && (
+                    <div className="pay-back" role="status">
+                      <strong>Back from your UPI app</strong>
+                      <p>Only you know how that went — your bank tells this app nothing.</p>
+                      <div className="pay-back-actions">
+                        <button type="submit" className="pay-yes" disabled={busy}>
+                          {busy
+                            ? <><LoaderCircle size={15} className="spin" /> Recording</>
+                            : <>Yes, {money(value)} went through</>}
+                        </button>
+                        <button type="button" className="pay-no" onClick={() => setReturned(false)} disabled={busy}>
+                          Not yet
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pay-actions">
                     {launch === 'chooser' && (
