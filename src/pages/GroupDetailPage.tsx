@@ -174,6 +174,7 @@ export function GroupDetailPage() {
     if (owed <= 0.005) return
 
     setSettleSeed({
+      groupId: id,
       mode: 'pay',
       people: [{
         userId: expense.paidById,
@@ -212,6 +213,7 @@ export function GroupDetailPage() {
     // their share of this expense, never more than they still owe
     const theirShare = expense.shares.find((share) => share.userId === first.userId)?.amount ?? 0
     setSettleSeed({
+      groupId: id,
       mode: 'receive',
       people,
       personId: first.userId,
@@ -294,6 +296,7 @@ export function GroupDetailPage() {
                 className="friend-add"
                 disabled={busyId === suggestion.toUserId}
                 onClick={() => setSettleSeed({
+                  groupId: id,
                   mode: 'pay',
                   people: [{
                     userId: suggestion.toUserId,

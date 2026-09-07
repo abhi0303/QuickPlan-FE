@@ -24,6 +24,7 @@ import { QuickAddModal } from '../common/QuickAddModal'
 import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
 import { EditTaskModal } from '../tasks/EditTaskModal'
+import { PendingPaymentBar } from '../groups/PendingPaymentBar'
 import { PullToRefresh } from '../common/PullToRefresh'
 import { RouteLoading } from '../common/RouteLoading'
 import { SpeakButton } from '../common/SpeakButton'
@@ -232,6 +233,10 @@ export function AppShell() {
       )}
 
       {showVoiceButton && <SpeakButton floating tucked={tucked} />}
+
+      {/* asked wherever you land, because a payment handed to a UPI app can
+          outlive the page that was going to ask about it */}
+      <PendingPaymentBar />
 
       {levelUp && (
         <LevelUpOverlay
