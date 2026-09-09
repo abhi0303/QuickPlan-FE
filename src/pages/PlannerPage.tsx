@@ -10,6 +10,7 @@ import { usePlanner } from '../hooks/usePlanner'
 import { cadenceLabel } from '../services/recurring'
 import { sharePercent } from '../utils/share'
 import type { Plan } from '../services/planner'
+import { splitCommitted } from '../services/planner'
 import './PlannerPage.scss'
 
 /**
@@ -85,15 +86,36 @@ export function PlannerPage() {
    * screen. See docs/budget-planner.md — the basis belongs server-side
    * eventually, and that is a one-parameter change to GET /api/planner.
    */
-  const left = plan.monthlyIncome - plan.committed.total - month.total + month.received
+  /*
+   * A commitment that has already been charged is in two places at once: in
+   * the plan, and in what has actually left the account. Only what is still to
+   * come gets subtracted a second time — see splitCommitted.
+   *
+   * The match is on category and amount because the cash-flow feed does not
+   * carry `createdVia`, so there is nothing saying which movement a schedule
+   * posted. Every row below says whether it counted as paid, so a wrong match
+   * is visible rather than buried in a total.
+   */
+  const split = splitCommitted(plan.committed.items, month.outflows)
+
+  const left = plan.monthlyIncome - split.due - month.total + month.received
   const short = left < 0
   const suggestions = plan.suggestions.filter((item) => !dismissed.includes(item.id))
   const targetGap = plan.savingsTarget !== null ? left - plan.savingsTarget : null
 
   const { daysElapsed, daysTotal } = month.period
   // spending to date, carried forward at the same rate
-  const projected = daysElapsed > 0 ? (month.total / daysElapsed) * daysTotal : 0
-  const projectedLeft = plan.monthlyIncome - plan.committed.total - projected + month.received
+  /*
+   * Only the variable spending is extrapolated. Rent and an EMI do not arrive
+   * a little at a time — projecting nine days that happen to contain ₹70,565
+   * of them across a whole month is what produced a "month ends at ₹3,58,506"
+   * on an income of ₹1,66,000.
+   */
+  const variable = Math.max(0, month.total - split.paidCash)
+  const projected = daysElapsed > 0
+    ? (variable / daysElapsed) * daysTotal + split.paidCash + split.due
+    : 0
+  const projectedLeft = plan.monthlyIncome - projected + month.received
   const midMonth = daysElapsed > 2 && daysElapsed < daysTotal
 
   return (
@@ -126,7 +148,7 @@ export function PlannerPage() {
         )}
       </section>
 
-      <Waterfall plan={plan} spent={month.total} received={month.received} />
+      <Waterfall plan={plan} due={split.due} spent={month.total} received={month.received} />
 
       <section className="panel planner-income">
         <div>
@@ -143,6 +165,13 @@ export function PlannerPage() {
           <h2>Already committed</h2>
           <span className="planner-total">{money(plan.committed.total)}</span>
         </div>
+        {/* Which of it has already gone out, because that half is counted in
+            what has been spent rather than a second time here. */}
+        {split.paid > 0 && (
+          <p className="muted planner-paid">
+            {money(split.paid)} of it already charged this month · {money(split.due)} still to come
+          </p>
+        )}
         {/* said once, quietly, so the absence of suggestions here reads as
             deliberate rather than as the page having missed something */}
         <p className="muted"><Lock size={13} /> Fixed costs. The planner never suggests cutting these.</p>
@@ -163,7 +192,10 @@ export function PlannerPage() {
                     {item.paused && ' · paused'}
                   </small>
                 </div>
-                <strong className="plan-amount">{money(item.monthly)}</strong>
+                <strong className="plan-amount">
+                  {money(item.monthly)}
+                  {split.paidIds.includes(item.id) && <em className="plan-paid">paid</em>}
+                </strong>
                 <label className="plan-switch" title={item.included ? 'Counted in the plan' : 'Left out'}>
                   <input
                     type="checkbox"
@@ -280,15 +312,18 @@ export function PlannerPage() {
  * step can go *up* as well as down — which is what money coming back from a
  * group does, and a chart that could only subtract would have to hide it.
  */
-function Waterfall({ plan, spent, received }: { plan: Plan, spent: number, received: number }) {
+function Waterfall(
+  { plan, due, spent, received }: { plan: Plan, due: number, spent: number, received: number },
+) {
   const income = plan.monthlyIncome
-  const afterCommitted = income - plan.committed.total
+  // only what has not been charged yet: the rest is already inside `spent`
+  const afterCommitted = income - due
   const afterSpent = afterCommitted - spent
   const left = afterSpent + received
 
   const steps = [
     { key: 'income', label: 'Income', value: income, from: 0, to: income, tone: 'income' },
-    { key: 'committed', label: 'Committed', value: plan.committed.total, from: afterCommitted, to: income, tone: 'committed' },
+    { key: 'committed', label: 'Still due', value: due, from: afterCommitted, to: income, tone: 'committed' },
     { key: 'spent', label: 'Out', value: spent, from: afterSpent, to: afterCommitted, tone: 'estimated' },
     ...(received > 0
       ? [{ key: 'received', label: 'Back in', value: received, from: afterSpent, to: left, tone: 'received' }]

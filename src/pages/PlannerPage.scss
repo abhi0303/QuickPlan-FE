@@ -395,3 +395,27 @@
     .suggestion { flex-wrap: wrap; }
     .suggestion-saves { margin-left: auto; }
 }
+
+/* Says which half of the committed total has already left the account, so the
+   figure above it and the spending below it are not read as two separate bills. */
+.planner-paid {
+    margin-top: -4px;
+}
+
+/* Centred under the amount rather than filling the cell: the figures line up
+   on their right edge, and a chip stretched to that edge reads as a second
+   column of its own. */
+.plan-paid {
+    background: var(--primary-soft);
+    border-radius: var(--r-pill);
+    color: var(--primary-strong);
+    display: block;
+    font-size: 9.5px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: .05em;
+    margin: 4px auto 0;
+    padding: 2px 7px;
+    text-transform: uppercase;
+    width: fit-content;
+}
