@@ -75,6 +75,63 @@ export type Plan = {
   suggestions: Suggestion[]
 }
 
+/** An outflow this month, as much of one as the matching needs. */
+export type MonthOutflow = { category?: string | null; amount: number }
+
+export type CommittedSplit = {
+  /** Monthly value of commitments that have not been charged yet. */
+  due: number
+  /** Monthly value of the ones that have. */
+  paid: number
+  /** What those actually took out, which a yearly charge makes different. */
+  paidCash: number
+  paidIds: string[]
+}
+
+const CENT = 0.01
+
+function key(category?: string | null) {
+  return (category ?? '').trim().toLowerCase()
+}
+
+/**
+ * Which commitments this month has already paid for.
+ *
+ * Recurring schedules post themselves as ordinary expenses, so from the moment
+ * one lands it is in both places at once: in `committed`, which is the plan for
+ * the month, and in what actually left the account. Subtracting both from
+ * income counts it twice — which is how a month with ₹70,565 of commitments,
+ * ₹70,565 of which had already gone out, reported being ₹12,117 short of an
+ * income it was comfortably inside.
+ *
+ * Matching is on category and amount, because the cash-flow feed does not say
+ * which schedule posted a movement — see the note in the planner page. Each
+ * outflow is consumed once, so two identical schedules need two charges before
+ * both count as paid.
+ */
+export function splitCommitted(items: CommittedItem[], outflows: MonthOutflow[]): CommittedSplit {
+  const spare = outflows.map((row) => ({ ...row, taken: false }))
+  const split: CommittedSplit = { due: 0, paid: 0, paidCash: 0, paidIds: [] }
+
+  for (const item of items) {
+    if (!item.included || item.paused) continue
+
+    const match = spare.find((row) =>
+      !row.taken && key(row.category) === key(item.category) && Math.abs(row.amount - item.amount) < CENT)
+
+    if (match) {
+      match.taken = true
+      split.paid += item.monthly
+      split.paidCash += match.amount
+      split.paidIds.push(item.id)
+    } else {
+      split.due += item.monthly
+    }
+  }
+
+  return split
+}
+
 const num = (value: unknown, fallback = 0) =>
   (typeof value === 'number' && Number.isFinite(value) ? value : fallback)
 

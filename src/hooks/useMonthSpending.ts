@@ -40,6 +40,9 @@ export function useMonthSpending() {
     })
 
     const buckets = new Map<string, CategorySpend>()
+    /* Every outflow, not just the biggest of each category: the planner has to
+       tell two EMIs apart to know whether both have been charged. */
+    const outflows: { category: string, amount: number }[] = []
     let received = 0
 
     for (const movement of inMonth) {
@@ -52,6 +55,8 @@ export function useMonthSpending() {
         ? SETTLED
         : movement.category?.trim() || 'Uncategorised'
 
+      outflows.push({ category: key, amount: movement.amount })
+
       const bucket = buckets.get(key) ?? { category: key, total: 0, count: 0, largest: null }
       bucket.total += movement.amount
       bucket.count += 1
@@ -62,6 +67,7 @@ export function useMonthSpending() {
     const categories = [...buckets.values()].sort((a, b) => b.total - a.total)
     return {
       categories,
+      outflows,
       total: categories.reduce((sum, row) => sum + row.total, 0),
       received,
       count: inMonth.length,
