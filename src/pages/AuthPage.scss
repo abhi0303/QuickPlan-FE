@@ -596,3 +596,71 @@
         padding-top: max(calc(22px + var(--inset-top)), var(--inset-floor, 58px));
     }
 }
+
+/* ==========================================================================
+   consent
+   ========================================================================== */
+
+/* Unticked, blocking, and the links open in a new tab — a signup that makes
+   you start again for reading the terms is one nobody reads the terms on.
+
+   Qualified with .auth-card because the card's own `label { display: grid }`
+   and `input { padding: 14px 15px; width: 100% }` are (0,1,1) and would
+   otherwise stack the box above the sentence and inflate it to field size. */
+
+.consent {
+    display: grid;
+    gap: 6px;
+}
+
+.auth-card label.consent-check {
+    align-items: flex-start;
+    color: var(--text-soft);
+    cursor: pointer;
+    display: flex;
+    font-size: 13.5px;
+    font-weight: 500;
+    gap: 10px;
+    line-height: 1.5;
+}
+
+.auth-card .consent-check input {
+    accent-color: var(--primary);
+    background: none;
+    border: 0;
+    border-radius: 0;
+    flex: none;
+    height: 18px;
+    /* the cap height of the first line, so it sits with the text not above it */
+    margin-top: 2px;
+    padding: 0;
+    width: 18px;
+}
+
+.consent-check a {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* The box itself carries the error, since that is what has to be found. */
+.consent-check.is-missing input {
+    outline: 2px solid var(--rose);
+    outline-offset: 2px;
+}
+
+.auth-legal {
+    color: var(--muted);
+    display: flex;
+    font-size: 13px;
+    gap: 10px;
+    justify-content: center;
+    margin: 10px 0 0;
+}
+
+.auth-legal a {
+    color: var(--muted);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-legal a:hover { color: var(--primary); }

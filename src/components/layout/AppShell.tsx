@@ -25,6 +25,7 @@ import { EditReminderModal } from '../reminders/EditReminderModal'
 import { ReminderAlerts } from '../reminders/ReminderAlerts'
 import { EditTaskModal } from '../tasks/EditTaskModal'
 import { PendingPaymentBar } from '../groups/PendingPaymentBar'
+import { ReacceptTerms } from '../settings/ReacceptTerms'
 import { PullToRefresh } from '../common/PullToRefresh'
 import { RouteLoading } from '../common/RouteLoading'
 import { SpeakButton } from '../common/SpeakButton'
@@ -237,6 +238,9 @@ export function AppShell() {
       {/* asked wherever you land, because a payment handed to a UPI app can
           outlive the page that was going to ask about it */}
       <PendingPaymentBar />
+
+      {/* Everyone who predates the policies sees this once, over everything. */}
+      <ReacceptTerms />
 
       {levelUp && (
         <LevelUpOverlay
