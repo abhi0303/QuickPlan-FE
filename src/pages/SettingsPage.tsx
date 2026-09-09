@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import {
-  BellRing, Compass, Globe, KeyRound, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun, SunMoon,
+  BellRing, Compass, Globe, KeyRound, LogOut, Moon, Palette, Play, RefreshCw, Repeat, Sun, SunMoon, Trash2,
 } from 'lucide-react'
 import { PushToggle } from '../components/common/PushToggle'
 import { SyncPanel } from '../components/offline/SyncPanel'
 import { ChangePasswordModal } from '../components/settings/ChangePasswordModal'
 import { UpiRow } from '../components/settings/UpiRow'
+import { DeleteAccountModal } from '../components/settings/DeleteAccountModal'
+import { LegalRow } from '../components/settings/LegalRow'
 import { useAppStore } from '../store/useAppStore'
 import './SettingsPage.scss'
 
 export function SettingsPage() {
   const [changingPassword, setChangingPassword] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const theme = useAppStore((state) => state.theme)
   const setTheme = useAppStore((state) => state.setTheme)
   const showThemeToggle = useAppStore((state) => state.showThemeToggle)
@@ -153,11 +156,20 @@ export function SettingsPage() {
         </div>
       </div>
 
+      <div className="settings-card">
+        <LegalRow />
+      </div>
+
       <button className="danger-row" onClick={signOut}>
         <LogOut size={18} /> Sign out of Quickplan
       </button>
 
+      <button className="danger-row is-delete" onClick={() => setDeleting(true)}>
+        <Trash2 size={18} /> Delete my account
+      </button>
+
       <ChangePasswordModal open={changingPassword} onClose={() => setChangingPassword(false)} />
+      <DeleteAccountModal open={deleting} onClose={() => setDeleting(false)} />
     </section>
   )
 }

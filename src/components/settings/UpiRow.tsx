@@ -6,6 +6,9 @@ import { fetchProfile, saveUpiIds } from '../../services/auth'
 import { isValidUpiId, normalizeUpiId } from '../../services/upi'
 import './UpiRow.scss'
 
+/** The API's own limit. Reached, the add control says so rather than failing. */
+const MAX_UPI_IDS = 5
+
 /**
  * The UPI addresses people can pay you at.
  *
@@ -58,7 +61,10 @@ export function UpiRow() {
   function handleAdd() {
     const next = normalizeUpiId(draft)
     if (!isValidUpiId(next)) return setError('A UPI ID reads like name@bank.')
+    /* Lower-cased before comparing, because VPAs are case-insensitive and the
+       API de-duplicates the same way — Abhi@ybl and abhi@ybl are one account. */
     if (list.includes(next)) return setError('That one is already on the list.')
+    if (list.length >= MAX_UPI_IDS) return setError(`Five is the most you can save.`)
     void commit([...list, next], list.length === 0 ? 'UPI ID saved.' : 'UPI ID added.')
   }
 
@@ -123,10 +129,12 @@ export function UpiRow() {
                 <X size={14} />
               </button>
             </div>
-          ) : (
+          ) : list.length < MAX_UPI_IDS ? (
             <button className="setting-action" onClick={() => setAdding(true)} disabled={busy}>
               <Plus size={14} /> {list.length === 0 ? 'Add a UPI ID' : 'Add another'}
             </button>
+          ) : (
+            <p className="field-hint">Five is the most you can save. Remove one to add another.</p>
           )}
 
           {error && <p className="field-hint is-warn"><CircleAlert size={13} /> {error}</p>}

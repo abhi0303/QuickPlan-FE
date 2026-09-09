@@ -1,0 +1,40 @@
+/* The two halves are the whole point of the screen, so they are set apart from
+   the form rather than written as a paragraph somebody skims past. */
+
+.delete-what {
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 15px 16px;
+}
+
+.delete-what p {
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.55;
+    margin: 0 0 14px;
+}
+
+.delete-what p:last-child { margin-bottom: 0; }
+
+.delete-goes,
+.delete-stays {
+    align-items: center;
+    color: var(--text) !important;
+    display: flex;
+    font-size: 13px !important;
+    gap: 6px;
+    margin-bottom: 5px !important;
+}
+
+.delete-stays { color: var(--tangerine) !important; margin-top: 4px; }
+.delete-stays strong { color: var(--tangerine); }
+
+.modal-submit.is-danger {
+    background: var(--rose);
+    box-shadow: none;
+}
+
+.modal-submit.is-danger:hover:not(:disabled) {
+    filter: brightness(.94);
+}
