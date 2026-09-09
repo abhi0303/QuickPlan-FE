@@ -1,4 +1,5 @@
 import { api } from './api'
+import { CURRENT_TERMS_VERSION } from '../data/legal'
 import type { Session } from '../store/useAppStore'
 
 type AuthResponse = { accessToken: string; user: { id: string; name: string; email: string } }
@@ -54,7 +55,17 @@ function toSession({ accessToken, user }: AuthResponse): Session {
 }
 
 export async function register(payload: { name: string; email: string; password: string }): Promise<RegisterResult> {
-  const { data } = await api.post<RegisterResponse>('/api/auth/register', payload)
+  /*
+   * `acceptedTerms` must be the boolean, not "true" or 1 — the API rejects
+   * anything it would have to coerce, because consent has to be an affirmative
+   * act rather than a value that happened to be truthy. The version travels
+   * with it so the record says which policies were agreed to.
+   */
+  const { data } = await api.post<RegisterResponse>('/api/auth/register', {
+    ...payload,
+    acceptedTerms: true,
+    termsVersion: CURRENT_TERMS_VERSION,
+  })
   if (data.emailVerified && data.accessToken) {
     return { verified: true, message: data.message, session: toSession({ accessToken: data.accessToken, user: data.user }) }
   }
@@ -102,7 +113,27 @@ export type Profile = {
   email: string
   /** The UPI addresses people can pay you at, best one first. */
   upiIds?: string[] | null
+  /** Which policies they agreed to. "legacy" for anyone who predates them. */
+  termsVersion?: string | null
+  termsAcceptedAt?: string | null
   settings?: UserSettings
+}
+
+/** Re-consent, for anyone whose accepted version has fallen behind. */
+export async function acceptTerms(): Promise<{ termsVersion: string; termsAcceptedAt: string }> {
+  const { data } = await api.post('/api/user/accept-terms', { termsVersion: CURRENT_TERMS_VERSION })
+  return data as { termsVersion: string; termsAcceptedAt: string }
+}
+
+/**
+ * Closing the account for good. The password is asked for because a live
+ * session is not proof of ownership and this cannot be undone.
+ *
+ * A 200 means the token is already dead — treat it as a sign-out, not as a
+ * response to act on.
+ */
+export async function deleteAccount(currentPassword: string): Promise<void> {
+  await api.delete('/api/user/me', { data: { currentPassword } })
 }
 
 export async function fetchProfile(): Promise<Profile> {

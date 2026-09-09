@@ -24,6 +24,8 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage').then((module) => 
 const AuthPage = lazy(() => import('./pages/AuthPage').then((module) => ({ default: module.AuthPage })))
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then((module) => ({ default: module.VerifyEmailPage })))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })))
+const TermsPage = lazy(() => import('./pages/TermsPage').then((module) => ({ default: module.TermsPage })))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((module) => ({ default: module.PrivacyPage })))
 
 function App() {
   const session = useAppStore((state) => state.session)
@@ -71,6 +73,10 @@ function App() {
               neither may bounce a signed-in visitor to the dashboard. */}
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          {/* Published documents: readable signed out, and they have to survive
+              a hard refresh, which is most of the point of publishing them. */}
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
           <Route element={session ? <AppShell /> : <Navigate to="/auth" replace />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />

@@ -1,0 +1,11 @@
+/* Two links of equal weight: neither is the one you are meant to read. */
+
+.legal-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.legal-links .setting-action {
+    text-decoration: none;
+}

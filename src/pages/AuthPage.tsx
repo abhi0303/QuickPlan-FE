@@ -71,6 +71,11 @@ export function AuthPage() {
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({})
   const [showPassword, setShowPassword] = useState(false)
   const [capsLock, setCapsLock] = useState(false)
+  /* Starts unticked, always. A pre-ticked box is not consent — and the submit
+     is refused with a visible reason rather than sitting there disabled, so
+     somebody who missed it can tell why. */
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [termsError, setTermsError] = useState(false)
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
   /* What is on screen instead of the form once a mail route has been asked to
@@ -131,6 +136,7 @@ export function AuthPage() {
     setServerError('')
     setNotice(null)
     setUnverifiedEmail('')
+    setTermsError(false)
     setCapsLock(false)
     setShowPassword(false)
     // keep name/email so switching tabs never costs the user typing
@@ -152,6 +158,12 @@ export function AuthPage() {
     const firstInvalid = fields.find((field) => errors[field])
     if (firstInvalid) {
       document.getElementById(firstInvalid)?.focus()
+      return
+    }
+
+    if (isSignup && !acceptedTerms) {
+      setTermsError(true)
+      document.getElementById('acceptTerms')?.focus()
       return
     }
 
@@ -490,6 +502,32 @@ export function AuthPage() {
                 </label>
               )}
 
+              {isSignup && (
+                <div className="consent">
+                  <label className={`consent-check ${termsError ? 'is-missing' : ''}`}>
+                    <input
+                      id="acceptTerms"
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      disabled={loading}
+                      onChange={(event) => { setAcceptedTerms(event.target.checked); setTermsError(false) }}
+                      aria-describedby={termsError ? 'terms-error' : undefined}
+                    />
+                    <span>
+                      {/* new tab: reading the terms must not cost somebody the
+                          form they have half filled in */}
+                      I agree to the <a href="/terms" target="_blank" rel="noreferrer">Terms of Use</a> and{' '}
+                      <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>, and I am 18 or older.
+                    </span>
+                  </label>
+                  {termsError && (
+                    <p className="field-error" id="terms-error" role="alert">
+                      <CircleAlert size={13} /> Please accept the Terms of Use and Privacy Policy to continue.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {serverError && (
                 <p className="form-error" role="alert">
                   <CircleAlert size={16} />
@@ -529,6 +567,13 @@ export function AuthPage() {
           <p className="auth-terms">
             <ShieldCheck size={14} />
             Your planning space stays personal and private.
+          </p>
+
+          {/* People read these before deciding to sign up, not after. */}
+          <p className="auth-legal">
+            <a href="/terms" target="_blank" rel="noreferrer">Terms</a>
+            <span aria-hidden="true">·</span>
+            <a href="/privacy" target="_blank" rel="noreferrer">Privacy</a>
           </p>
         </section>
       </div>
