@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { format, isPast, isToday, isTomorrow, parseISO } from 'date-fns'
 import { Check, Clock3, Pencil, Trash2 } from 'lucide-react'
 import type { Task, TaskPriority } from '../../services/tasks'
@@ -46,6 +47,25 @@ type Props = {
 }
 
 export function TaskRow({ task, busy, onToggle, onDelete, onEdit }: Props) {
+  const [expanded, setExpanded] = useState(false)
+  /* Whether the note is actually being cut off. Measured rather than assumed,
+     because it depends on the width the row happens to have — and the layout
+     changes shape at 1000px, so the answer changes with the window. */
+  const [clipped, setClipped] = useState(false)
+  const noteRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    const note = noteRef.current
+    // an opened note reports no overflow, which would take its own toggle away
+    if (!note || expanded) return
+
+    const observer = new ResizeObserver(() => {
+      setClipped(note.scrollWidth > note.clientWidth + 1)
+    })
+    observer.observe(note)
+    return () => observer.disconnect()
+  }, [expanded])
+
   const due = describeDue(task.dueDate)
   const color = task.category ? CATEGORY_COLORS[task.category.toLowerCase()] ?? DEFAULT_COLOR : DEFAULT_COLOR
 
@@ -64,7 +84,21 @@ export function TaskRow({ task, busy, onToggle, onDelete, onEdit }: Props) {
       <div className="task-row-copy">
         <div>
           <strong>{task.title}</strong>
-          {task.notes && <p className="task-notes">{task.notes}</p>}
+          {task.notes && (
+            <button
+              type="button"
+              ref={noteRef}
+              className={`task-notes ${expanded ? 'is-open' : ''}`}
+              /* nothing to open when it already fits, and a control that does
+                 nothing should not be reachable by keyboard either */
+              disabled={!clipped && !expanded}
+              aria-expanded={clipped || expanded ? expanded : undefined}
+              onClick={() => setExpanded((open) => !open)}
+              title={!expanded && clipped ? 'Show the whole note' : undefined}
+            >
+              {task.notes}
+            </button>
+          )}
         </div>
 
         <div className="task-meta">

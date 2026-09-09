@@ -94,6 +94,22 @@
     flex: 0 0 clamp(200px, 24%, 300px);
 }
 
+/* Below about a thousand the row cannot hold both: five tabs come to ~430px,
+   search asks for 200, and with the sidebar taking its share the column is
+   ~529 at 861. Sharing a line there does not squeeze search — it scrolls
+   "Overdue" and "Completed" out of reach, which is the one thing this row
+   exists to offer. So search takes its own line first. */
+@media (max-width: 1000px) {
+
+    .toolbar-row {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .toolbar-row .search-inline { flex: none; }
+}
+
 .sort-select {
     align-items: center;
     background: var(--surface);
@@ -185,12 +201,3 @@
     opacity: .7;
 }
 
-@media (max-width: 860px) {
-.toolbar-row {
-        align-items: stretch;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-.toolbar-row .search-inline { flex: none; }
-}

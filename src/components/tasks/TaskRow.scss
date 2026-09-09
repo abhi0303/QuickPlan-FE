@@ -7,6 +7,7 @@
     border-radius: var(--r-md);
     display: flex;
     gap: 13px;
+    min-width: 0;
     padding: 14px 12px;
     transition: background .18s ease, opacity .18s ease;
 }
@@ -31,16 +32,17 @@
 }
 
 @media (min-width: 1000px) {
-/* the panel is wide; keep the title left and pull the meta to the right
+
+    /* the panel is wide; keep the title left and pull the meta to the right
        rather than stacking everything in the first third */
-.task-row-copy {
+    .task-row-copy {
         align-items: center;
         display: flex;
         gap: 16px;
         justify-content: space-between;
     }
 
-.task-row-copy>div:first-child {
+    .task-row-copy>div:first-child {
         min-width: 0;
     }
 }
@@ -51,13 +53,37 @@
     font-weight: 600;
 }
 
+/* A button that reads as text: the ellipsis says there is more, and the thing
+   showing the ellipsis is the thing you would click. Disabled when the note
+   already fits, so it never offers to open something that is fully visible. */
 .task-notes {
+    background: none;
+    border: 0;
     color: var(--muted);
+    display: block;
+    font-family: inherit;
     font-size: 13px;
     margin-top: 4px;
     overflow: hidden;
+    padding: 0;
+    text-align: left;
     text-overflow: ellipsis;
+    transition: color .18s ease;
     white-space: nowrap;
+    width: 100%;
+}
+
+.task-notes:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.task-notes:not(:disabled) { cursor: pointer; }
+.task-notes:not(:disabled):hover { color: var(--text-soft); }
+
+.task-notes.is-open {
+    overflow: visible;
+    white-space: normal;
 }
 
 .priority-tag {
@@ -104,9 +130,19 @@
     width: 32px;
 }
 
-.task-row:hover .task-edit { opacity: 1; }
-.task-edit:hover { background: var(--primary-soft); color: var(--primary-strong); }
-.task-edit:disabled { cursor: not-allowed; opacity: .4; }
+.task-row:hover .task-edit {
+    opacity: 1;
+}
+
+.task-edit:hover {
+    background: var(--primary-soft);
+    color: var(--primary-strong);
+}
+
+.task-edit:disabled {
+    cursor: not-allowed;
+    opacity: .4;
+}
 
 .task-delete {
     align-items: center;
@@ -131,11 +167,11 @@
 }
 
 @media (max-width: 860px) {
-.task-delete {
+    .task-delete {
         opacity: 1;
     }
 
-.task-notes {
+    .task-notes {
         white-space: normal;
     }
 }
@@ -170,7 +206,11 @@
 @keyframes queuedPulse {
 
     0%,
-    100% { opacity: .45; }
+    100% {
+        opacity: .45;
+    }
 
-    50% { opacity: 1; }
+    50% {
+        opacity: 1;
+    }
 }
